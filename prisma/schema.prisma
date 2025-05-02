@@ -1,0 +1,130 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  CUSTOMER
+  EDITOR
+  SENIOR_EDITOR
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PENDING_AI
+  PENDING_EDITOR_ASSIGNMENT
+  IN_EDITING
+  PENDING_SENIOR_REVIEW
+  IN_SENIOR_REVIEW
+  COMPLETED
+  REJECTED
+}
+
+enum EditorLanguagePairQualificationStatus {
+  INITIAL_EVALUATION_REQUIRED
+  INITIAL_EVALUATION_IN_PROGRESS
+  REEVALUATION_REQUIRED
+  REEVALUATION_IN_PROGRESS
+  QUALIFIED
+  FAILED
+}
+
+model User {
+  id           String @id @default(uuid()) @db.Uuid
+  email        String @unique
+  passwordHash String @map("password_hash")
+  firstName    String @map("first_name")
+  lastName     String @map("last_name")
+
+  emailVerified              Boolean @default(false) @map("email_verified")
+  emailVerificationTokenHash String? @map("email_verification_token_hash")
+  passwordResetTokenHash     String? @map("password_reset_token_hash")
+
+  roles  UserRole[]
+  orders Order[]
+
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  editorLanguagePair EditorLanguagePair[]
+
+  clientOrders       Order[] @relation("ClientOrders")
+  editorOrders       Order[] @relation("EditorOrders")
+  seniorEditorOrders Order[] @relation("SeniorEditorOrders")
+
+  @@map("users")
+}
+
+model Language {
+  id   String @id @default(uuid()) @db.Uuid
+  code String @unique
+  name String
+
+  sourceFor LanguagePair[] @relation("SourceLanguage")
+  targetFor LanguagePair[] @relation("TargetLanguage")
+
+  @@map("languages")
+}
+
+model LanguagePair {
+  id               String   @id @default(uuid()) @db.Uuid
+  sourceLanguage   Language @relation("SourceLanguage", fields: [sourceLanguageId], references: [id])
+  sourceLanguageId String   @db.Uuid
+  targetLanguage   Language @relation("TargetLanguage", fields: [targetLanguageId], references: [id])
+  targetLanguageId String   @db.Uuid
+
+  orders  Order[]
+  editors EditorLanguagePair[]
+
+  @@unique([sourceLanguageId, targetLanguageId])
+  @@map("language_pairs")
+}
+
+model EditorLanguagePair {
+  id String @id @default(uuid()) @db.Uuid
+
+  editorId String @map("editor_id") @db.Uuid
+  editor   User   @relation(fields: [editorId], references: [id])
+
+  languagePairId String       @map("language_pair_id") @db.Uuid
+  languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])
+
+  qualificationStatus EditorLanguagePairQualificationStatus
+
+  @@unique([editorId, languagePairId])
+  @@map("editor_language_pairs")
+}
+
+model Order {
+  id String @id @default(uuid()) @db.Uuid
+
+  clientId String @map("client_id") @db.Uuid
+  client   User   @relation("ClientOrders", fields: [clientId], references: [id])
+
+  languagePairId String       @map("language_pair_id") @db.Uuid
+  languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])
+
+  editorId String? @map("editor_id") @db.Uuid
+  editor   User?   @relation("EditorOrders", fields: [editorId], references: [id])
+
+  seniorEditorId String? @map("senior_editor_id") @db.Uuid
+  seniorEditor   User?   @relation("SeniorEditorOrders", fields: [seniorEditorId], references: [id])
+
+  originalText      String  @map("original_text")
+  aiTranslatedText  String? @map("ai_translated_text")
+  humanEditedText   String? @map("human_edited_text")
+  finalApprovedText String? @map("final_approved_text")
+
+  status OrderStatus
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User?    @relation(fields: [userId], references: [id])
+  userId    String?  @db.Uuid
+
+  @@map("orders")
+}
