@@ -11,6 +11,11 @@ export const envSchema = z.object({
   // JWT
   JWT_SECRET: z.string(),
   JWT_EXPIRATION_TIME: z.string().default('1d'),
+
+  // EMAIL (MailHog)
+  MAILHOG_HOST: z.string(),
+  MAILHOG_PORT: z.coerce.number(),
+  EMAIL_DEFAULT_FROM: z.string().email().default('noreply@example.com'),
 });
 export type Env = z.infer<typeof envSchema>;
 

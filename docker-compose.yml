@@ -9,3 +9,12 @@ services:
       POSTGRES_DB: db
     volumes:
       - ./docker-volumes/postgres:/var/lib/postgresql/data
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: translation_mailhog
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    volumes:
+      - ./docker-volumes/mailhog:/data

@@ -3,6 +3,7 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from '@common/config';
 import { InternalModule } from './internal/internal.module';
+import { IntegrationModule } from './integration/integration.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { InternalModule } from './internal/internal.module';
       validate: (env) => validateEnv(env),
     }),
     InfrastructureModule,
+    IntegrationModule,
     InternalModule,
   ],
 })

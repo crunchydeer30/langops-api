@@ -76,7 +76,15 @@ export class Customer extends AggregateRoot implements ICustomer {
     };
 
     const customer = new Customer(customerProps);
-    customer.apply(new CustomerRegisteredEvent({ customerId: id }));
+    customer.apply(
+      new CustomerRegisteredEvent({
+        customerId: id,
+        email: emailVo.value,
+        firstName: args.firstName,
+        lastName: args.lastName,
+      }),
+    );
+    console.log('Created event');
     customer.generateEmailVerificationToken();
     return customer;
   }
