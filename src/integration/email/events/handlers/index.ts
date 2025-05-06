@@ -1,1 +1,2 @@
-export * from './customer-registered.handler';
+export * from './customers';
+export * from './editor-application';

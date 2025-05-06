@@ -1,7 +1,7 @@
 import { EventsHandler, IEventHandler, CommandBus } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { CustomerRegisteredEvent } from 'src/internal/customer/domain/events';
-import { SendEmailCommand } from '../../commands';
+import { SendEmailCommand } from 'src/integration/email/commands';
 
 @EventsHandler(CustomerRegisteredEvent)
 export class CustomerRegisteredHandler

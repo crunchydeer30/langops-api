@@ -70,4 +70,36 @@ export const ERRORS = {
       httpStatus: 400,
     },
   },
+  EDITOR_APPLICATION: {
+    INVALID_STATUS_TRANSITION: {
+      code: 'EDITOR_APPLICATION_001',
+      message: 'Invalid status transition',
+      httpStatus: 400,
+    },
+    INVALID_TOKEN_GENERATION: {
+      code: 'EDITOR_APPLICATION_002',
+      message: 'Invalid token generation',
+      httpStatus: 400,
+    },
+    NO_REGISTRATION_TOKEN: {
+      code: 'EDITOR_APPLICATION_003',
+      message: 'No registration token',
+      httpStatus: 400,
+    },
+    TOKEN_ALREADY_USED: {
+      code: 'EDITOR_APPLICATION_004',
+      message: 'Token already used',
+      httpStatus: 400,
+    },
+    ALREADY_EXISTS: {
+      code: 'EDITOR_APPLICATION_005',
+      message: 'Editor application already exists',
+      httpStatus: 409,
+    },
+    NOT_FOUND: {
+      code: 'EDITOR_APPLICATION_006',
+      message: 'Editor application not found',
+      httpStatus: 404,
+    },
+  },
 } as const;

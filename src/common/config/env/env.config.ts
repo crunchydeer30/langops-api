@@ -4,6 +4,7 @@ export const envSchema = z.object({
   // APP
   NODE_ENV: z.string().default('development'),
   PORT: z.string().default('3000'),
+  BASE_URL: z.string(),
 
   // DATABASE
   DATABASE_URL: z.string(),

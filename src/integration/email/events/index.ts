@@ -1,5 +1,13 @@
-import { CustomerRegisteredHandler } from './handlers';
+import {
+  CustomerRegisteredHandler,
+  EditorApplicationRejectedHandler,
+  EditorRegistrationTokenGeneratedHandler,
+} from './handlers';
 
 export * from './handlers';
 
-export const EmailEventHandlers = [CustomerRegisteredHandler];
+export const EmailEventHandlers = [
+  CustomerRegisteredHandler,
+  EditorRegistrationTokenGeneratedHandler,
+  EditorApplicationRejectedHandler,
+];
