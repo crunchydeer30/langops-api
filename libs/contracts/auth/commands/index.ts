@@ -1,1 +1,2 @@
-export * from './login.command';
+export * from './login-customer.command';
+export * from './register-customer.command';

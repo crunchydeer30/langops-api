@@ -4,11 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { CqrsModule } from '@nestjs/cqrs';
 import { Env } from 'src/common/config';
-import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { UserModule } from '../user/user.module';
-import { AUTH_COMMAND_HANDLERS } from './application';
+import { AuthCommandHandlers } from './application';
+import { CustomerModule } from '../customer/customer.module';
+import { AuthCustomerController } from './controllers';
 
 @Module({
   imports: [
@@ -23,9 +23,9 @@ import { AUTH_COMMAND_HANDLERS } from './application';
       inject: [ConfigService],
     }),
     CqrsModule,
-    UserModule,
+    CustomerModule,
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, ...AUTH_COMMAND_HANDLERS],
+  controllers: [AuthCustomerController],
+  providers: [AuthService, JwtStrategy, ...AuthCommandHandlers],
 })
 export class AuthModule {}

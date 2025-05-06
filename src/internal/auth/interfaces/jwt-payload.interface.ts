@@ -1,7 +1,11 @@
-import { UserRole } from '../../user/domain/entities/user-role.enum'; // Assuming this exists
+export enum UserRole {
+  CUSTOMER = 'customer',
+  EDITOR = 'editor',
+  SENIOR_EDITOR = 'senior-editor',
+  ADMIN = 'admin',
+}
 
 export interface JwtPayload {
-  sub: string;
-  email: string;
+  id: string;
   roles: UserRole[];
 }

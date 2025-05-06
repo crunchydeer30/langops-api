@@ -1,5 +1,5 @@
-import { AuthenticateUserHandler } from './authenticate-user';
+import { AuthenticateCustomerHandler } from './authenticate-customer';
 
-export * from './authenticate-user';
+export * from './authenticate-customer';
 
-export const AUTH_COMMAND_HANDLERS = [AuthenticateUserHandler];
+export const AuthCommandHandlers = [AuthenticateCustomerHandler];

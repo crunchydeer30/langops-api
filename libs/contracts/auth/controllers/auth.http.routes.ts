@@ -1,6 +1,15 @@
-export const AUTH_HTTP_CONTROLLER = 'auth';
+export const AUTH_HTTP_CONTROLLER = {
+  CUSTOMER: 'auth/customer',
+  EDITOR: 'auth/editor',
+};
 
 export const AUTH_HTTP_ROUTES = {
-  LOGIN: '/login',
-  REGISTER: '/register',
+  CUSTOMER: {
+    LOGIN: '/login',
+    REGISTER: '/register',
+  },
+  EDITOR: {
+    LOGIN: '/login',
+    REGISTER: '/register',
+  },
 } as const;

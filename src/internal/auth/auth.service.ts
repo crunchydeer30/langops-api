@@ -1,17 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from './interfaces/jwt-payload.interface';
-import { UserRole } from '../user/domain/entities/user-role.enum';
+import { JwtPayload, UserRole } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  generateJwt(data: { id: string; email: string; roles: UserRole[] }): string {
+  generateJwt(data: { id: string; email: string }): string {
     const payload: JwtPayload = {
-      sub: data.id,
-      email: data.email,
-      roles: data.roles,
+      id: data.id,
+      roles: [UserRole.CUSTOMER],
     };
     return this.jwtService.sign(payload);
   }
