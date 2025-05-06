@@ -32,6 +32,26 @@ enum EditorLanguagePairQualificationStatus {
   FAILED
 }
 
+enum EditorApplicationStatus {
+  PENDING_REVIEW
+  ACCEPTED
+  REJECTED
+  REGISTRATION_PENDING
+  COMPLETED
+}
+
+enum EvaluationSetStatus {
+  PENDING_TASKS_GENERATION
+  PENDING_EDITOR_SUBMISSION
+  PENDING_REVIEW
+  REVIEWED
+}
+
+enum EvaluationType {
+  INITIAL_QUALIFICATION
+  PERIODIC_REVIEW
+}
+
 model Customer {
   id           String @id @default(uuid()) @db.Uuid
   email        String @unique
@@ -67,6 +87,10 @@ model Editor {
   editedOrders   Order[]              @relation("EditorOrders")
   reviewedOrders Order[]              @relation("SeniorEditorOrders")
 
+  applications              EditorApplication[] @relation("ApplicantApplications")
+  evaluationSetsAsApplicant EvaluationSet[]     @relation("EditorEvaluationSets")
+  evaluationSetsAsReviewer  EvaluationSet[]     @relation("SeniorEditorReviewedEvaluationSets")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -91,8 +115,10 @@ model LanguagePair {
   targetLanguage   Language @relation("TargetLanguage", fields: [targetLanguageId], references: [id])
   targetLanguageId String   @db.Uuid
 
-  orders  Order[]
-  editors EditorLanguagePair[]
+  orders                         Order[]
+  editors                        EditorLanguagePair[]
+  editorApplicationLanguagePairs EditorApplicationLanguagePair[]
+  evaluationSets                 EvaluationSet[]
 
   @@unique([sourceLanguageId, targetLanguageId])
   @@map("language_pairs")
@@ -108,6 +134,10 @@ model EditorLanguagePair {
   languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])
 
   qualificationStatus EditorLanguagePairQualificationStatus
+  rating              Float?
+  lastEvaluationAt    DateTime?                             @map("last_evaluation_at")
+
+  evaluationSet EvaluationSet? @relation("EvaluationForLanguagePair")
 
   @@unique([editorId, languagePairId])
   @@map("editor_language_pairs")
@@ -135,8 +165,96 @@ model Order {
 
   status OrderStatus
 
+  evaluationTasks EvaluationTask[] @relation("OrderEvaluationTasks")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("orders")
+}
+
+model EditorApplication {
+  id     String                  @id @default(uuid()) @db.Uuid
+  email  String                  @unique
+  status EditorApplicationStatus @default(PENDING_REVIEW)
+
+  requestedLanguagePairs  EditorApplicationLanguagePair[]
+  registrationTokenHash   String?                         @unique @map("registration_token_hash")
+  registrationTokenIsUsed Boolean?                        @default(false) @map("registration_token_is_used")
+
+  editorId String? @unique @map("editor_id") @db.Uuid
+  editor   Editor? @relation("ApplicantApplications", fields: [editorId], references: [id])
+
+  rejectionReason String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("editor_applications")
+}
+
+model EditorApplicationLanguagePair {
+  id String @id @default(uuid()) @db.Uuid
+
+  applicationId String            @map("application_id") @db.Uuid
+  application   EditorApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  languagePairId String       @map("language_pair_id") @db.Uuid
+  languagePair   LanguagePair @relation(fields: [languagePairId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([applicationId, languagePairId])
+  @@map("editor_application_language_pairs")
+}
+
+model EvaluationSet {
+  id String @id @default(uuid()) @db.Uuid
+
+  editorId String @map("editor_id") @db.Uuid
+  editor   Editor @relation("EditorEvaluationSets", fields: [editorId], references: [id])
+
+  languagePairId String       @map("language_pair_id") @db.Uuid
+  languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])
+
+  type          EvaluationType
+  status        EvaluationSetStatus @default(PENDING_TASKS_GENERATION)
+  averageRating Float?
+
+  assignedSeniorEditorId String? @map("assigned_senior_editor_id") @db.Uuid
+  assignedSeniorEditor   Editor? @relation("SeniorEditorReviewedEvaluationSets", fields: [assignedSeniorEditorId], references: [id])
+
+  tasks EvaluationTask[]
+
+  editorLanguagePairId String?             @unique @map("editor_language_pair_id") @db.Uuid
+  editorLanguagePair   EditorLanguagePair? @relation("EvaluationForLanguagePair", fields: [editorLanguagePairId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([editorId, languagePairId, createdAt])
+  @@map("evaluation_sets")
+}
+
+model EvaluationTask {
+  id String @id @default(uuid()) @db.Uuid
+
+  evaluationSetId String        @map("evaluation_set_id") @db.Uuid
+  evaluationSet   EvaluationSet @relation(fields: [evaluationSetId], references: [id], onDelete: Cascade)
+
+  order Int
+
+  sourceOrderId String? @map("source_order_id") @db.Uuid
+  sourceOrder   Order?  @relation("OrderEvaluationTasks", fields: [sourceOrderId], references: [id])
+
+  originalText         String
+  editorSubmission     String?
+  rating               Int?
+  seniorEditorFeedback String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([evaluationSetId, order])
+  @@map("evaluation_tasks")
 }
