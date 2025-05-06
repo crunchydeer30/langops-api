@@ -17,13 +17,10 @@ export class VerificationToken {
     const hashToCompare = createHash('sha256')
       .update(plainTokenToCompare)
       .digest('hex');
-    // Ensure buffers are of the same length for timingSafeEqual
     const storedHashBuffer = Buffer.from(this.hash, 'hex');
     const comparisonHashBuffer = Buffer.from(hashToCompare, 'hex');
 
     if (storedHashBuffer.length !== comparisonHashBuffer.length) {
-      // This should not happen if hashes are generated consistently (e.g. SHA256 produces fixed length)
-      // but as a safeguard:
       return false;
     }
     return timingSafeEqual(storedHashBuffer, comparisonHashBuffer);

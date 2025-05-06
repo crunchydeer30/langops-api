@@ -1,6 +1,5 @@
 export interface IEditorEmailVerifiedEventProps {
   editorId: string;
-  // at: Date;
 }
 
 export class EditorEmailVerifiedEvent {
