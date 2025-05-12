@@ -38,6 +38,23 @@ export const ERRORS = {
       httpStatus: 409,
     },
   },
+  ORDER: {
+    NOT_FOUND: {
+      code: 'ORDER_001',
+      message: 'Order not found',
+      httpStatus: 404,
+    },
+    INVALID_STATUS_TRANSITION: {
+      code: 'ORDER_002',
+      message: 'Invalid order status transition',
+      httpStatus: 400,
+    },
+    NO_EDITOR_ASSIGNED: {
+      code: 'ORDER_003',
+      message: 'No editor assigned to this order',
+      httpStatus: 400,
+    },
+  },
   EDITOR: {
     NOT_FOUND: {
       code: 'EDITOR_001',
