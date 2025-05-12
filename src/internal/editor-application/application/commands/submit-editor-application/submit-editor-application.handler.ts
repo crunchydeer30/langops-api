@@ -14,8 +14,10 @@ export class SubmitEditorApplicationHandler
     private readonly editorApplicationRepository: EditorApplicationRepository,
   ) {}
 
-  async execute(command: SubmitEditorApplicationCommand): Promise<string> {
-    const { email, languagePairIds } = command.payload;
+  async execute(
+    command: SubmitEditorApplicationCommand,
+  ): Promise<EditorApplication> {
+    const { email, firstName, lastName, languagePairIds } = command.payload;
 
     const existingApplication =
       await this.editorApplicationRepository.findByEmail(Email.create(email));
@@ -26,11 +28,13 @@ export class SubmitEditorApplicationHandler
 
     const application = EditorApplication.create({
       email,
+      firstName,
+      lastName,
       languagePairIds,
     });
     await this.editorApplicationRepository.saveWithLanguagePairs(application);
     application.commit();
 
-    return application.id;
+    return application;
   }
 }

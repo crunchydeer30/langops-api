@@ -15,6 +15,8 @@ import {
 export interface IEditorApplication {
   id: string;
   email: Email;
+  firstName: string;
+  lastName: string;
   status: EditorApplicationStatus;
   rejectionReason?: string | null;
   registrationTokenHash?: string | null;
@@ -27,6 +29,8 @@ export interface IEditorApplication {
 export interface IEditorApplicationCreateArgs {
   id?: string;
   email: string;
+  firstName: string;
+  lastName: string;
   languagePairIds: string[];
 }
 
@@ -35,6 +39,8 @@ export class EditorApplication
   implements IEditorApplication
 {
   public id: string;
+  public firstName: string;
+  public lastName: string;
   public email: Email;
   public status: EditorApplicationStatus;
   public rejectionReason: string | null;
@@ -70,6 +76,8 @@ export class EditorApplication
         rejectionReason: null,
         registrationTokenHash: null,
         registrationTokenIsUsed: null,
+        firstName: args.firstName,
+        lastName: args.lastName,
         editorId: null,
         createdAt: now,
         updatedAt: now,

@@ -2,6 +2,8 @@ import { ICommand } from '@nestjs/cqrs';
 
 export interface SubmitEditorApplicationCommandPayload {
   email: string;
+  firstName: string;
+  lastName: string;
   languagePairIds: string[];
 }
 

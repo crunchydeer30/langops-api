@@ -2,7 +2,7 @@ import { SubmitEditorApplicationHandler } from './submit-editor-application/subm
 import { ApproveEditorApplicationHandler } from './approve-editor-application/approve-editor-application.handler';
 import { RejectEditorApplicationHandler } from './reject-editor-application/reject-editor-application.handler';
 
-export const COMMAND_HANDLERS = [
+export const EditorApplicationCommandHandlers = [
   SubmitEditorApplicationHandler,
   ApproveEditorApplicationHandler,
   RejectEditorApplicationHandler,

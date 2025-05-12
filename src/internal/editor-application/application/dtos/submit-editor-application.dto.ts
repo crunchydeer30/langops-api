@@ -1,25 +1,13 @@
-import { IsEmail, IsArray, IsUUID, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { SubmitEditorApplicationCommand } from '@libs/contracts/editor-application';
+import { createZodDto, zodToOpenAPI } from 'nestjs-zod';
 
-export class SubmitEditorApplicationDto {
-  @ApiProperty({
-    description: 'Email of the applicant',
-    example: 'applicant@example.com',
-  })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
+export class SubmitEditorApplicationBodyDto extends createZodDto(
+  SubmitEditorApplicationCommand.BodySchema,
+) {}
 
-  @ApiProperty({
-    description:
-      'Array of language pair IDs that the editor wants to qualify for',
-    example: [
-      '123e4567-e89b-12d3-a456-426614174000',
-      '123e4567-e89b-12d3-a456-426614174001',
-    ],
-    type: [String],
-  })
-  @IsArray()
-  @IsUUID('4', { each: true })
-  languagePairIds: string[];
-}
+export class SubmitEditorApplicationResponseDto extends createZodDto(
+  SubmitEditorApplicationCommand.ResponseSchema,
+) {}
+
+zodToOpenAPI(SubmitEditorApplicationCommand.BodySchema);
+zodToOpenAPI(SubmitEditorApplicationCommand.ResponseSchema);
