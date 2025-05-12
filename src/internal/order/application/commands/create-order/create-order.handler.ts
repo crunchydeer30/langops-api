@@ -6,6 +6,9 @@ import {
 } from './create-order.command';
 import { Order } from '../../../domain/entities/order.entity';
 import { OrderRepository } from 'src/internal/order/infrastructure';
+import { LanguagePairRepository } from 'src/internal/language-pair/infrastructure';
+import { DomainException } from '@common/exceptions';
+import { ERRORS } from 'libs/contracts/common/errors/errors';
 
 @CommandHandler(CreateOrderCommand)
 export class CreateOrderHandler
@@ -15,6 +18,7 @@ export class CreateOrderHandler
 
   constructor(
     private readonly orderRepository: OrderRepository,
+    private readonly languagePairRepository: LanguagePairRepository,
     private readonly publisher: EventPublisher,
   ) {}
 
@@ -22,6 +26,19 @@ export class CreateOrderHandler
     props,
   }: CreateOrderCommand): Promise<ICreateOrderCommandResult> {
     this.logger.log(`Creating new order for customer: ${props.customerId}`);
+
+    // Verify that the language pair exists
+    this.logger.log(
+      `Verifying existence of language pair: ${props.languagePairId}`,
+    );
+    const languagePair = await this.languagePairRepository.findById(
+      props.languagePairId,
+    );
+
+    if (!languagePair) {
+      this.logger.warn(`Language pair not found: ${props.languagePairId}`);
+      throw new DomainException(ERRORS.LANGUAGE_PAIR.NOT_FOUND);
+    }
 
     const order = Order.create({
       customerId: props.customerId,

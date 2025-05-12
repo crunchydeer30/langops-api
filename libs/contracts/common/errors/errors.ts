@@ -152,4 +152,23 @@ export const ERRORS = {
       httpStatus: 400,
     },
   },
+  LANGUAGE_PAIR: {
+    NOT_FOUND: {
+      code: 'LANGUAGE_PAIR_001',
+      message: 'Language pair not found',
+      httpStatus: 404,
+    },
+    MULTIPLE_NOT_FOUND: {
+      code: 'LANGUAGE_PAIR_002',
+      message: 'One or more language pairs not found',
+      httpStatus: 404,
+    },
+  },
+  LANGUAGE: {
+    NOT_FOUND: {
+      code: 'LANGUAGE_001',
+      message: 'Language not found',
+      httpStatus: 404,
+    },
+  },
 } as const;

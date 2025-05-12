@@ -6,6 +6,7 @@ import { Email } from '@common/domain/value-objects';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
 import { EditorApplicationRepository } from 'src/internal/editor-application/infrastructure';
+import { LanguagePairRepository } from 'src/internal/language-pair/infrastructure';
 
 @CommandHandler(SubmitEditorApplicationCommand)
 export class SubmitEditorApplicationHandler
@@ -14,6 +15,7 @@ export class SubmitEditorApplicationHandler
   private readonly logger = new Logger(SubmitEditorApplicationHandler.name);
   constructor(
     private readonly editorApplicationRepository: EditorApplicationRepository,
+    private readonly languagePairRepository: LanguagePairRepository,
     private readonly publisher: EventPublisher,
   ) {}
 
@@ -34,6 +36,24 @@ export class SubmitEditorApplicationHandler
         `Duplicate editor application attempt for email: ${email}`,
       );
       throw new DomainException(ERRORS.EDITOR_APPLICATION.ALREADY_EXISTS);
+    }
+
+    this.logger.log(
+      `Verifying existence of language pairs: ${languagePairIds.join(', ')}`,
+    );
+    const existingLanguagePairs = await Promise.all(
+      languagePairIds.map((id) => this.languagePairRepository.findById(id)),
+    );
+
+    const missingPairIds = languagePairIds.filter(
+      (id, index) => existingLanguagePairs[index] === null,
+    );
+
+    if (missingPairIds.length > 0) {
+      this.logger.warn(
+        `One or more language pairs not found: ${missingPairIds.join(', ')}`,
+      );
+      throw new DomainException(ERRORS.LANGUAGE_PAIR.MULTIPLE_NOT_FOUND);
     }
 
     const application = EditorApplication.create({

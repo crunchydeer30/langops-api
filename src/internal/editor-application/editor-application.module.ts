@@ -6,9 +6,10 @@ import {
   EditorApplicationRepository,
 } from './infrastructure';
 import { CqrsModule } from '@nestjs/cqrs';
+import { LanguagePairModule } from '../language-pair/language-pair.module';
 
 @Module({
-  imports: [CqrsModule],
+  imports: [CqrsModule, LanguagePairModule],
   controllers: [EditorApplicationController],
   providers: [
     EditorApplicationRepository,
