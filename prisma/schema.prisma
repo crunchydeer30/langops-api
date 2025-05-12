@@ -127,6 +127,9 @@ model LanguagePair {
   editorApplicationLanguagePairs EditorApplicationLanguagePair[]
   evaluationSets                 EvaluationSet[]
 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@unique([sourceLanguageId, targetLanguageId])
   @@map("language_pairs")
 }
