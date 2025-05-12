@@ -1,9 +1,16 @@
-export interface RegisterEditorCommandPayload {
+import { ICommand } from '@nestjs/cqrs';
+
+export interface IRegisterEditorCommandProps {
   token: string;
   applicationId: string;
   password: string;
 }
 
-export class RegisterEditorCommand {
-  constructor(public readonly payload: RegisterEditorCommandPayload) {}
+export interface IRegisterEditorCommandResult {
+  userId: string;
+  accessToken: string;
+}
+
+export class RegisterEditorCommand implements ICommand {
+  constructor(public readonly props: IRegisterEditorCommandProps) {}
 }

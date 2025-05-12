@@ -13,10 +13,7 @@ export namespace RegisterEditorCommand {
   export type BodySchema = z.infer<typeof BodySchema>;
 
   export const ResponseSchema = z.object({
-    id: z.string().uuid(),
-    email: z.string().email(),
-    firstName: z.string(),
-    lastName: z.string(),
+    userId: z.string().uuid(),
     accessToken: z.string(),
   });
   export type ResponseSchema = z.infer<typeof ResponseSchema>;

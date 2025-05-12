@@ -5,6 +5,10 @@ export interface IAuthenticateStaffCommandProps {
   password: string;
 }
 
+export interface IAuthenticateStaffCommandResult {
+  accessToken: string;
+}
+
 export class AuthenticateStaffCommand implements ICommand {
   constructor(public readonly props: IAuthenticateStaffCommandProps) {}
 }

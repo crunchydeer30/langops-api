@@ -14,6 +14,7 @@ export namespace RegisterCustomerCommand {
   export type BodySchema = z.infer<typeof BodySchema>;
 
   export const ResponseSchema = z.object({
+    userId: z.string().uuid(),
     accessToken: z.string(),
   });
   export type ResponseSchema = z.infer<typeof ResponseSchema>;

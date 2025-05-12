@@ -6,7 +6,10 @@ import {
   LoginStaffBodyDto,
   LoginStaffResponseDto,
 } from '../dto/login-staff.dto';
-import { AuthenticateStaffCommand } from '../application/commands/authenticate-staff';
+import {
+  AuthenticateStaffCommand,
+  IAuthenticateStaffCommandResult,
+} from '../application/commands/authenticate-staff';
 import { Logger } from '@nestjs/common';
 
 @Controller(AUTH_HTTP_CONTROLLER.STAFF)
@@ -22,13 +25,15 @@ export class AuthStaffController {
     this.logger.log(`Processing login request for staff member: ${dto.email}`);
     const { email, password } = dto;
 
-    const result = await this.commandBus.execute(
-      new AuthenticateStaffCommand({ email, password }),
-    );
+    const result = await this.commandBus.execute<
+      AuthenticateStaffCommand,
+      IAuthenticateStaffCommandResult
+    >(new AuthenticateStaffCommand({ email, password }));
 
     this.logger.log(
       `Successfully generated access token for staff member: ${email}`,
     );
-    return result;
+
+    return { accessToken: result.accessToken };
   }
 }

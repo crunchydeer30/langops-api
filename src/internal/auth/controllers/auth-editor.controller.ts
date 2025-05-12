@@ -10,8 +10,14 @@ import {
   RegisterEditorBodyDto,
   RegisterEditorResponseDto,
 } from '../dto/register-editor.dto';
-import { AuthenticateEditorCommand } from '../application/commands/authenticate-editor';
-import { RegisterEditorCommand } from '../application/commands/register-editor';
+import {
+  AuthenticateEditorCommand,
+  IAuthenticateEditorCommandResult,
+} from '../application/commands/authenticate-editor';
+import {
+  RegisterEditorCommand,
+  IRegisterEditorCommandResult,
+} from '../application/commands/register-editor';
 import { Logger } from '@nestjs/common';
 
 @Controller(AUTH_HTTP_CONTROLLER.EDITOR)
@@ -32,11 +38,11 @@ export class AuthEditorController {
 
     const result = await this.commandBus.execute<
       AuthenticateEditorCommand,
-      { accessToken: string }
+      IAuthenticateEditorCommandResult
     >(new AuthenticateEditorCommand({ email, password }));
 
     this.logger.log(`Successfully generated access token for editor: ${email}`);
-    return result;
+    return { accessToken: result.accessToken };
   }
 
   @Post(AUTH_HTTP_ROUTES.EDITOR.REGISTER)
@@ -58,7 +64,7 @@ export class AuthEditorController {
 
     const result = await this.commandBus.execute<
       RegisterEditorCommand,
-      RegisterEditorResponseDto
+      IRegisterEditorCommandResult
     >(
       new RegisterEditorCommand({
         applicationId: dto.applicationId,
@@ -67,7 +73,13 @@ export class AuthEditorController {
       }),
     );
 
-    this.logger.log(`Successfully registered editor with ID: ${result.id}`);
-    return result;
+    this.logger.log(
+      `Successfully registered editor with ID: ${dto.applicationId}`,
+    );
+
+    return {
+      userId: result.userId,
+      accessToken: result.accessToken,
+    };
   }
 }

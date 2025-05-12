@@ -1,5 +1,8 @@
 import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
-import { RegisterEditorCommand } from './register-editor.command';
+import {
+  IRegisterEditorCommandResult,
+  RegisterEditorCommand,
+} from './register-editor.command';
 import { EditorApplicationRepository } from 'src/internal/editor-application/infrastructure';
 import { Logger } from '@nestjs/common';
 import { DomainException } from '@common/exceptions';
@@ -11,14 +14,6 @@ import {
   JwtPayload,
   UserRole,
 } from 'src/internal/auth/interfaces/jwt-payload.interface';
-
-export interface RegisterEditorCommandResult {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  accessToken: string;
-}
 
 @CommandHandler(RegisterEditorCommand)
 export class RegisterEditorHandler
@@ -35,8 +30,8 @@ export class RegisterEditorHandler
 
   async execute(
     command: RegisterEditorCommand,
-  ): Promise<RegisterEditorCommandResult> {
-    const { applicationId, token, password } = command.payload;
+  ): Promise<IRegisterEditorCommandResult> {
+    const { applicationId, token, password } = command.props;
 
     this.logger.log(
       `Attempting to register editor with application ID: ${applicationId}`,
@@ -93,10 +88,7 @@ export class RegisterEditorHandler
     );
 
     return {
-      id: editor.id,
-      email: editor.email.value,
-      firstName: editor.firstName,
-      lastName: editor.lastName,
+      userId: editor.id,
       accessToken,
     };
   }
