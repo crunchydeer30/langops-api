@@ -38,12 +38,14 @@ export class RegisterCustomerHandler
       lastName,
     });
 
-    this.logger.log(`Customer entity created with ID: ${customer.id}`);
+    this.logger.log(
+      `Customer entity created with ID: ${customer.id}, email: ${email}`,
+    );
 
     await this.customerRepository.save(customer);
 
     this.logger.log(
-      `Publishing events for new customer with ID: ${customer.id}`,
+      `Publishing events for new customer with ID: ${customer.id}, email: ${email}`,
     );
 
     const customerWithEvents = this.publisher.mergeObjectContext(customer);
@@ -57,7 +59,7 @@ export class RegisterCustomerHandler
     const accessToken = this.jwtService.sign(payload);
 
     this.logger.log(
-      `Successfully registered customer with email: ${customer.email.value}`,
+      `Successfully registered customer with ID: ${customer.id}, email: ${customer.email.value}`,
     );
 
     return {

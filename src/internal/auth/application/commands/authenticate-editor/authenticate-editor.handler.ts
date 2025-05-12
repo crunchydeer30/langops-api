@@ -52,7 +52,9 @@ export class AuthenticateEditorHandler
 
     const accessToken = this.jwtService.sign(payload);
 
-    this.logger.log(`Successfully authenticated editor with ID: ${editor.id}`);
+    this.logger.log(
+      `Successfully authenticated editor with ID: ${editor.id}, email: ${email}`,
+    );
 
     return { accessToken };
   }

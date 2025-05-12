@@ -37,7 +37,7 @@ export class RejectEditorApplicationHandler
 
     application.reject(rejectionReason);
     this.logger.log(
-      `Editor application rejected for id: ${applicationId}, reason: ${rejectionReason}`,
+      `Editor application rejected for id: ${applicationId}, email: ${application.email.value}, reason: ${rejectionReason}`,
     );
     await this.editorApplicationRepository.save(application);
 
@@ -46,7 +46,7 @@ export class RejectEditorApplicationHandler
     applicationWithEvents.commit();
 
     this.logger.log(
-      `Editor application rejection process completed for id: ${applicationId}`,
+      `Editor application rejection process completed for id: ${applicationId}, email: ${application.email.value}`,
     );
     return {
       success: true,

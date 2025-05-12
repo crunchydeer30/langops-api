@@ -18,17 +18,7 @@ export class SendEmailHandler implements ICommandHandler<SendEmailCommand> {
     this.logger.log(
       `Attempting to send email to: ${toRecipients} with subject: ${props.subject}`,
     );
-    try {
-      await this.emailService.send(props);
-      this.logger.log(
-        `Successfully initiated email sending to: ${toRecipients}`,
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to execute SendEmailCommand for: ${toRecipients}`,
-        error instanceof Error ? error.stack : String(error),
-      );
-      throw error;
-    }
+    await this.emailService.send(props);
+    this.logger.log(`Successfully initiated email sending to: ${toRecipients}`);
   }
 }

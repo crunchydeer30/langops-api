@@ -36,7 +36,9 @@ export class ApproveEditorApplicationHandler
     }
 
     application.approve();
-    this.logger.log(`Editor application approved for id: ${applicationId}`);
+    this.logger.log(
+      `Editor application approved for id: ${applicationId}, email: ${application.email.value}`,
+    );
     await this.editorApplicationRepository.save(application);
 
     const applicationWithEvents =
@@ -44,7 +46,7 @@ export class ApproveEditorApplicationHandler
     applicationWithEvents.commit();
 
     this.logger.log(
-      `Editor application approval process completed for id: ${applicationId}`,
+      `Editor application approval process completed for id: ${applicationId}, email: ${application.email.value}`,
     );
     return {
       success: true,

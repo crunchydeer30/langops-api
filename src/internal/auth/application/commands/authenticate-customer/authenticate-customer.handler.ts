@@ -26,47 +26,42 @@ export class AuthenticateCustomerHandler
   async execute({
     props,
   }: AuthenticateCustomerCommand): Promise<{ accessToken: string }> {
-    try {
-      this.logger.log(`Authenticating customer: ${props.email}`);
-      const { email, password } = props;
+    this.logger.log(`Authenticating customer: ${props.email}`);
+    const { email, password } = props;
 
-      const customer = await this.customerRepository.findByEmail(
-        Email.create(email),
-      );
+    const customer = await this.customerRepository.findByEmail(
+      Email.create(email),
+    );
 
-      if (!customer) {
-        this.logger.warn('Failed to authenticate customer: Customer not found');
-        throw new UnauthorizedException('Invalid credentials.');
-      }
-
-      const isPasswordValid = await customer.comparePassword(password);
-
-      if (!isPasswordValid) {
-        this.logger.warn('Failed to authenticate customer: Invalid password');
-        throw new UnauthorizedException('Invalid credentials.');
-      }
-
-      this.logger.log(`Issuing access token for customer: ${email}`);
-      const payload: JwtPayload = {
-        id: customer.id,
-        roles: [UserRole.CUSTOMER],
-      };
-
-      const accessToken = this.jwtService.sign(payload);
-
-      this.eventBus.publish(
-        new CustomerLoggedInEvent({ customerId: customer.id, at: new Date() }),
-      );
-
-      this.logger.log(
-        `Successfully issued access token for customer: ${email}`,
-      );
-      return { accessToken };
-    } catch (error: unknown) {
-      this.logger.error(
-        `Failed to authenticate customer: ${JSON.stringify(error)}`,
+    if (!customer) {
+      this.logger.warn(
+        `Failed to authenticate customer: Customer not found for email ${email}`,
       );
       throw new UnauthorizedException('Invalid credentials.');
     }
+
+    const isPasswordValid = await customer.comparePassword(password);
+
+    if (!isPasswordValid) {
+      this.logger.warn(
+        `Failed to authenticate customer: Invalid password for email ${email}`,
+      );
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    this.logger.log(`Issuing access token for customer: ${email}`);
+    const payload: JwtPayload = {
+      id: customer.id,
+      roles: [UserRole.CUSTOMER],
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    this.eventBus.publish(
+      new CustomerLoggedInEvent({ customerId: customer.id, at: new Date() }),
+    );
+
+    this.logger.log(`Successfully issued access token for customer: ${email}`);
+    return { accessToken };
   }
 }

@@ -56,7 +56,7 @@ export class AuthenticateStaffHandler
     const accessToken = this.jwtService.sign(payload);
 
     this.logger.log(
-      `Successfully authenticated staff member with ID: ${staffMember.id}`,
+      `Successfully authenticated staff member with ID: ${staffMember.id}, email: ${email}`,
     );
 
     return { accessToken };
