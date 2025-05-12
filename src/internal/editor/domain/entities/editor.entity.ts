@@ -118,7 +118,7 @@ export class Editor extends AggregateRoot implements IEditor {
     this.apply(
       new EditorPasswordResetRequestedEvent({
         editorId: this.id,
-        plainToken: plainToken,
+        token: plainToken,
       }),
     );
   }
