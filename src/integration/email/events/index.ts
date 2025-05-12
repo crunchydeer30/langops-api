@@ -1,13 +1,13 @@
 import {
   CustomerRegisteredHandler,
-  EditorApplicationRejectedHandler,
-  EditorRegistrationTokenGeneratedHandler,
+  EditorApplicationApprovedHandler,
+  EditorApplicationSubmittedHandler,
 } from './handlers';
 
 export * from './handlers';
 
 export const EmailEventHandlers = [
   CustomerRegisteredHandler,
-  EditorRegistrationTokenGeneratedHandler,
-  EditorApplicationRejectedHandler,
+  EditorApplicationApprovedHandler,
+  EditorApplicationSubmittedHandler,
 ];

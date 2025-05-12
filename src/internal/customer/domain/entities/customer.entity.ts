@@ -5,6 +5,7 @@ import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts';
 import { Email } from '@common/domain/value-objects/email.vo';
 import { VerificationToken } from '@common/domain/value-objects/verification-token.vo';
+import { Logger } from '@nestjs/common';
 import {
   CustomerRegisteredEvent,
   CustomerEmailVerifiedEvent,
@@ -36,6 +37,8 @@ export interface ICustomerCreateArgs {
 }
 
 export class Customer extends AggregateRoot implements ICustomer {
+  private logger = new Logger(Customer.name);
+
   public id: string;
   public email: Email;
   public passwordHash: string;
@@ -61,6 +64,8 @@ export class Customer extends AggregateRoot implements ICustomer {
     const emailVo = Email.create(args.email);
     const passwordHash = await argon2.hash(args.password);
     const now = new Date();
+    const logger = new Logger(Customer.name);
+    logger.log(`Creating new customer with email: ${args.email} and ID: ${id}`);
 
     const customerProps: ICustomer = {
       id,
@@ -84,12 +89,14 @@ export class Customer extends AggregateRoot implements ICustomer {
         lastName: args.lastName,
       }),
     );
-    console.log('Created event');
     customer.generateEmailVerificationToken();
     return customer;
   }
 
   private generateEmailVerificationToken(): void {
+    this.logger.log(
+      `Generating email verification token for customer: ${this.id}`,
+    );
     const { plainToken, verificationToken } = VerificationToken.generate();
     this.emailVerificationToken = verificationToken;
     this.apply(
@@ -101,6 +108,7 @@ export class Customer extends AggregateRoot implements ICustomer {
   }
 
   public async changePassword(password: string): Promise<void> {
+    this.logger.log(`Changing password for customer: ${this.id}`);
     this.passwordHash = await argon2.hash(password);
     this.apply(
       new CustomerPasswordChangedEvent({
@@ -119,21 +127,35 @@ export class Customer extends AggregateRoot implements ICustomer {
   }
 
   public verifyEmail(tokenValue: string): void {
+    this.logger.log(`Attempting to verify email for customer: ${this.id}`);
+
     if (!this.emailVerificationToken) {
+      this.logger.warn(
+        `Email verification failed for customer ${this.id}: No verification token exists`,
+      );
       throw new DomainException(
         ERRORS.CUSTOMER.EMAIL_VERIFICATION_TOKEN_INVALID,
       );
     }
+
     const isValid = this.emailVerificationToken.compare(tokenValue);
     if (!isValid) {
+      this.logger.warn(
+        `Email verification failed for customer ${this.id}: Invalid token provided`,
+      );
       throw new DomainException(
         ERRORS.CUSTOMER.EMAIL_VERIFICATION_TOKEN_INVALID,
       );
     }
 
     if (this.emailVerified) {
+      this.logger.warn(
+        `Email verification failed for customer ${this.id}: Email already verified`,
+      );
       throw new DomainException(ERRORS.CUSTOMER.EMAIL_ALREADY_VERIFIED);
     }
+
+    this.logger.log(`Email verification successful for customer: ${this.id}`);
 
     this.emailVerified = true;
     this.emailVerificationToken = null;
@@ -145,6 +167,7 @@ export class Customer extends AggregateRoot implements ICustomer {
   }
 
   public requestPasswordReset(): void {
+    this.logger.log(`Password reset requested for customer: ${this.id}`);
     const { plainToken, verificationToken } = VerificationToken.generate();
     this.passwordResetToken = verificationToken;
     this.updatedAt = new Date();
@@ -160,20 +183,31 @@ export class Customer extends AggregateRoot implements ICustomer {
     password: string,
     tokenValue: string,
   ): Promise<void> {
+    this.logger.log(`Attempting to reset password for customer: ${this.id}`);
     this.verifyPasswordResetToken(tokenValue);
     this.passwordHash = await argon2.hash(password);
     this.passwordResetToken = null;
+    this.logger.log(`Password reset successfully for customer: ${this.id}`);
     this.apply(new CustomerPasswordResetEvent({ customerId: this.id }));
   }
 
   private verifyPasswordResetToken(tokenValue: string): void {
     if (!this.passwordResetToken) {
+      this.logger.warn(
+        `Password reset token validation failed for customer ${this.id}: No token exists`,
+      );
       throw new DomainException(ERRORS.CUSTOMER.RESET_PASSWORD_TOKEN_INVALID);
     }
     const isValid = this.passwordResetToken.compare(tokenValue);
     if (!isValid) {
+      this.logger.warn(
+        `Password reset token validation failed for customer ${this.id}: Invalid token provided`,
+      );
       throw new DomainException(ERRORS.CUSTOMER.RESET_PASSWORD_TOKEN_INVALID);
     }
+    this.logger.log(
+      `Password reset token validated successfully for customer: ${this.id}`,
+    );
   }
 
   public clearPasswordResetToken(): void {

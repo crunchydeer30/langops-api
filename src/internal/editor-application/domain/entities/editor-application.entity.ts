@@ -11,6 +11,7 @@ import {
   EditorApplicationRejectedEvent,
   EditorRegistrationTokenGeneratedEvent,
 } from '../events';
+import { Logger } from '@nestjs/common';
 
 export interface IEditorApplication {
   id: string;
@@ -38,6 +39,8 @@ export class EditorApplication
   extends AggregateRoot
   implements IEditorApplication
 {
+  private logger = new Logger(EditorApplication.name);
+
   public id: string;
   public firstName: string;
   public lastName: string;
@@ -92,12 +95,14 @@ export class EditorApplication
         languagePairIds: args.languagePairIds,
       }),
     );
-
     return application;
   }
 
   public approve(): void {
     if (this.status !== EditorApplicationStatus.PENDING_REVIEW) {
+      this.logger.warn(
+        `Invalid application transition for application "${this.id}" from ${this.status} to ${EditorApplicationStatus.REGISTRATION_PENDING}`,
+      );
       throw new DomainException(
         ERRORS.EDITOR_APPLICATION.INVALID_STATUS_TRANSITION,
       );
@@ -105,12 +110,21 @@ export class EditorApplication
 
     this.status = EditorApplicationStatus.REGISTRATION_PENDING;
     this.updatedAt = new Date();
-    this.apply(new EditorApplicationApprovedEvent({ applicationId: this.id }));
-    this.generateRegistrationToken();
+    const { plainToken } = this.generateRegistrationToken();
+    this.apply(
+      new EditorApplicationApprovedEvent({
+        applicationId: this.id,
+        email: this.email.value,
+        plainToken,
+      }),
+    );
   }
 
   public reject(reason: string): void {
     if (this.status !== EditorApplicationStatus.PENDING_REVIEW) {
+      this.logger.warn(
+        `Invalid application transition for application "${this.id}" from ${this.status} to ${EditorApplicationStatus.REJECTED}`,
+      );
       throw new DomainException(
         ERRORS.EDITOR_APPLICATION.INVALID_STATUS_TRANSITION,
       );
@@ -119,6 +133,7 @@ export class EditorApplication
     this.status = EditorApplicationStatus.REJECTED;
     this.rejectionReason = reason;
     this.updatedAt = new Date();
+    this.logger.log(`Application "${this.id}" rejected with reason: ${reason}`);
     this.apply(
       new EditorApplicationRejectedEvent({
         applicationId: this.id,
@@ -133,10 +148,16 @@ export class EditorApplication
     hashedToken: string;
   } {
     if (this.status !== EditorApplicationStatus.REGISTRATION_PENDING) {
+      this.logger.warn(
+        `Invalid token generation attempt for application "${this.id}" with status ${this.status}`,
+      );
       throw new DomainException(
         ERRORS.EDITOR_APPLICATION.INVALID_TOKEN_GENERATION,
       );
     }
+    this.logger.log(
+      `Generating registration token for application "${this.id}"`,
+    );
 
     const plainToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto
@@ -177,15 +198,24 @@ export class EditorApplication
 
   public markRegistrationTokenAsUsed(editorId: string): void {
     if (!this.registrationTokenHash) {
+      this.logger.warn(
+        `No registration token found for application "${this.id}" during token usage attempt`,
+      );
       throw new DomainException(
         ERRORS.EDITOR_APPLICATION.NO_REGISTRATION_TOKEN,
       );
     }
 
     if (this.registrationTokenIsUsed) {
+      this.logger.warn(
+        `Registration token for application "${this.id}" has already been used`,
+      );
       throw new DomainException(ERRORS.EDITOR_APPLICATION.TOKEN_ALREADY_USED);
     }
 
+    this.logger.log(
+      `Marking registration token as used for application "${this.id}", linked to editor ${editorId}`,
+    );
     this.status = EditorApplicationStatus.COMPLETED;
     this.registrationTokenIsUsed = true;
     this.editorId = editorId;

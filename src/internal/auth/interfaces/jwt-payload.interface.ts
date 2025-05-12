@@ -1,9 +1,9 @@
 export enum UserRole {
-  CUSTOMER = 'customer',
-  EDITOR = 'editor',
-  SENIOR_EDITOR = 'senior-editor',
-  ADMIN = 'admin',
-  STAFF = 'staff',
+  CUSTOMER = 'CUSTOMER',
+  EDITOR = 'EDITOR',
+  SENIOR_EDITOR = 'SENIOR_EDITOR',
+  ADMIN = 'ADMIN',
+  STAFF = 'STAFF',
 }
 
 export interface JwtPayload {

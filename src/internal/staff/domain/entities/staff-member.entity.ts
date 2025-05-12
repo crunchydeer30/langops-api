@@ -6,6 +6,7 @@ import { ERRORS } from 'libs/contracts';
 import { Email } from '@common/domain/value-objects/email.vo';
 import { VerificationToken } from '@common/domain/value-objects/verification-token.vo';
 import { StaffRole } from '@prisma/client';
+import { Logger } from '@nestjs/common';
 import {
   StaffMemberRegisteredEvent,
   StaffMemberEmailVerifiedEvent,
@@ -39,6 +40,8 @@ export interface IStaffMemberCreateArgs {
 }
 
 export class StaffMember extends AggregateRoot implements IStaffMember {
+  private logger = new Logger(StaffMember.name);
+
   public id: string;
   public email: Email;
   public passwordHash: string;
@@ -67,6 +70,10 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
     const emailVo = Email.create(args.email);
     const passwordHash = await argon2.hash(args.password);
     const now = new Date();
+    const logger = new Logger(StaffMember.name);
+    logger.log(
+      `Creating new staff member with email: ${args.email}, ID: ${id}, role: ${args.role}`,
+    );
 
     const staffMemberProps: IStaffMember = {
       id,
@@ -98,6 +105,9 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
   }
 
   private generateEmailVerificationToken(): void {
+    this.logger.log(
+      `Generating email verification token for staff member: ${this.id}`,
+    );
     const { plainToken, verificationToken } = VerificationToken.generate();
     this.emailVerificationToken = verificationToken;
     this.apply(
@@ -109,6 +119,7 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
   }
 
   public async changePassword(password: string): Promise<void> {
+    this.logger.log(`Changing password for staff member: ${this.id}`);
     this.passwordHash = await argon2.hash(password);
     this.updatedAt = new Date();
     this.apply(
@@ -128,17 +139,33 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
   }
 
   public verifyEmail(tokenValue: string): void {
+    this.logger.log(`Attempting to verify email for staff member: ${this.id}`);
+
     if (!this.emailVerificationToken) {
+      this.logger.warn(
+        `Email verification failed for staff member ${this.id}: No verification token exists`,
+      );
       throw new DomainException(ERRORS.STAFF.EMAIL_VERIFICATION_TOKEN_INVALID);
     }
+
     const isValid = this.emailVerificationToken.compare(tokenValue);
     if (!isValid) {
+      this.logger.warn(
+        `Email verification failed for staff member ${this.id}: Invalid token provided`,
+      );
       throw new DomainException(ERRORS.STAFF.EMAIL_VERIFICATION_TOKEN_INVALID);
     }
 
     if (this.emailVerified) {
+      this.logger.warn(
+        `Email verification failed for staff member ${this.id}: Email already verified`,
+      );
       throw new DomainException(ERRORS.STAFF.EMAIL_ALREADY_VERIFIED);
     }
+
+    this.logger.log(
+      `Email verification successful for staff member: ${this.id}`,
+    );
 
     this.emailVerified = true;
     this.emailVerificationToken = null;
@@ -151,6 +178,7 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
   }
 
   public requestPasswordReset(): string {
+    this.logger.log(`Password reset requested for staff member: ${this.id}`);
     const { plainToken, verificationToken } = VerificationToken.generate();
     this.passwordResetToken = verificationToken;
     this.updatedAt = new Date();
@@ -161,6 +189,9 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
         at: this.updatedAt,
       }),
     );
+    this.logger.log(
+      `Password reset token generated for staff member: ${this.id}`,
+    );
     return plainToken;
   }
 
@@ -168,10 +199,14 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
     password: string,
     tokenValue: string,
   ): Promise<void> {
+    this.logger.log(
+      `Attempting to reset password for staff member: ${this.id}`,
+    );
     this.verifyPasswordResetToken(tokenValue);
     this.passwordHash = await argon2.hash(password);
     this.passwordResetToken = null;
     this.updatedAt = new Date();
+    this.logger.log(`Password reset successfully for staff member: ${this.id}`);
     this.apply(
       new StaffMemberPasswordResetEvent({
         staffMemberId: this.id,
@@ -182,12 +217,21 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
 
   private verifyPasswordResetToken(tokenValue: string): void {
     if (!this.passwordResetToken) {
+      this.logger.warn(
+        `Password reset token validation failed for staff member ${this.id}: No token exists`,
+      );
       throw new DomainException(ERRORS.STAFF.RESET_PASSWORD_TOKEN_INVALID);
     }
     const isValid = this.passwordResetToken.compare(tokenValue);
     if (!isValid) {
+      this.logger.warn(
+        `Password reset token validation failed for staff member ${this.id}: Invalid token provided`,
+      );
       throw new DomainException(ERRORS.STAFF.RESET_PASSWORD_TOKEN_INVALID);
     }
+    this.logger.log(
+      `Password reset token validated successfully for staff member: ${this.id}`,
+    );
   }
 
   public clearPasswordResetToken(): void {

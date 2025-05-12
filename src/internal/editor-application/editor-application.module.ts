@@ -5,8 +5,10 @@ import {
   EditorApplicationMapper,
   EditorApplicationRepository,
 } from './infrastructure';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
+  imports: [CqrsModule],
   controllers: [EditorApplicationController],
   providers: [
     EditorApplicationRepository,

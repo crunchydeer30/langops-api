@@ -32,7 +32,7 @@ export class CustomerRegisteredHandler
       await this.commandBus.execute(new SendEmailCommand(emailPayload));
     } catch (error) {
       this.logger.error(
-        `Failed to handle CustomerRegisteredEvent for customer ID "${event.payload.customerId}": ${JSON.stringify(error)}`,
+        `Failed to handle CustomerRegisteredEvent for customer ID "${event.payload.customerId}": ${error instanceof Error ? error.message : JSON.stringify(error)}`,
       );
     }
   }

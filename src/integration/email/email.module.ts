@@ -1,12 +1,10 @@
-import { Module, Global } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { IEmailService, MailhogEmailService } from './services';
-import { SendEmailHandler } from './commands';
+import { EmailEventHandlers } from './events';
+import { EmailCommandHandlers } from './commands';
 
-export const CommandHandlers = [SendEmailHandler];
-
-@Global()
 @Module({
   imports: [CqrsModule, ConfigModule],
   providers: [
@@ -17,7 +15,8 @@ export const CommandHandlers = [SendEmailHandler];
       },
       inject: [ConfigService],
     },
-    ...CommandHandlers,
+    ...EmailEventHandlers,
+    ...EmailCommandHandlers,
   ],
   exports: [IEmailService, CqrsModule],
 })

@@ -50,7 +50,7 @@ export class AuthenticateStaffHandler
     this.logger.log(`Issuing access token for staff member: ${email}`);
     const payload: JwtPayload = {
       id: staffMember.id,
-      roles: [UserRole.STAFF],
+      roles: [UserRole.ADMIN],
     };
 
     const accessToken = this.jwtService.sign(payload);

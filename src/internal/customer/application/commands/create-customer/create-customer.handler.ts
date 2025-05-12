@@ -43,7 +43,6 @@ export class CreateCustomerHandler
     });
 
     await this.customerRepository.save(customer);
-
     const customerWithEvents = this.publisher.mergeObjectContext(customer);
     customerWithEvents.commit();
 

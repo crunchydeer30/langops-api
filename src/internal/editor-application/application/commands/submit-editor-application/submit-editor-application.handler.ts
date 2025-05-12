@@ -1,4 +1,5 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler, EventPublisher } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import { SubmitEditorApplicationCommand } from './submit-editor-application.command';
 import { EditorApplication } from '../../../domain/entities/editor-application.entity';
 import { Email } from '@common/domain/value-objects';
@@ -10,8 +11,10 @@ import { EditorApplicationRepository } from 'src/internal/editor-application/inf
 export class SubmitEditorApplicationHandler
   implements ICommandHandler<SubmitEditorApplicationCommand>
 {
+  private readonly logger = new Logger(SubmitEditorApplicationHandler.name);
   constructor(
     private readonly editorApplicationRepository: EditorApplicationRepository,
+    private readonly publisher: EventPublisher,
   ) {}
 
   async execute(
@@ -19,10 +22,17 @@ export class SubmitEditorApplicationHandler
   ): Promise<EditorApplication> {
     const { email, firstName, lastName, languagePairIds } = command.payload;
 
+    this.logger.log(
+      `Attempting to submit editor application for email: ${email}`,
+    );
+
     const existingApplication =
       await this.editorApplicationRepository.findByEmail(Email.create(email));
 
     if (existingApplication) {
+      this.logger.warn(
+        `Duplicate editor application attempt for email: ${email}`,
+      );
       throw new DomainException(ERRORS.EDITOR_APPLICATION.ALREADY_EXISTS);
     }
 
@@ -32,9 +42,18 @@ export class SubmitEditorApplicationHandler
       lastName,
       languagePairIds,
     });
+    this.logger.log(
+      `Created new editor application for email: ${email}, applicationId: ${application.id}`,
+    );
     await this.editorApplicationRepository.saveWithLanguagePairs(application);
-    application.commit();
 
+    const applicationWithEvents =
+      this.publisher.mergeObjectContext(application);
+    applicationWithEvents.commit();
+
+    this.logger.log(
+      `Editor application submitted successfully for email: ${email}, applicationId: ${application.id}`,
+    );
     return application;
   }
 }
