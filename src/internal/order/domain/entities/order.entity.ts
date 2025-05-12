@@ -17,6 +17,7 @@ export interface IOrder {
   editorId?: string | null;
   seniorEditorId?: string | null;
   originalText: string;
+  taskSpecificInstructions?: string | null;
   aiTranslatedText?: string | null;
   humanEditedText?: string | null;
   finalApprovedText?: string | null;
@@ -29,6 +30,7 @@ export interface IOrderCreateArgs {
   clientId: string;
   languagePairId: string;
   originalText: string;
+  taskSpecificInstructions?: string;
 }
 
 export class Order extends AggregateRoot {
@@ -40,6 +42,7 @@ export class Order extends AggregateRoot {
   public editorId: string | null;
   public seniorEditorId: string | null;
   public originalText: string;
+  public taskSpecificInstructions: string | null;
   public aiTranslatedText: string | null;
   public humanEditedText: string | null;
   public finalApprovedText: string | null;
@@ -55,6 +58,7 @@ export class Order extends AggregateRoot {
     this.editorId = props.editorId || null;
     this.seniorEditorId = props.seniorEditorId || null;
     this.originalText = props.originalText;
+    this.taskSpecificInstructions = props.taskSpecificInstructions || null;
     this.aiTranslatedText = props.aiTranslatedText || null;
     this.humanEditedText = props.humanEditedText || null;
     this.finalApprovedText = props.finalApprovedText || null;
@@ -77,6 +81,7 @@ export class Order extends AggregateRoot {
       editorId: props.editorId || null,
       seniorEditorId: props.seniorEditorId || null,
       originalText: props.originalText,
+      taskSpecificInstructions: props.taskSpecificInstructions || null,
       aiTranslatedText: props.aiTranslatedText || null,
       humanEditedText: props.humanEditedText || null,
       finalApprovedText: props.finalApprovedText || null,
@@ -91,6 +96,7 @@ export class Order extends AggregateRoot {
         clientId: props.clientId,
         languagePairId: props.languagePairId,
         originalText: props.originalText,
+        taskSpecificInstructions: props.taskSpecificInstructions || null,
         createdAt: now,
       }),
     );

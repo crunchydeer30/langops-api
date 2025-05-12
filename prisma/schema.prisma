@@ -163,6 +163,7 @@ model Order {
   seniorEditor   Editor? @relation("SeniorEditorOrders", fields: [seniorEditorId], references: [id])
 
   originalText      String  @map("original_text")
+  taskSpecificInstructions String? @map("task_specific_instructions")
   aiTranslatedText  String? @map("ai_translated_text")
   humanEditedText   String? @map("human_edited_text")
   finalApprovedText String? @map("final_approved_text")

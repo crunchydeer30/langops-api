@@ -1,8 +1,9 @@
-interface IOrderCreatedEventProps {
+export interface IOrderCreatedEventProps {
   orderId: string;
   clientId: string;
   languagePairId: string;
   originalText: string;
+  taskSpecificInstructions?: string | null;
   createdAt: Date;
 }
 
