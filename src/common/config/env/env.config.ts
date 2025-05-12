@@ -17,6 +17,10 @@ export const envSchema = z.object({
   MAILHOG_HOST: z.string(),
   MAILHOG_PORT: z.coerce.number(),
   EMAIL_DEFAULT_FROM: z.string().email().default('noreply@example.com'),
+
+  // REDIS (Queue)
+  REDIS_HOST: z.string().default('localhost'),
+  REDIS_PORT: z.coerce.number().default(6379),
 });
 export type Env = z.infer<typeof envSchema>;
 

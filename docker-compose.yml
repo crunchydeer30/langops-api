@@ -18,3 +18,11 @@ services:
       - '8025:8025'
     volumes:
       - ./docker-volumes/mailhog:/data
+
+  redis:
+    image: redis:alpine
+    container_name: translation_redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./docker-volumes/redis:/data
