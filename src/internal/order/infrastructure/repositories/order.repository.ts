@@ -13,22 +13,72 @@ export class OrderRepository implements IOrderRepository {
 
   async findById(id: string): Promise<Order | null> {
     const model = await this.prisma.order.findUnique({ where: { id } });
+    if (!model) {
+      return null;
+    }
     return this.mapper.toDomain(model);
   }
 
-  async findByClientId(clientId: string): Promise<Order[]> {
+  async findByCustomerId(customerId: string): Promise<Order[]> {
     const models = await this.prisma.order.findMany({
-      where: { clientId },
+      where: { customerId },
     });
-    return models.map((model) => this.mapper.toDomain(model)!).filter(Boolean);
+    return models.map((model) => this.mapper.toDomain(model)).filter(Boolean);
   }
 
   async save(order: Order): Promise<void> {
-    const data = this.mapper.toPersistence(order);
+    const {
+      id,
+      customerId,
+      languagePairId,
+      editorId,
+      seniorEditorId,
+      originalText,
+      taskSpecificInstructions,
+      aiTranslatedText,
+      humanEditedText,
+      finalApprovedText,
+      status,
+      createdAt,
+      updatedAt,
+    } = this.mapper.toPersistence(order);
+
+    const updateData = {
+      id,
+      customerId,
+      languagePairId,
+      editorId,
+      seniorEditorId,
+      originalText,
+      taskSpecificInstructions,
+      aiTranslatedText,
+      humanEditedText,
+      finalApprovedText,
+      status,
+      createdAt,
+      updatedAt,
+    };
+
     await this.prisma.order.upsert({
       where: { id: order.id },
-      update: data,
-      create: data,
+      update: updateData,
+      create: {
+        id,
+        originalText,
+        taskSpecificInstructions,
+        aiTranslatedText,
+        humanEditedText,
+        finalApprovedText,
+        status,
+        ...(createdAt && { createdAt }),
+        ...(updatedAt && { updatedAt }),
+        customer: { connect: { id: customerId } },
+        languagePair: { connect: { id: languagePairId } },
+        ...(editorId && { editor: { connect: { id: editorId } } }),
+        ...(seniorEditorId && {
+          seniorEditor: { connect: { id: seniorEditorId } },
+        }),
+      },
     });
   }
 }

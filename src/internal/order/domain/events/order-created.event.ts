@@ -1,6 +1,6 @@
 export interface IOrderCreatedEventProps {
   orderId: string;
-  clientId: string;
+  customerId: string;
   languagePairId: string;
   originalText: string;
   taskSpecificInstructions?: string | null;

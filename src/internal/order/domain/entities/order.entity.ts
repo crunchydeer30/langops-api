@@ -12,7 +12,7 @@ import {
 
 export interface IOrder {
   id: string;
-  clientId: string;
+  customerId: string;
   languagePairId: string;
   editorId?: string | null;
   seniorEditorId?: string | null;
@@ -27,17 +27,22 @@ export interface IOrder {
 }
 
 export interface IOrderCreateArgs {
-  clientId: string;
+  customerId: string;
   languagePairId: string;
   originalText: string;
-  taskSpecificInstructions?: string;
+  taskSpecificInstructions?: string | null;
+  editorId?: string | null;
+  seniorEditorId?: string | null;
+  aiTranslatedText?: string | null;
+  humanEditedText?: string | null;
+  finalApprovedText?: string | null;
 }
 
 export class Order extends AggregateRoot {
   private readonly logger = new Logger(Order.name);
 
   public readonly id: string;
-  public readonly clientId: string;
+  public readonly customerId: string;
   public readonly languagePairId: string;
   public editorId: string | null;
   public seniorEditorId: string | null;
@@ -53,7 +58,7 @@ export class Order extends AggregateRoot {
   constructor(props: IOrder) {
     super();
     this.id = props.id;
-    this.clientId = props.clientId;
+    this.customerId = props.customerId;
     this.languagePairId = props.languagePairId;
     this.editorId = props.editorId || null;
     this.seniorEditorId = props.seniorEditorId || null;
@@ -68,15 +73,13 @@ export class Order extends AggregateRoot {
   }
 
   // Factory method
-  public static create(
-    props: Omit<IOrder, 'id' | 'createdAt' | 'updatedAt'>,
-  ): Order {
+  public static create(props: IOrderCreateArgs): Order {
     const now = new Date();
     const orderId = uuidv4();
 
     const order = new Order({
       id: orderId,
-      clientId: props.clientId,
+      customerId: props.customerId,
       languagePairId: props.languagePairId,
       editorId: props.editorId || null,
       seniorEditorId: props.seniorEditorId || null,
@@ -93,7 +96,7 @@ export class Order extends AggregateRoot {
     order.apply(
       new OrderCreatedEvent({
         orderId,
-        clientId: props.clientId,
+        customerId: props.customerId,
         languagePairId: props.languagePairId,
         originalText: props.originalText,
         taskSpecificInstructions: props.taskSpecificInstructions || null,

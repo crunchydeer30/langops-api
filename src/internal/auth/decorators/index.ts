@@ -1,2 +1,2 @@
 export * from './roles.decorator';
-export { Roles } from './roles.decorator';
+export * from './get-jwt-payload.decorator';

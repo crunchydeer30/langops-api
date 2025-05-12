@@ -69,7 +69,7 @@ model Customer {
   emailVerificationTokenHash String? @map("email_verification_token_hash")
   passwordResetTokenHash     String? @map("password_reset_token_hash")
 
-  orders Order[] @relation("ClientOrders")
+  orders Order[] @relation("CustomerOrders")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -150,8 +150,8 @@ model EditorLanguagePair {
 model Order {
   id String @id @default(uuid()) @db.Uuid
 
-  clientId String   @map("client_id") @db.Uuid
-  client   Customer @relation("ClientOrders", fields: [clientId], references: [id])
+  customerId String   @map("customer_id") @db.Uuid
+  customer   Customer @relation("CustomerOrders", fields: [customerId], references: [id])
 
   languagePairId String       @map("language_pair_id") @db.Uuid
   languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])

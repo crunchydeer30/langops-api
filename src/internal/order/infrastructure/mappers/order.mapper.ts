@@ -4,11 +4,10 @@ import { Order, IOrder } from '../../domain/entities/order.entity';
 
 @Injectable()
 export class OrderMapper {
-  toDomain(model: OrderModel | null): Order | null {
-    if (!model) return null;
+  toDomain(model: OrderModel): Order {
     const props: IOrder = {
       id: model.id,
-      clientId: model.clientId,
+      customerId: model.customerId,
       languagePairId: model.languagePairId,
       editorId: model.editorId,
       seniorEditorId: model.seniorEditorId,
@@ -30,7 +29,7 @@ export class OrderMapper {
     Partial<Pick<OrderModel, 'createdAt' | 'updatedAt'>> {
     return {
       id: entity.id,
-      clientId: entity.clientId,
+      customerId: entity.customerId,
       languagePairId: entity.languagePairId,
       editorId: entity.editorId,
       seniorEditorId: entity.seniorEditorId,
