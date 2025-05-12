@@ -8,7 +8,9 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthCommandHandlers } from './application';
 import { CustomerModule } from '../customer/customer.module';
-import { AuthCustomerController } from './controllers';
+import { AuthControllers } from './controllers';
+import { StaffModule } from '../staff/staff.module';
+import { EditorModule } from '../editor/editor.module';
 
 @Module({
   imports: [
@@ -24,8 +26,10 @@ import { AuthCustomerController } from './controllers';
     }),
     CqrsModule,
     CustomerModule,
+    EditorModule,
+    StaffModule,
   ],
-  controllers: [AuthCustomerController],
+  controllers: [...AuthControllers],
   providers: [AuthService, JwtStrategy, ...AuthCommandHandlers],
 })
 export class AuthModule {}

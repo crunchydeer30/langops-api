@@ -1,6 +1,6 @@
 import { ICommand } from '@nestjs/cqrs';
 
-export interface SubmitEditorApplicationCommandPayload {
+export interface ISubmitEditorApplicationCommandPayload {
   email: string;
   firstName: string;
   lastName: string;
@@ -8,5 +8,7 @@ export interface SubmitEditorApplicationCommandPayload {
 }
 
 export class SubmitEditorApplicationCommand implements ICommand {
-  constructor(public readonly payload: SubmitEditorApplicationCommandPayload) {}
+  constructor(
+    public readonly payload: ISubmitEditorApplicationCommandPayload,
+  ) {}
 }

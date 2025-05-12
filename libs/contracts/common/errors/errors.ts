@@ -102,4 +102,32 @@ export const ERRORS = {
       httpStatus: 404,
     },
   },
+  STAFF: {
+    NOT_FOUND: {
+      code: 'STAFF_001',
+      message: 'Staff member not found.',
+      httpStatus: 404,
+    },
+    EMAIL_CONFLICT: {
+      code: 'STAFF_002',
+      message: 'Email is already in use by a staff member.',
+      httpStatus: 409,
+    },
+    EMAIL_VERIFICATION_TOKEN_INVALID: {
+      code: 'STAFF_003',
+      message:
+        'Staff member email verification token is either expired or invalid',
+      httpStatus: 400,
+    },
+    EMAIL_ALREADY_VERIFIED: {
+      code: 'STAFF_004',
+      message: 'Staff member email is already verified.',
+      httpStatus: 400,
+    },
+    RESET_PASSWORD_TOKEN_INVALID: {
+      code: 'STAFF_005',
+      message: 'Staff member password reset token is either expired or invalid',
+      httpStatus: 400,
+    },
+  },
 } as const;

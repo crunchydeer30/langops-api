@@ -3,6 +3,7 @@ export enum UserRole {
   EDITOR = 'editor',
   SENIOR_EDITOR = 'senior-editor',
   ADMIN = 'admin',
+  STAFF = 'staff',
 }
 
 export interface JwtPayload {

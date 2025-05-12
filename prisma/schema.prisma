@@ -52,6 +52,12 @@ enum EvaluationType {
   PERIODIC_REVIEW
 }
 
+enum StaffRole {
+  ADMIN
+  SUPPORT
+  CONTENT_MANAGER
+}
+
 model Customer {
   id           String @id @default(uuid()) @db.Uuid
   email        String @unique
@@ -174,9 +180,11 @@ model Order {
 }
 
 model EditorApplication {
-  id     String                  @id @default(uuid()) @db.Uuid
-  email  String                  @unique
-  status EditorApplicationStatus @default(PENDING_REVIEW)
+  id        String                  @id @default(uuid()) @db.Uuid
+  email     String                  @unique
+  firstName String
+  lastName  String
+  status    EditorApplicationStatus @default(PENDING_REVIEW)
 
   requestedLanguagePairs  EditorApplicationLanguagePair[]
   registrationTokenHash   String?                         @unique @map("registration_token_hash")
@@ -257,4 +265,22 @@ model EvaluationTask {
 
   @@unique([evaluationSetId, order])
   @@map("evaluation_tasks")
+}
+
+model StaffMember {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  role         StaffRole
+
+  emailVerified              Boolean  @default(false) @map("email_verified")
+  emailVerificationTokenHash String?  @map("email_verification_token_hash")
+  passwordResetTokenHash     String?  @map("password_reset_token_hash")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("staff_members")
 }
