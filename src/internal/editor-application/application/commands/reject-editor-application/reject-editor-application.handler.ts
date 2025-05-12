@@ -1,6 +1,9 @@
 import { CommandHandler, ICommandHandler, EventPublisher } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { RejectEditorApplicationCommand } from './reject-editor-application.command';
+import {
+  RejectEditorApplicationCommand,
+  IRejectEditorApplicationCommandResult,
+} from './reject-editor-application.command';
 import { EditorApplicationRepository } from 'src/internal/editor-application/infrastructure';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from '@libs/contracts/common';
@@ -15,8 +18,10 @@ export class RejectEditorApplicationHandler
     private readonly publisher: EventPublisher,
   ) {}
 
-  async execute(command: RejectEditorApplicationCommand): Promise<string> {
-    const { applicationId, rejectionReason } = command.payload;
+  async execute(
+    command: RejectEditorApplicationCommand,
+  ): Promise<IRejectEditorApplicationCommandResult> {
+    const { applicationId, rejectionReason } = command.props;
 
     this.logger.log(
       `Attempting to reject editor application with id: ${applicationId}`,
@@ -43,6 +48,9 @@ export class RejectEditorApplicationHandler
     this.logger.log(
       `Editor application rejection process completed for id: ${applicationId}`,
     );
-    return application.id;
+    return {
+      success: true,
+      applicationId: application.id,
+    };
   }
 }

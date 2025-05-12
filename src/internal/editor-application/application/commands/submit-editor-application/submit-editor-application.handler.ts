@@ -20,7 +20,7 @@ export class SubmitEditorApplicationHandler
   async execute(
     command: SubmitEditorApplicationCommand,
   ): Promise<EditorApplication> {
-    const { email, firstName, lastName, languagePairIds } = command.payload;
+    const { email, firstName, lastName, languagePairIds } = command.props;
 
     this.logger.log(
       `Attempting to submit editor application for email: ${email}`,

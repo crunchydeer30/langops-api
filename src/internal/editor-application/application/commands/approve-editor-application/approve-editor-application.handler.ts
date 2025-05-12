@@ -1,6 +1,9 @@
 import { CommandHandler, ICommandHandler, EventPublisher } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { ApproveEditorApplicationCommand } from './approve-editor-application.command';
+import {
+  ApproveEditorApplicationCommand,
+  IApproveEditorApplicationCommandResult,
+} from './approve-editor-application.command';
 import { EditorApplicationRepository } from 'src/internal/editor-application/infrastructure';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from '@libs/contracts/common';
@@ -15,8 +18,10 @@ export class ApproveEditorApplicationHandler
     private readonly publisher: EventPublisher,
   ) {}
 
-  async execute(command: ApproveEditorApplicationCommand): Promise<string> {
-    const { applicationId } = command.payload;
+  async execute(
+    command: ApproveEditorApplicationCommand,
+  ): Promise<IApproveEditorApplicationCommandResult> {
+    const { applicationId } = command.props;
 
     this.logger.log(
       `Attempting to approve editor application with id: ${applicationId}`,
@@ -41,6 +46,9 @@ export class ApproveEditorApplicationHandler
     this.logger.log(
       `Editor application approval process completed for id: ${applicationId}`,
     );
-    return application.id;
+    return {
+      success: true,
+      editorId: application.id,
+    };
   }
 }

@@ -1,8 +1,14 @@
-interface AuthenticateCustomerProps {
+import { ICommand } from '@nestjs/cqrs';
+
+export interface IAuthenticateCustomerCommandProps {
   email: string;
   password: string;
 }
 
-export class AuthenticateCustomerCommand {
-  constructor(public readonly props: AuthenticateCustomerProps) {}
+export interface IAuthenticateCustomerCommandResult {
+  accessToken: string;
+}
+
+export class AuthenticateCustomerCommand implements ICommand {
+  constructor(public readonly props: IAuthenticateCustomerCommandProps) {}
 }

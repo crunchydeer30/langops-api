@@ -1,11 +1,14 @@
 import { ICommand } from '@nestjs/cqrs';
 
-interface ApproveEditorApplicationCommandPayload {
+export interface IApproveEditorApplicationCommandProps {
   applicationId: string;
 }
 
+export interface IApproveEditorApplicationCommandResult {
+  success: boolean;
+  editorId?: string;
+}
+
 export class ApproveEditorApplicationCommand implements ICommand {
-  constructor(
-    public readonly payload: ApproveEditorApplicationCommandPayload,
-  ) {}
+  constructor(public readonly props: IApproveEditorApplicationCommandProps) {}
 }

@@ -1,10 +1,15 @@
 import { ICommand } from '@nestjs/cqrs';
 
-interface RejectEditorApplicationCommandPayload {
+export interface IRejectEditorApplicationCommandProps {
   applicationId: string;
   rejectionReason: string;
 }
 
+export interface IRejectEditorApplicationCommandResult {
+  success: boolean;
+  applicationId: string;
+}
+
 export class RejectEditorApplicationCommand implements ICommand {
-  constructor(public readonly payload: RejectEditorApplicationCommandPayload) {}
+  constructor(public readonly props: IRejectEditorApplicationCommandProps) {}
 }
