@@ -4,6 +4,8 @@ import { CustomerModule } from './customer/customer.module';
 import { EditorApplicationModule } from './editor-application/editor-application.module';
 import { EditorModule } from './editor/editor.module';
 import { OrderModule } from './order/order.module';
+import { LanguageModule } from './language/language.module';
+import { LanguagePairModule } from './language-pair/language-pair.module';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import { OrderModule } from './order/order.module';
     CustomerModule,
     EditorModule,
     EditorApplicationModule,
+    LanguageModule,
+    LanguagePairModule,
     OrderModule,
   ],
 })
