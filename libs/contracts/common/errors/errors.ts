@@ -101,6 +101,11 @@ export const ERRORS = {
       message: 'Editor application not found',
       httpStatus: 404,
     },
+    REGISTRATION_TOKEN_INVALID: {
+      code: 'EDITOR_APPLICATION_007',
+      message: 'Invalid registration token',
+      httpStatus: 400,
+    },
   },
   STAFF: {
     NOT_FOUND: {

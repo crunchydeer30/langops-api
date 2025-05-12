@@ -2,18 +2,16 @@ import { AggregateRoot } from '@nestjs/cqrs';
 import { v4 as uuidv4 } from 'uuid';
 import * as argon2 from 'argon2';
 import { DomainException } from '@common/exceptions';
-import { ERRORS } from 'libs/contracts/common/errors/errors';
+import { ERRORS } from '@libs/contracts/common/errors/errors';
 import { EditorRole } from '@prisma/client';
 import { Logger } from '@nestjs/common';
 import { Email } from '@common/domain/value-objects/email.vo';
 import { VerificationToken } from '@common/domain/value-objects/verification-token.vo';
 import {
   EditorRegisteredEvent,
-  EditorEmailVerifiedEvent,
   EditorPasswordChangedEvent,
   EditorPasswordResetRequestedEvent,
   EditorPasswordResetEvent,
-  EditorEmailVerificationTokenGeneratedEvent,
 } from '../events';
 
 export interface IEditor {
@@ -23,8 +21,6 @@ export interface IEditor {
   firstName: string;
   lastName: string;
   role: EditorRole;
-  emailVerified: boolean;
-  emailVerificationToken: VerificationToken | null;
   passwordResetToken: VerificationToken | null;
   createdAt: Date;
   updatedAt: Date;
@@ -48,8 +44,6 @@ export class Editor extends AggregateRoot implements IEditor {
   public firstName: string;
   public lastName: string;
   public role: EditorRole;
-  public emailVerified: boolean;
-  public emailVerificationToken: VerificationToken | null;
   public passwordResetToken: VerificationToken | null;
   public createdAt: Date;
   public updatedAt: Date;
@@ -81,30 +75,20 @@ export class Editor extends AggregateRoot implements IEditor {
       firstName: args.firstName,
       lastName: args.lastName,
       role: args.role ?? EditorRole.REGULAR,
-      emailVerified: false,
-      emailVerificationToken: null,
       createdAt: now,
       updatedAt: now,
     };
 
     const editor = new Editor(editorProps);
-    editor.apply(new EditorRegisteredEvent({ editorId: id }));
-    editor.generateEmailVerificationToken();
-    return editor;
-  }
-
-  private generateEmailVerificationToken(): void {
-    this.logger.log(
-      `Generating email verification token for editor: ${this.id}`,
-    );
-    const { plainToken, verificationToken } = VerificationToken.generate();
-    this.emailVerificationToken = verificationToken;
-    this.apply(
-      new EditorEmailVerificationTokenGeneratedEvent({
-        editorId: this.id,
-        plainToken,
+    editor.apply(
+      new EditorRegisteredEvent({
+        editorId: id,
+        email: emailVo.value,
+        firstName: args.firstName,
+        lastName: args.lastName,
       }),
     );
+    return editor;
   }
 
   public async changePassword(password: string): Promise<void> {
@@ -124,43 +108,6 @@ export class Editor extends AggregateRoot implements IEditor {
     } catch {
       return false;
     }
-  }
-
-  public verifyEmail(tokenValue: string): void {
-    this.logger.log(`Attempting to verify email for editor: ${this.id}`);
-
-    if (!this.emailVerificationToken) {
-      this.logger.warn(
-        `Email verification failed for editor ${this.id}: No verification token exists`,
-      );
-      throw new DomainException(ERRORS.EDITOR.EMAIL_VERIFICATION_TOKEN_INVALID);
-    }
-
-    const isValid = this.emailVerificationToken.compare(tokenValue);
-    if (!isValid) {
-      this.logger.warn(
-        `Email verification failed for editor ${this.id}: Invalid token provided`,
-      );
-      throw new DomainException(ERRORS.EDITOR.EMAIL_VERIFICATION_TOKEN_INVALID);
-    }
-
-    if (this.emailVerified) {
-      this.logger.warn(
-        `Email verification failed for editor ${this.id}: Email already verified`,
-      );
-      throw new DomainException(ERRORS.EDITOR.EMAIL_ALREADY_VERIFIED);
-    }
-
-    this.logger.log(`Email verification successful for editor: ${this.id}`);
-
-    this.emailVerified = true;
-    this.emailVerificationToken = null;
-    this.updatedAt = new Date();
-    this.apply(
-      new EditorEmailVerifiedEvent({
-        editorId: this.id,
-      }),
-    );
   }
 
   public requestPasswordReset(): void {

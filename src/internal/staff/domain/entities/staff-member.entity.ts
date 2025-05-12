@@ -2,16 +2,14 @@ import { AggregateRoot } from '@nestjs/cqrs';
 import * as argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
-import { ERRORS } from 'libs/contracts';
+import { ERRORS } from '@libs/contracts/common/errors/errors';
 import { Email } from '@common/domain/value-objects/email.vo';
 import { VerificationToken } from '@common/domain/value-objects/verification-token.vo';
 import { StaffRole } from '@prisma/client';
 import { Logger } from '@nestjs/common';
 import {
   StaffMemberRegisteredEvent,
-  StaffMemberEmailVerifiedEvent,
   StaffMemberPasswordChangedEvent,
-  StaffMemberEmailVerificationTokenGeneratedEvent,
   StaffMemberPasswordResetRequestedEvent,
   StaffMemberPasswordResetEvent,
 } from '../events';
@@ -23,8 +21,6 @@ export interface IStaffMember {
   firstName: string;
   lastName: string;
   role: StaffRole;
-  emailVerified: boolean;
-  emailVerificationToken: VerificationToken | null;
   passwordResetToken: VerificationToken | null;
   createdAt: Date;
   updatedAt: Date;
@@ -48,8 +44,6 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
   public firstName: string;
   public lastName: string;
   public role: StaffRole;
-  public emailVerified: boolean;
-  public emailVerificationToken: VerificationToken | null;
   public passwordResetToken: VerificationToken | null;
   public createdAt: Date;
   public updatedAt: Date;
@@ -82,8 +76,6 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
       firstName: args.firstName,
       lastName: args.lastName,
       role: args.role,
-      emailVerified: false,
-      emailVerificationToken: null,
       passwordResetToken: null,
       createdAt: now,
       updatedAt: now,
@@ -100,22 +92,7 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
       }),
     );
 
-    staffMember.generateEmailVerificationToken();
     return staffMember;
-  }
-
-  private generateEmailVerificationToken(): void {
-    this.logger.log(
-      `Generating email verification token for staff member: ${this.id}`,
-    );
-    const { plainToken, verificationToken } = VerificationToken.generate();
-    this.emailVerificationToken = verificationToken;
-    this.apply(
-      new StaffMemberEmailVerificationTokenGeneratedEvent({
-        staffMemberId: this.id,
-        plainToken,
-      }),
-    );
   }
 
   public async changePassword(password: string): Promise<void> {
@@ -136,45 +113,6 @@ export class StaffMember extends AggregateRoot implements IStaffMember {
     } catch {
       return false;
     }
-  }
-
-  public verifyEmail(tokenValue: string): void {
-    this.logger.log(`Attempting to verify email for staff member: ${this.id}`);
-
-    if (!this.emailVerificationToken) {
-      this.logger.warn(
-        `Email verification failed for staff member ${this.id}: No verification token exists`,
-      );
-      throw new DomainException(ERRORS.STAFF.EMAIL_VERIFICATION_TOKEN_INVALID);
-    }
-
-    const isValid = this.emailVerificationToken.compare(tokenValue);
-    if (!isValid) {
-      this.logger.warn(
-        `Email verification failed for staff member ${this.id}: Invalid token provided`,
-      );
-      throw new DomainException(ERRORS.STAFF.EMAIL_VERIFICATION_TOKEN_INVALID);
-    }
-
-    if (this.emailVerified) {
-      this.logger.warn(
-        `Email verification failed for staff member ${this.id}: Email already verified`,
-      );
-      throw new DomainException(ERRORS.STAFF.EMAIL_ALREADY_VERIFIED);
-    }
-
-    this.logger.log(
-      `Email verification successful for staff member: ${this.id}`,
-    );
-
-    this.emailVerified = true;
-    this.emailVerificationToken = null;
-    this.updatedAt = new Date();
-    this.apply(
-      new StaffMemberEmailVerifiedEvent({
-        staffMemberId: this.id,
-      }),
-    );
   }
 
   public requestPasswordReset(): string {

@@ -11,6 +11,7 @@ import { CustomerModule } from '../customer/customer.module';
 import { AuthControllers } from './controllers';
 import { StaffModule } from '../staff/staff.module';
 import { EditorModule } from '../editor/editor.module';
+import { EditorApplicationModule } from '../editor-application/editor-application.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { EditorModule } from '../editor/editor.module';
     CqrsModule,
     CustomerModule,
     EditorModule,
+    EditorApplicationModule,
     StaffModule,
   ],
   controllers: [...AuthControllers],

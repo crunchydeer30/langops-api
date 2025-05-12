@@ -15,6 +15,6 @@ import { CqrsModule } from '@nestjs/cqrs';
     EditorApplicationMapper,
     ...EditorApplicationCommandHandlers,
   ],
-  exports: [],
+  exports: [EditorApplicationRepository],
 })
 export class EditorApplicationModule {}

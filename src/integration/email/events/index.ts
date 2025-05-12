@@ -1,13 +1,5 @@
-import {
-  CustomerRegisteredHandler,
-  EditorApplicationApprovedHandler,
-  EditorApplicationSubmittedHandler,
-} from './handlers';
+import { EmailEventHandlers as AllEmailEventHandlers } from './handlers';
 
 export * from './handlers';
 
-export const EmailEventHandlers = [
-  CustomerRegisteredHandler,
-  EditorApplicationApprovedHandler,
-  EditorApplicationSubmittedHandler,
-];
+export const EmailEventHandlers = AllEmailEventHandlers;

@@ -15,10 +15,6 @@ export class EditorMapper {
       firstName: model.firstName,
       lastName: model.lastName,
       role: model.role,
-      emailVerified: model.emailVerified,
-      emailVerificationToken: model.emailVerificationTokenHash
-        ? new VerificationToken(model.emailVerificationTokenHash)
-        : null,
       passwordResetToken: model.passwordResetTokenHash
         ? new VerificationToken(model.passwordResetTokenHash)
         : null,
@@ -42,10 +38,6 @@ export class EditorMapper {
       firstName: editor.firstName,
       lastName: editor.lastName,
       role: editor.role,
-      emailVerified: editor.emailVerified,
-      emailVerificationTokenHash: editor.emailVerificationToken
-        ? editor.emailVerificationToken.hash
-        : null,
       passwordResetTokenHash: editor.passwordResetToken
         ? editor.passwordResetToken.hash
         : null,

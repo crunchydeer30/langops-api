@@ -18,10 +18,6 @@ export class StaffMemberMapper {
       firstName: model.firstName,
       lastName: model.lastName,
       role: model.role,
-      emailVerified: model.emailVerified,
-      emailVerificationToken: model.emailVerificationTokenHash
-        ? new VerificationToken(model.emailVerificationTokenHash)
-        : null,
       passwordResetToken: model.passwordResetTokenHash
         ? new VerificationToken(model.passwordResetTokenHash)
         : null,
@@ -42,8 +38,6 @@ export class StaffMemberMapper {
       firstName: entity.firstName,
       lastName: entity.lastName,
       role: entity.role,
-      emailVerified: entity.emailVerified,
-      emailVerificationTokenHash: entity.emailVerificationToken?.hash || null,
       passwordResetTokenHash: entity.passwordResetToken?.hash || null,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
