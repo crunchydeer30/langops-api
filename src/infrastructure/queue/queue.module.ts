@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { QueueService } from './queue.service';
 import { Env } from '@common/config';
 
 @Module({
@@ -17,7 +16,7 @@ import { Env } from '@common/config';
       }),
     }),
   ],
-  providers: [QueueService],
-  exports: [BullModule, QueueService],
+  providers: [],
+  exports: [BullModule],
 })
 export class QueueModule {}
