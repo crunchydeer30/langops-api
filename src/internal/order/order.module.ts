@@ -9,21 +9,22 @@ import { QueueModule } from 'src/infrastructure/queue';
 import { TranslationFlow } from './application/flows';
 import { BullModule } from '@nestjs/bullmq';
 import { TranslationProcessor } from './application/processors';
+import {
+  ORDER_QUEUES,
+  TRANSLATION_FLOW,
+} from './infrastructure/bullmq/constants';
 
 @Module({
   imports: [
     CqrsModule,
     QueueModule,
     LanguagePairModule,
-    BullModule.registerQueue({
-      name: 'translation-queue',
-    }),
-    BullModule.registerQueue({
-      name: 'translation-flow-queue',
-    }),
     BullModule.registerFlowProducer({
-      name: 'translation-flow',
+      name: TRANSLATION_FLOW.name,
     }),
+    ...Object.values(ORDER_QUEUES).map((queueName) =>
+      BullModule.registerQueue({ name: queueName }),
+    ),
   ],
   controllers: [OrderController],
   providers: [

@@ -1,8 +1,9 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
+import { TRANSLATION_FLOW } from '../../infrastructure/bullmq/constants';
 
-@Processor('translation-queue')
+@Processor(TRANSLATION_FLOW.JOBS.TRANSLATE.queue)
 export class TranslationProcessor extends WorkerHost {
   private readonly logger = new Logger(TranslationProcessor.name);
 
@@ -12,7 +13,7 @@ export class TranslationProcessor extends WorkerHost {
     );
 
     switch (job.name) {
-      case 'translation-flow:translate':
+      case TRANSLATION_FLOW.JOBS.TRANSLATE.name:
         this.logger.warn('TRANSLATED');
         return;
       default:
