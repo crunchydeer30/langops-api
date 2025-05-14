@@ -9,7 +9,7 @@ import { OrderRepository } from 'src/internal/order/infrastructure';
 import { LanguagePairRepository } from 'src/internal/language-pair/infrastructure';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
-import { TranslationFlow } from '../../flows';
+import { MachineTranslationFlow } from '../../flows';
 
 @CommandHandler(CreateOrderCommand)
 export class CreateOrderHandler
@@ -21,7 +21,7 @@ export class CreateOrderHandler
     private readonly orderRepository: OrderRepository,
     private readonly languagePairRepository: LanguagePairRepository,
     private readonly publisher: EventPublisher,
-    private readonly translationFlow: TranslationFlow,
+    private readonly machineTranslationFlow: MachineTranslationFlow,
   ) {}
 
   async execute({
@@ -29,7 +29,6 @@ export class CreateOrderHandler
   }: CreateOrderCommand): Promise<ICreateOrderCommandResult> {
     this.logger.log(`Creating new order for customer: ${props.customerId}`);
 
-    // Verify that the language pair exists
     this.logger.log(
       `Verifying existence of language pair: ${props.languagePairId}`,
     );
@@ -53,7 +52,7 @@ export class CreateOrderHandler
     await this.orderRepository.save(order);
     orderWithEvents.commit();
 
-    await this.translationFlow.start(order.id);
+    await this.machineTranslationFlow.start(order.id);
 
     this.logger.log(`Order created successfully with ID: ${order.id}`);
     return { id: order.id };

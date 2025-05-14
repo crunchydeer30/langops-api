@@ -1,4 +1,4 @@
 export const ORDER_QUEUES = {
-  FLOWS_TRANSLATION_QUEUE: 'flows_translation_queue',
-  TRANSLATE_QUEUE: 'flows_translation_translate_queue',
+  FLOWS_MACHINE_TRANSLATION_QUEUE: 'flows_machine_translation_queue',
+  PARSE_QUEUE: 'flows_machine_translation_parse_queue',
 } as const;

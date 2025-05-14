@@ -1,1 +1,1 @@
-export * from './translation.processor';
+export * from './machine-translation.processor';

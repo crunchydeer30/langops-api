@@ -13,12 +13,12 @@ import { OrderCommandHandlers } from './application';
 import { TextSegmentationService } from './application/services';
 import { LanguagePairModule } from '../language-pair/language-pair.module';
 import { QueueModule } from 'src/infrastructure/queue';
-import { TranslationFlow } from './application/flows';
+import { MachineTranslationFlow } from './application/flows';
 import { BullModule } from '@nestjs/bullmq';
-import { TranslationProcessor } from './application/processors';
+import { OrderParserProcessor } from './application/processors';
 import {
+  MACHINE_TRANSLATION_FLOW,
   ORDER_QUEUES,
-  TRANSLATION_FLOW,
 } from './infrastructure/bullmq/constants';
 
 @Module({
@@ -26,8 +26,9 @@ import {
     CqrsModule,
     QueueModule,
     LanguagePairModule,
+
     BullModule.registerFlowProducer({
-      name: TRANSLATION_FLOW.name,
+      name: MACHINE_TRANSLATION_FLOW.name,
     }),
     ...Object.values(ORDER_QUEUES).map((queueName) =>
       BullModule.registerQueue({ name: queueName }),
@@ -40,8 +41,8 @@ import {
     TranslationSegmentMapper,
     TranslationSegmentRepository,
     TextSegmentationService,
-    TranslationFlow,
-    TranslationProcessor,
+    MachineTranslationFlow,
+    OrderParserProcessor,
     ...OrderCommandHandlers,
   ],
 })
