@@ -5,5 +5,3 @@ export interface IOrderRepository {
   findById(id: string): Promise<Order | null>;
   findByCustomerId(customerId: string): Promise<Order[]>;
 }
-
-export const IOrderRepository = Symbol('IOrderRepository');

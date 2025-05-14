@@ -18,9 +18,6 @@ export interface IOrder {
   seniorEditorId?: string | null;
   originalText: string;
   taskSpecificInstructions?: string | null;
-  aiTranslatedText?: string | null;
-  humanEditedText?: string | null;
-  finalApprovedText?: string | null;
   status: OrderStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -33,9 +30,6 @@ export interface IOrderCreateArgs {
   taskSpecificInstructions?: string | null;
   editorId?: string | null;
   seniorEditorId?: string | null;
-  aiTranslatedText?: string | null;
-  humanEditedText?: string | null;
-  finalApprovedText?: string | null;
 }
 
 export class Order extends AggregateRoot {
@@ -48,9 +42,6 @@ export class Order extends AggregateRoot {
   public seniorEditorId: string | null;
   public originalText: string;
   public taskSpecificInstructions: string | null;
-  public aiTranslatedText: string | null;
-  public humanEditedText: string | null;
-  public finalApprovedText: string | null;
   public status: OrderStatus;
   public createdAt: Date;
   public updatedAt: Date;
@@ -64,15 +55,11 @@ export class Order extends AggregateRoot {
     this.seniorEditorId = props.seniorEditorId || null;
     this.originalText = props.originalText;
     this.taskSpecificInstructions = props.taskSpecificInstructions || null;
-    this.aiTranslatedText = props.aiTranslatedText || null;
-    this.humanEditedText = props.humanEditedText || null;
-    this.finalApprovedText = props.finalApprovedText || null;
     this.status = props.status;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
   }
 
-  // Factory method
   public static create(props: IOrderCreateArgs): Order {
     const now = new Date();
     const orderId = uuidv4();
@@ -85,9 +72,6 @@ export class Order extends AggregateRoot {
       seniorEditorId: props.seniorEditorId || null,
       originalText: props.originalText,
       taskSpecificInstructions: props.taskSpecificInstructions || null,
-      aiTranslatedText: props.aiTranslatedText || null,
-      humanEditedText: props.humanEditedText || null,
-      finalApprovedText: props.finalApprovedText || null,
       status: OrderStatus.PENDING,
       createdAt: now,
       updatedAt: now,
@@ -107,7 +91,6 @@ export class Order extends AggregateRoot {
     return order;
   }
 
-  // Methods for state transitions
   public setAITranslation(aiTranslatedText: string): void {
     this.logger.log(`Setting AI translation for order: ${this.id}`);
 
@@ -122,11 +105,9 @@ export class Order extends AggregateRoot {
     }
 
     const previousStatus = this.status;
-    this.aiTranslatedText = aiTranslatedText;
     this.status = OrderStatus.PENDING_EDITOR_ASSIGNMENT;
     this.updatedAt = new Date();
 
-    // Apply events
     this.apply(
       new OrderAITranslatedEvent({
         orderId: this.id,
@@ -170,7 +151,7 @@ export class Order extends AggregateRoot {
     );
   }
 
-  public submitHumanEditedTranslation(humanEditedText: string): void {
+  public submitHumanEditedTranslation(): void {
     this.logger.log(
       `Submitting human edited translation for order: ${this.id}`,
     );
@@ -188,7 +169,7 @@ export class Order extends AggregateRoot {
     }
 
     const previousStatus = this.status;
-    this.humanEditedText = humanEditedText;
+    // humanEditedText is now stored in TranslationSegment entities
     this.status = OrderStatus.PENDING_SENIOR_REVIEW;
     this.updatedAt = new Date();
 
@@ -202,7 +183,7 @@ export class Order extends AggregateRoot {
     );
   }
 
-  public approveFinalTranslation(finalApprovedText: string): void {
+  public approveFinalTranslation(): void {
     this.logger.log(`Approving final translation for order: ${this.id}`);
 
     if (this.status !== OrderStatus.PENDING_SENIOR_REVIEW) {
@@ -213,7 +194,6 @@ export class Order extends AggregateRoot {
     }
 
     const previousStatus = this.status;
-    this.finalApprovedText = finalApprovedText;
     this.status = OrderStatus.COMPLETED;
     this.updatedAt = new Date();
 

@@ -170,11 +170,10 @@ model Order {
 
   originalText             String  @map("original_text")
   taskSpecificInstructions String? @map("task_specific_instructions")
-  aiTranslatedText         String? @map("ai_translated_text")
-  humanEditedText          String? @map("human_edited_text")
-  finalApprovedText        String? @map("final_approved_text")
 
   status OrderStatus
+
+  translationSegments TranslationSegment[]
 
   evaluationTasks EvaluationTask[] @relation("OrderEvaluationTasks")
 
@@ -182,6 +181,30 @@ model Order {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("orders")
+}
+
+model TranslationSegment {
+  id String @id @default(uuid()) @db.Uuid
+
+  orderId String? @map("order_id") @db.Uuid
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  evaluationTaskId String?         @map("evaluation_task_id") @db.Uuid
+  evaluationTask   EvaluationTask? @relation(fields: [evaluationTaskId], references: [id], onDelete: Cascade)
+
+  sequenceNumber Int @map("sequence_number")
+
+  originalText      String  @map("original_text")
+  aiTranslatedText  String? @map("ai_translated_text")
+  humanEditedText   String? @map("human_edited_text")
+  finalApprovedText String? @map("final_approved_text")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([orderId, sequenceNumber], name: "orderSegmentUnique", map: "order_segment_unique")
+  @@unique([evaluationTaskId, sequenceNumber], name: "evaluationSegmentUnique", map: "evaluation_segment_unique")
+  @@map("translation_segments")
 }
 
 model EditorApplication {
@@ -260,8 +283,8 @@ model EvaluationTask {
   sourceOrderId String? @map("source_order_id") @db.Uuid
   sourceOrder   Order?  @relation("OrderEvaluationTasks", fields: [sourceOrderId], references: [id])
 
-  originalText         String
-  editorSubmission     String?
+  segments TranslationSegment[]
+
   rating               Int?
   seniorEditorFeedback String?
 

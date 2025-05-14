@@ -1,9 +1,16 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { OrderMapper } from './infrastructure/mappers/order.mapper';
-import { OrderRepository } from './infrastructure/repositories/order.repository';
+import {
+  OrderMapper,
+  TranslationSegmentMapper,
+} from './infrastructure/mappers';
+import {
+  OrderRepository,
+  TranslationSegmentRepository,
+} from './infrastructure/repositories';
 import { OrderController } from './application/controllers/order.controller';
 import { OrderCommandHandlers } from './application';
+import { TextSegmentationService } from './application/services';
 import { LanguagePairModule } from '../language-pair/language-pair.module';
 import { QueueModule } from 'src/infrastructure/queue';
 import { TranslationFlow } from './application/flows';
@@ -30,6 +37,9 @@ import {
   providers: [
     OrderMapper,
     OrderRepository,
+    TranslationSegmentMapper,
+    TranslationSegmentRepository,
+    TextSegmentationService,
     TranslationFlow,
     TranslationProcessor,
     ...OrderCommandHandlers,

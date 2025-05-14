@@ -54,6 +54,11 @@ export const ERRORS = {
       message: 'No editor assigned to this order',
       httpStatus: 400,
     },
+    INVALID_OPERATION: {
+      code: 'ORDER_004',
+      message: 'Invalid operation on order or translation segment',
+      httpStatus: 400,
+    },
   },
   EDITOR: {
     NOT_FOUND: {

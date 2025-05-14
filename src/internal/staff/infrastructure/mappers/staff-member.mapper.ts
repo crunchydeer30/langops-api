@@ -9,8 +9,7 @@ import { VerificationToken } from '@common/domain/value-objects/verification-tok
 
 @Injectable()
 export class StaffMemberMapper {
-  toDomain(model: StaffMemberModel | null): StaffMember | null {
-    if (!model) return null;
+  toDomain(model: StaffMemberModel): StaffMember {
     const props: IStaffMember = {
       id: model.id,
       email: Email.create(model.email),
@@ -24,6 +23,7 @@ export class StaffMemberMapper {
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     };
+
     return StaffMember.reconstitute(props);
   }
 

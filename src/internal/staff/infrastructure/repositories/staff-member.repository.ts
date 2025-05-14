@@ -14,6 +14,9 @@ export class StaffMemberRepository implements IStaffMemberRepository {
 
   async findById(id: string): Promise<StaffMember | null> {
     const model = await this.prisma.staffMember.findUnique({ where: { id } });
+    if (!model) {
+      return null;
+    }
     return this.mapper.toDomain(model);
   }
 
@@ -21,16 +24,21 @@ export class StaffMemberRepository implements IStaffMemberRepository {
     const model = await this.prisma.staffMember.findUnique({
       where: { email: email.value },
     });
+    if (!model) {
+      return null;
+    }
     return this.mapper.toDomain(model);
   }
 
   async save(staffMember: StaffMember): Promise<StaffMember> {
     const data = this.mapper.toPersistence(staffMember);
+
     const model = await this.prisma.staffMember.upsert({
       where: { id: staffMember.id },
       update: data,
       create: data,
     });
+
     return this.mapper.toDomain(model)!;
   }
 }
