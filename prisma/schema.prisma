@@ -173,6 +173,7 @@ model Order {
   seniorEditor   Editor? @relation("SeniorEditorOrders", fields: [seniorEditorId], references: [id])
 
   originalText             String  @map("original_text")
+  maskedText               String? @map("masked_text")
   taskSpecificInstructions String? @map("task_specific_instructions")
 
   sensitiveDataMapping SensitiveDataMapping? @relation("OrderSensitiveDataMapping")

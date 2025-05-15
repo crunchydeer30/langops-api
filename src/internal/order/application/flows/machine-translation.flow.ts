@@ -30,6 +30,13 @@ export class MachineTranslationFlow {
               name: MACHINE_TRANSLATION_FLOW.JOBS.SEGMENT_TEXT.name,
               data: { orderId },
               queueName: MACHINE_TRANSLATION_FLOW.JOBS.SEGMENT_TEXT.queue,
+              children: [
+                {
+                  name: MACHINE_TRANSLATION_FLOW.JOBS.MASK.name,
+                  data: { orderId },
+                  queueName: MACHINE_TRANSLATION_FLOW.JOBS.MASK.queue,
+                },
+              ],
             },
           ],
         },

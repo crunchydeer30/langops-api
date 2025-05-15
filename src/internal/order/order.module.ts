@@ -11,12 +11,19 @@ import {
 } from './infrastructure/repositories';
 import { OrderController } from './application/controllers/order.controller';
 import { OrderCommandHandlers } from './application';
-import { TextSegmentationService } from './application/services';
+import {
+  TextSegmentationService,
+  SensitiveDataMaskingService,
+} from './application/services';
 import { LanguagePairModule } from '../language-pair/language-pair.module';
 import { QueueModule } from 'src/infrastructure/queue';
 import { MachineTranslationFlow } from './application/flows';
 import { BullModule } from '@nestjs/bullmq';
-import { OrderParserProcessor } from './application/processors';
+import {
+  OrderParserProcessor,
+  MaskSensitiveDataProcessor,
+  SegmentTextProcessor,
+} from './application/processors';
 import {
   MACHINE_TRANSLATION_FLOW,
   ORDER_QUEUES,
@@ -28,7 +35,6 @@ import { SensitiveDataMappingMapper } from './infrastructure/mappers/sensitive-d
     CqrsModule,
     QueueModule,
     LanguagePairModule,
-
     BullModule.registerFlowProducer({
       name: MACHINE_TRANSLATION_FLOW.name,
     }),
@@ -45,8 +51,11 @@ import { SensitiveDataMappingMapper } from './infrastructure/mappers/sensitive-d
     SensitiveDataMappingMapper,
     SensitiveDataMappingRepository,
     TextSegmentationService,
+    SensitiveDataMaskingService,
     MachineTranslationFlow,
     OrderParserProcessor,
+    MaskSensitiveDataProcessor,
+    SegmentTextProcessor,
     ...OrderCommandHandlers,
   ],
 })

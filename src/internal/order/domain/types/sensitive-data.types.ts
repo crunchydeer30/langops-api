@@ -4,6 +4,7 @@ export enum ISensitiveDataType {
   PHONE = 'PHONE',
   PASSWORD = 'PASSWORD',
   CODE = 'CODE',
+  CREDIT_CARD = 'CREDIT_CARD',
 }
 
 export interface ISensitiveDataTokenInfo {

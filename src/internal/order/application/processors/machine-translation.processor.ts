@@ -45,10 +45,8 @@ export class OrderParserProcessor extends WorkerHost {
           throw new Error(`Order not found: ${orderId}`);
         }
 
-        const segments = await this.textSegmentationService.segmentOrderText(
-          orderId,
-          order.originalText,
-        );
+        const segments =
+          await this.textSegmentationService.segmentOrderText(orderId);
 
         this.logger.log(
           `[MACHINE TRANSLATION] Text segmentation completed for order: ${orderId}. Created ${segments.length} segments.`,

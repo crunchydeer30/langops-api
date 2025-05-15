@@ -17,6 +17,7 @@ export interface IOrder {
   editorId?: string | null;
   seniorEditorId?: string | null;
   originalText: string;
+  maskedText?: string | null;
   taskSpecificInstructions?: string | null;
   status: OrderStatus;
   createdAt: Date;
@@ -41,6 +42,7 @@ export class Order extends AggregateRoot {
   public editorId: string | null;
   public seniorEditorId: string | null;
   public originalText: string;
+  public maskedText: string | null;
   public taskSpecificInstructions: string | null;
   public status: OrderStatus;
   public createdAt: Date;
@@ -54,6 +56,7 @@ export class Order extends AggregateRoot {
     this.editorId = props.editorId || null;
     this.seniorEditorId = props.seniorEditorId || null;
     this.originalText = props.originalText;
+    this.maskedText = props.maskedText ?? null;
     this.taskSpecificInstructions = props.taskSpecificInstructions || null;
     this.status = props.status;
     this.createdAt = props.createdAt;
@@ -71,6 +74,7 @@ export class Order extends AggregateRoot {
       editorId: props.editorId || null,
       seniorEditorId: props.seniorEditorId || null,
       originalText: props.originalText,
+      maskedText: null,
       taskSpecificInstructions: props.taskSpecificInstructions || null,
       status: OrderStatus.PENDING,
       createdAt: now,
@@ -169,7 +173,6 @@ export class Order extends AggregateRoot {
     }
 
     const previousStatus = this.status;
-    // humanEditedText is now stored in TranslationSegment entities
     this.status = OrderStatus.PENDING_SENIOR_REVIEW;
     this.updatedAt = new Date();
 

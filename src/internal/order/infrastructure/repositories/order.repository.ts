@@ -34,6 +34,7 @@ export class OrderRepository implements IOrderRepository {
       editorId,
       seniorEditorId,
       originalText,
+      maskedText,
       taskSpecificInstructions,
       status,
       createdAt,
@@ -47,6 +48,7 @@ export class OrderRepository implements IOrderRepository {
       editorId,
       seniorEditorId,
       originalText,
+      maskedText,
       taskSpecificInstructions,
       status,
       createdAt,
@@ -59,6 +61,7 @@ export class OrderRepository implements IOrderRepository {
       create: {
         id,
         originalText,
+        maskedText,
         taskSpecificInstructions,
         status,
         ...(createdAt && { createdAt }),
