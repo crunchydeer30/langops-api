@@ -6,6 +6,7 @@ import {
 } from './infrastructure/mappers';
 import {
   OrderRepository,
+  SensitiveDataMappingRepository,
   TranslationSegmentRepository,
 } from './infrastructure/repositories';
 import { OrderController } from './application/controllers/order.controller';
@@ -20,6 +21,7 @@ import {
   MACHINE_TRANSLATION_FLOW,
   ORDER_QUEUES,
 } from './infrastructure/bullmq/constants';
+import { SensitiveDataMappingMapper } from './infrastructure/mappers/sensitive-data-mapping.mapper';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import {
     OrderRepository,
     TranslationSegmentMapper,
     TranslationSegmentRepository,
+    SensitiveDataMappingMapper,
+    SensitiveDataMappingRepository,
     TextSegmentationService,
     MachineTranslationFlow,
     OrderParserProcessor,

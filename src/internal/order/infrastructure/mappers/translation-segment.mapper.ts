@@ -14,6 +14,8 @@ export class TranslationSegmentMapper {
       evaluationTaskId: prismaModel.evaluationTaskId || null,
       sequenceNumber: prismaModel.sequenceNumber,
       originalText: prismaModel.originalText,
+      containsSensitiveData: prismaModel.containsSensitiveData,
+      sensitiveDataTokens: prismaModel.sensitiveDataTokens || [],
       aiTranslatedText: prismaModel.aiTranslatedText,
       humanEditedText: prismaModel.humanEditedText,
       finalApprovedText: prismaModel.finalApprovedText,
@@ -25,10 +27,12 @@ export class TranslationSegmentMapper {
   toPersistence(
     domain: TranslationSegment,
   ): Prisma.TranslationSegmentUncheckedCreateInput {
-    const model: PrismaTranslationSegment = {
+    const model: Prisma.TranslationSegmentUncheckedCreateInput = {
       id: domain.id,
       sequenceNumber: domain.sequenceNumber,
       originalText: domain.originalText,
+      containsSensitiveData: domain.containsSensitiveData,
+      sensitiveDataTokens: domain.sensitiveDataTokens,
       aiTranslatedText: domain.aiTranslatedText,
       humanEditedText: domain.humanEditedText,
       finalApprovedText: domain.finalApprovedText,

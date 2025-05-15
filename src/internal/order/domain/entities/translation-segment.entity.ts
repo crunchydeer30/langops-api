@@ -8,6 +8,8 @@ export interface ITranslationSegment {
   evaluationTaskId?: string | null;
   sequenceNumber: number;
   originalText: string;
+  containsSensitiveData: boolean;
+  sensitiveDataTokens: string[];
   aiTranslatedText?: string | null;
   humanEditedText?: string | null;
   finalApprovedText?: string | null;
@@ -20,6 +22,8 @@ export interface ITranslationSegmentCreateArgs {
   evaluationTaskId?: string | null;
   sequenceNumber: number;
   originalText: string;
+  containsSensitiveData?: boolean;
+  sensitiveDataTokens?: string[];
   aiTranslatedText?: string | null;
   humanEditedText?: string | null;
   finalApprovedText?: string | null;
@@ -33,6 +37,8 @@ export class TranslationSegment extends AggregateRoot {
   public evaluationTaskId: string | null;
   public sequenceNumber: number;
   public originalText: string;
+  public containsSensitiveData: boolean;
+  public sensitiveDataTokens: string[];
   public aiTranslatedText: string | null;
   public humanEditedText: string | null;
   public finalApprovedText: string | null;
@@ -46,6 +52,8 @@ export class TranslationSegment extends AggregateRoot {
     this.evaluationTaskId = props.evaluationTaskId || null;
     this.sequenceNumber = props.sequenceNumber;
     this.originalText = props.originalText;
+    this.containsSensitiveData = props.containsSensitiveData ?? false;
+    this.sensitiveDataTokens = props.sensitiveDataTokens ?? [];
     this.aiTranslatedText = props.aiTranslatedText || null;
     this.humanEditedText = props.humanEditedText || null;
     this.finalApprovedText = props.finalApprovedText || null;
@@ -76,6 +84,8 @@ export class TranslationSegment extends AggregateRoot {
       evaluationTaskId: props.evaluationTaskId || null,
       sequenceNumber: props.sequenceNumber,
       originalText: props.originalText,
+      containsSensitiveData: props.containsSensitiveData ?? false,
+      sensitiveDataTokens: props.sensitiveDataTokens ?? [],
       aiTranslatedText: props.aiTranslatedText || null,
       humanEditedText: props.humanEditedText || null,
       finalApprovedText: props.finalApprovedText || null,
