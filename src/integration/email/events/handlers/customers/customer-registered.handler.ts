@@ -24,7 +24,6 @@ export class CustomerRegisteredHandler
       const emailPayload = {
         to: event.payload.email,
         subject: 'Welcome to Our Platform!',
-        textBody: `Hello ${customerName},\n\nWelcome! We're excited to have you.\n\nBest regards,\nThe Team`,
         htmlBody: `<p>Hello ${customerName},</p><p>Welcome! We're excited to have you.</p><p>Best regards,<br>The Team</p>`,
       };
 

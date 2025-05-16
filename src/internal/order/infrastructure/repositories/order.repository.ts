@@ -31,48 +31,32 @@ export class OrderRepository implements IOrderRepository {
       id,
       customerId,
       languagePairId,
-      editorId,
-      seniorEditorId,
       originalText,
-      maskedText,
-      taskSpecificInstructions,
       status,
       createdAt,
       updatedAt,
     } = this.mapper.toPersistence(order);
 
-    const updateData = {
-      id,
-      customerId,
-      languagePairId,
-      editorId,
-      seniorEditorId,
+    const updatePayload = {
       originalText,
-      maskedText,
-      taskSpecificInstructions,
+      status,
+      updatedAt,
+    };
+
+    const createPayload = {
+      id,
+      originalText,
       status,
       createdAt,
       updatedAt,
+      customer: { connect: { id: customerId } },
+      languagePair: { connect: { id: languagePairId } },
     };
 
     await this.prisma.order.upsert({
       where: { id: order.id },
-      update: updateData,
-      create: {
-        id,
-        originalText,
-        maskedText,
-        taskSpecificInstructions,
-        status,
-        ...(createdAt && { createdAt }),
-        ...(updatedAt && { updatedAt }),
-        customer: { connect: { id: customerId } },
-        languagePair: { connect: { id: languagePairId } },
-        ...(editorId && { editor: { connect: { id: editorId } } }),
-        ...(seniorEditorId && {
-          seniorEditor: { connect: { id: seniorEditorId } },
-        }),
-      },
+      update: updatePayload,
+      create: createPayload,
     });
   }
 }

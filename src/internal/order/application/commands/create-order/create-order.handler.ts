@@ -9,7 +9,6 @@ import { OrderRepository } from 'src/internal/order/infrastructure';
 import { LanguagePairRepository } from 'src/internal/language-pair/infrastructure';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
-import { MachineTranslationFlow } from '../../flows';
 
 @CommandHandler(CreateOrderCommand)
 export class CreateOrderHandler
@@ -21,7 +20,6 @@ export class CreateOrderHandler
     private readonly orderRepository: OrderRepository,
     private readonly languagePairRepository: LanguagePairRepository,
     private readonly publisher: EventPublisher,
-    private readonly machineTranslationFlow: MachineTranslationFlow,
   ) {}
 
   async execute({
@@ -45,14 +43,11 @@ export class CreateOrderHandler
       customerId: props.customerId,
       languagePairId: props.languagePairId,
       originalText: props.originalText,
-      taskSpecificInstructions: props.taskSpecificInstructions,
     });
 
     const orderWithEvents = this.publisher.mergeObjectContext(order);
     await this.orderRepository.save(order);
     orderWithEvents.commit();
-
-    await this.machineTranslationFlow.start(order.id);
 
     this.logger.log(`Order created successfully with ID: ${order.id}`);
     return { id: order.id };

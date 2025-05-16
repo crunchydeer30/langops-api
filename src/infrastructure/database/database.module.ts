@@ -1,7 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
-import { ISensitiveDataTokenMap } from 'src/internal/order/domain/types/sensitive-data.types';
-
+import { TranslationSpecialTokenMap as ITranslationSpecialTokenMap } from 'src/internal/translation-task-parsing/domain/interfaces/translation-segment-token-map.interface';
 @Global()
 @Module({
   providers: [PrismaService],
@@ -12,6 +11,6 @@ export class DatabaseModule {}
 // Prisma json types
 declare global {
   namespace PrismaJson {
-    export type SensitiveDataTokenMap = ISensitiveDataTokenMap;
+    export type TranslationSpecialTokenMap = ITranslationSpecialTokenMap;
   }
 }

@@ -59,6 +59,11 @@ export const ERRORS = {
       message: 'Invalid operation on order or translation segment',
       httpStatus: 400,
     },
+    INVALID_PRICE: {
+      code: 'ORDER_005',
+      message: 'Invalid price for order',
+      httpStatus: 400,
+    },
   },
   EDITOR: {
     NOT_FOUND: {
@@ -174,6 +179,28 @@ export const ERRORS = {
       code: 'LANGUAGE_001',
       message: 'Language not found',
       httpStatus: 404,
+    },
+  },
+  TRANSLATION_TASK: {
+    NOT_FOUND: {
+      code: 'TRANSLATION_TASK_001',
+      message: 'Translation task not found',
+      httpStatus: 404,
+    },
+    SAVE_FAILED: {
+      code: 'TRANSLATION_TASK_002',
+      message: 'Failed to save translation task',
+      httpStatus: 500,
+    },
+    FIND_FAILED: {
+      code: 'TRANSLATION_TASK_003',
+      message: 'Failed to find translation task(s)',
+      httpStatus: 500,
+    },
+    PARSING_ERROR: {
+      code: 'TRANSLATION_TASK_004',
+      message: 'Failed to parse email content',
+      httpStatus: 500,
     },
   },
 } as const;

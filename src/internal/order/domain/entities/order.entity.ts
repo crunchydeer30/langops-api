@@ -1,12 +1,12 @@
 import { AggregateRoot } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, TranslationStage, Prisma } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from '@libs/contracts/common';
 import {
   OrderCreatedEvent,
-  OrderAITranslatedEvent,
+  OrderStageChangedEvent,
   OrderStatusChangedEvent,
 } from '../events';
 
@@ -14,12 +14,12 @@ export interface IOrder {
   id: string;
   customerId: string;
   languagePairId: string;
-  editorId?: string | null;
-  seniorEditorId?: string | null;
   originalText: string;
-  maskedText?: string | null;
-  taskSpecificInstructions?: string | null;
   status: OrderStatus;
+  totalPrice?: number | null;
+  currentStage?: TranslationStage | null;
+  sensitiveDataMaskedText?: string | null;
+  parsedTextSegments?: Prisma.JsonValue | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,23 +28,19 @@ export interface IOrderCreateArgs {
   customerId: string;
   languagePairId: string;
   originalText: string;
-  taskSpecificInstructions?: string | null;
-  editorId?: string | null;
-  seniorEditorId?: string | null;
 }
 
 export class Order extends AggregateRoot {
   private readonly logger = new Logger(Order.name);
 
-  public readonly id: string;
-  public readonly customerId: string;
-  public readonly languagePairId: string;
-  public editorId: string | null;
-  public seniorEditorId: string | null;
+  public id: string;
+  public customerId: string;
+  public languagePairId: string;
   public originalText: string;
-  public maskedText: string | null;
-  public taskSpecificInstructions: string | null;
   public status: OrderStatus;
+  public currentStage?: TranslationStage | null;
+  public sensitiveDataMaskedText?: string | null;
+  public parsedTextSegments?: Prisma.JsonValue | null;
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -53,12 +49,11 @@ export class Order extends AggregateRoot {
     this.id = props.id;
     this.customerId = props.customerId;
     this.languagePairId = props.languagePairId;
-    this.editorId = props.editorId || null;
-    this.seniorEditorId = props.seniorEditorId || null;
     this.originalText = props.originalText;
-    this.maskedText = props.maskedText ?? null;
-    this.taskSpecificInstructions = props.taskSpecificInstructions || null;
     this.status = props.status;
+    this.currentStage = props.currentStage;
+    this.sensitiveDataMaskedText = props.sensitiveDataMaskedText;
+    this.parsedTextSegments = props.parsedTextSegments;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
   }
@@ -71,12 +66,12 @@ export class Order extends AggregateRoot {
       id: orderId,
       customerId: props.customerId,
       languagePairId: props.languagePairId,
-      editorId: props.editorId || null,
-      seniorEditorId: props.seniorEditorId || null,
       originalText: props.originalText,
-      maskedText: null,
-      taskSpecificInstructions: props.taskSpecificInstructions || null,
-      status: OrderStatus.PENDING,
+      status: OrderStatus.PENDING_SUBMISSION,
+      totalPrice: null,
+      currentStage: TranslationStage.READY_FOR_PROCESSING,
+      sensitiveDataMaskedText: null,
+      parsedTextSegments: null,
       createdAt: now,
       updatedAt: now,
     });
@@ -87,7 +82,6 @@ export class Order extends AggregateRoot {
         customerId: props.customerId,
         languagePairId: props.languagePairId,
         originalText: props.originalText,
-        taskSpecificInstructions: props.taskSpecificInstructions || null,
         createdAt: now,
       }),
     );
@@ -95,31 +89,17 @@ export class Order extends AggregateRoot {
     return order;
   }
 
-  public setAITranslation(aiTranslatedText: string): void {
-    this.logger.log(`Setting AI translation for order: ${this.id}`);
-
-    if (
-      this.status !== OrderStatus.PENDING &&
-      this.status !== OrderStatus.PENDING_AI
-    ) {
+  public startProgress(): void {
+    this.logger.log(`Starting progress for order: ${this.id}`);
+    if (this.status !== OrderStatus.PENDING_SUBMISSION) {
       this.logger.warn(
-        `Cannot set AI translation for order ${this.id} in status ${this.status}`,
+        `Cannot start progress for order ${this.id} in status ${this.status}`,
       );
       throw new DomainException(ERRORS.ORDER.INVALID_STATUS_TRANSITION);
     }
-
     const previousStatus = this.status;
-    this.status = OrderStatus.PENDING_EDITOR_ASSIGNMENT;
+    this.status = OrderStatus.IN_PROGRESS;
     this.updatedAt = new Date();
-
-    this.apply(
-      new OrderAITranslatedEvent({
-        orderId: this.id,
-        aiTranslatedText,
-        translatedAt: this.updatedAt,
-      }),
-    );
-
     this.apply(
       new OrderStatusChangedEvent({
         orderId: this.id,
@@ -130,76 +110,17 @@ export class Order extends AggregateRoot {
     );
   }
 
-  public assignEditor(editorId: string): void {
-    this.logger.log(`Assigning editor ${editorId} to order: ${this.id}`);
-
-    if (this.status !== OrderStatus.PENDING_EDITOR_ASSIGNMENT) {
+  public completeOrder(): void {
+    this.logger.log(`Completing order: ${this.id}`);
+    if (this.status !== OrderStatus.IN_PROGRESS) {
       this.logger.warn(
-        `Cannot assign editor for order ${this.id} in status ${this.status}`,
+        `Cannot complete order ${this.id} in status ${this.status}`,
       );
       throw new DomainException(ERRORS.ORDER.INVALID_STATUS_TRANSITION);
     }
-
-    const previousStatus = this.status;
-    this.editorId = editorId;
-    this.status = OrderStatus.IN_EDITING;
-    this.updatedAt = new Date();
-
-    this.apply(
-      new OrderStatusChangedEvent({
-        orderId: this.id,
-        previousStatus,
-        newStatus: this.status,
-        changedAt: this.updatedAt,
-      }),
-    );
-  }
-
-  public submitHumanEditedTranslation(): void {
-    this.logger.log(
-      `Submitting human edited translation for order: ${this.id}`,
-    );
-
-    if (this.status !== OrderStatus.IN_EDITING) {
-      this.logger.warn(
-        `Cannot submit human edited translation for order ${this.id} in status ${this.status}`,
-      );
-      throw new DomainException(ERRORS.ORDER.INVALID_STATUS_TRANSITION);
-    }
-
-    if (!this.editorId) {
-      this.logger.warn(`No editor assigned to order ${this.id}`);
-      throw new DomainException(ERRORS.ORDER.NO_EDITOR_ASSIGNED);
-    }
-
-    const previousStatus = this.status;
-    this.status = OrderStatus.PENDING_SENIOR_REVIEW;
-    this.updatedAt = new Date();
-
-    this.apply(
-      new OrderStatusChangedEvent({
-        orderId: this.id,
-        previousStatus,
-        newStatus: this.status,
-        changedAt: this.updatedAt,
-      }),
-    );
-  }
-
-  public approveFinalTranslation(): void {
-    this.logger.log(`Approving final translation for order: ${this.id}`);
-
-    if (this.status !== OrderStatus.PENDING_SENIOR_REVIEW) {
-      this.logger.warn(
-        `Cannot approve final translation for order ${this.id} in status ${this.status}`,
-      );
-      throw new DomainException(ERRORS.ORDER.INVALID_STATUS_TRANSITION);
-    }
-
     const previousStatus = this.status;
     this.status = OrderStatus.COMPLETED;
     this.updatedAt = new Date();
-
     this.apply(
       new OrderStatusChangedEvent({
         orderId: this.id,
@@ -208,5 +129,78 @@ export class Order extends AggregateRoot {
         changedAt: this.updatedAt,
       }),
     );
+  }
+
+  public failOrder(): void {
+    this.logger.log(`Failing order: ${this.id}`);
+    const previousStatus = this.status;
+    this.status = OrderStatus.FAILED;
+    this.updatedAt = new Date();
+    this.apply(
+      new OrderStatusChangedEvent({
+        orderId: this.id,
+        previousStatus,
+        newStatus: this.status,
+        changedAt: this.updatedAt,
+      }),
+    );
+  }
+
+  public cancelOrder(): void {
+    this.logger.log(`Cancelling order: ${this.id}`);
+    if (
+      this.status === OrderStatus.COMPLETED ||
+      this.status === OrderStatus.FAILED
+    ) {
+      this.logger.warn(
+        `Cannot cancel order ${this.id} in status ${this.status}`,
+      );
+      throw new DomainException(ERRORS.ORDER.INVALID_STATUS_TRANSITION);
+    }
+    const previousStatus = this.status;
+    this.status = OrderStatus.CANCELLED;
+    this.updatedAt = new Date();
+    this.apply(
+      new OrderStatusChangedEvent({
+        orderId: this.id,
+        previousStatus,
+        newStatus: this.status,
+        changedAt: this.updatedAt,
+      }),
+    );
+  }
+
+  public updateStage(newStage: TranslationStage): void {
+    this.logger.log(
+      `Updating stage for order ${this.id} from ${this.currentStage} to ${newStage}`,
+    );
+    const previousStage = this.currentStage;
+    this.currentStage = newStage;
+    this.updatedAt = new Date();
+    this.apply(
+      new OrderStageChangedEvent({
+        orderId: this.id,
+        previousStage,
+        newStage: this.currentStage,
+        changedAt: this.updatedAt,
+      }),
+    );
+  }
+
+  // Method to set the sensitive data masked text
+  public setSensitiveDataMaskedText(text: string): void {
+    this.logger.log(`Setting sensitive data masked text for order ${this.id}`);
+    this.sensitiveDataMaskedText = text;
+    this.updatedAt = new Date();
+  }
+
+  public setParsedTextSegments(segments: Prisma.JsonValue): void {
+    this.logger.log(`Setting parsed text segments for order ${this.id}`);
+    this.parsedTextSegments = segments;
+    this.updatedAt = new Date();
+  }
+
+  public getId(): string {
+    return this.id;
   }
 }
