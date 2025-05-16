@@ -1,1 +1,1 @@
-export * from './create-order.command';
+export * from './create-email-translation-order.command';

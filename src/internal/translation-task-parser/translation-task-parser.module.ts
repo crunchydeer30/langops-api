@@ -25,4 +25,4 @@ import { EmailParsingService } from './application/services/email-parsing.servic
   controllers: [EmailParsingController],
   providers: [TranslationTaskParsingFlow, EmailParsingService],
 })
-export class TranslationTaskParsingModule {}
+export class TranslationTaskParserModule {}

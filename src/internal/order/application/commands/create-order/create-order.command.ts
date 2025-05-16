@@ -1,10 +1,11 @@
 import { ICommand } from '@nestjs/cqrs';
+import { OrderType } from '@prisma/client';
 
 export interface ICreateOrderCommandProps {
   customerId: string;
   languagePairId: string;
-  originalText: string;
-  taskSpecificInstructions?: string | null;
+  sourceContent: string;
+  type: OrderType;
 }
 
 export interface ICreateOrderCommandResult {

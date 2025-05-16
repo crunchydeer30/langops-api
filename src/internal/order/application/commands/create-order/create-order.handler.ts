@@ -5,6 +5,7 @@ import {
   ICreateOrderCommandResult,
 } from './create-order.command';
 import { Order } from '../../../domain/entities/order.entity';
+import { OrderCreatedEvent } from '../../../domain/events';
 import { OrderRepository } from 'src/internal/order/infrastructure';
 import { LanguagePairRepository } from 'src/internal/language-pair/infrastructure';
 import { DomainException } from '@common/exceptions';
@@ -42,11 +43,24 @@ export class CreateOrderHandler
     const order = Order.create({
       customerId: props.customerId,
       languagePairId: props.languagePairId,
-      originalText: props.originalText,
+      type: props.type,
     });
 
     const orderWithEvents = this.publisher.mergeObjectContext(order);
+
+    orderWithEvents.apply(
+      new OrderCreatedEvent({
+        orderId: order.id,
+        customerId: props.customerId,
+        languagePairId: props.languagePairId,
+        sourceContent: props.sourceContent,
+        type: props.type,
+        createdAt: new Date(),
+      }),
+    );
+
     await this.orderRepository.save(order);
+
     orderWithEvents.commit();
 
     this.logger.log(`Order created successfully with ID: ${order.id}`);

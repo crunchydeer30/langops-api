@@ -31,24 +31,23 @@ export class OrderRepository implements IOrderRepository {
       id,
       customerId,
       languagePairId,
-      originalText,
       status,
+      type,
       createdAt,
       updatedAt,
     } = this.mapper.toPersistence(order);
 
     const updatePayload = {
-      originalText,
       status,
       updatedAt,
     };
 
     const createPayload = {
       id,
-      originalText,
       status,
       createdAt,
       updatedAt,
+      type,
       customer: { connect: { id: customerId } },
       languagePair: { connect: { id: languagePairId } },
     };

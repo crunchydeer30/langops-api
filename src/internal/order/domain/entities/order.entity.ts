@@ -1,21 +1,22 @@
 import { AggregateRoot } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { OrderStatus, TranslationStage, Prisma } from '@prisma/client';
+import {
+  OrderStatus,
+  TranslationStage,
+  Prisma,
+  OrderType,
+} from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from '@libs/contracts/common';
-import {
-  OrderCreatedEvent,
-  OrderStageChangedEvent,
-  OrderStatusChangedEvent,
-} from '../events';
+import { OrderStatusChangedEvent } from '../events';
 
 export interface IOrder {
   id: string;
   customerId: string;
   languagePairId: string;
-  originalText: string;
   status: OrderStatus;
+  type: OrderType;
   totalPrice?: number | null;
   currentStage?: TranslationStage | null;
   sensitiveDataMaskedText?: string | null;
@@ -27,7 +28,7 @@ export interface IOrder {
 export interface IOrderCreateArgs {
   customerId: string;
   languagePairId: string;
-  originalText: string;
+  type: OrderType;
 }
 
 export class Order extends AggregateRoot {
@@ -36,8 +37,8 @@ export class Order extends AggregateRoot {
   public id: string;
   public customerId: string;
   public languagePairId: string;
-  public originalText: string;
   public status: OrderStatus;
+  public type: OrderType;
   public currentStage?: TranslationStage | null;
   public sensitiveDataMaskedText?: string | null;
   public parsedTextSegments?: Prisma.JsonValue | null;
@@ -49,8 +50,8 @@ export class Order extends AggregateRoot {
     this.id = props.id;
     this.customerId = props.customerId;
     this.languagePairId = props.languagePairId;
-    this.originalText = props.originalText;
     this.status = props.status;
+    this.type = props.type;
     this.currentStage = props.currentStage;
     this.sensitiveDataMaskedText = props.sensitiveDataMaskedText;
     this.parsedTextSegments = props.parsedTextSegments;
@@ -58,15 +59,15 @@ export class Order extends AggregateRoot {
     this.updatedAt = props.updatedAt;
   }
 
-  public static create(props: IOrderCreateArgs): Order {
+  public static create(args: IOrderCreateArgs): Order {
     const now = new Date();
     const orderId = uuidv4();
 
-    const order = new Order({
+    const orderProps: IOrder = {
       id: orderId,
-      customerId: props.customerId,
-      languagePairId: props.languagePairId,
-      originalText: props.originalText,
+      customerId: args.customerId,
+      languagePairId: args.languagePairId,
+      type: args.type,
       status: OrderStatus.PENDING_SUBMISSION,
       totalPrice: null,
       currentStage: TranslationStage.READY_FOR_PROCESSING,
@@ -74,17 +75,9 @@ export class Order extends AggregateRoot {
       parsedTextSegments: null,
       createdAt: now,
       updatedAt: now,
-    });
+    };
 
-    order.apply(
-      new OrderCreatedEvent({
-        orderId,
-        customerId: props.customerId,
-        languagePairId: props.languagePairId,
-        originalText: props.originalText,
-        createdAt: now,
-      }),
-    );
+    const order = new Order(orderProps);
 
     return order;
   }
@@ -168,39 +161,5 @@ export class Order extends AggregateRoot {
         changedAt: this.updatedAt,
       }),
     );
-  }
-
-  public updateStage(newStage: TranslationStage): void {
-    this.logger.log(
-      `Updating stage for order ${this.id} from ${this.currentStage} to ${newStage}`,
-    );
-    const previousStage = this.currentStage;
-    this.currentStage = newStage;
-    this.updatedAt = new Date();
-    this.apply(
-      new OrderStageChangedEvent({
-        orderId: this.id,
-        previousStage,
-        newStage: this.currentStage,
-        changedAt: this.updatedAt,
-      }),
-    );
-  }
-
-  // Method to set the sensitive data masked text
-  public setSensitiveDataMaskedText(text: string): void {
-    this.logger.log(`Setting sensitive data masked text for order ${this.id}`);
-    this.sensitiveDataMaskedText = text;
-    this.updatedAt = new Date();
-  }
-
-  public setParsedTextSegments(segments: Prisma.JsonValue): void {
-    this.logger.log(`Setting parsed text segments for order ${this.id}`);
-    this.parsedTextSegments = segments;
-    this.updatedAt = new Date();
-  }
-
-  public getId(): string {
-    return this.id;
   }
 }

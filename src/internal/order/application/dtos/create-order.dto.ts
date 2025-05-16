@@ -1,13 +1,13 @@
 import { createZodDto, zodToOpenAPI } from 'nestjs-zod';
-import { CreateOrderCommand } from 'libs/contracts/order';
+import { CreateEmailTranslationOrderCommand } from 'libs/contracts/order';
 
-export class CreateOrderBodyDto extends createZodDto(
-  CreateOrderCommand.BodySchema,
+export class CreateEmailTranslationOrderBodyDto extends createZodDto(
+  CreateEmailTranslationOrderCommand.BodySchema,
 ) {}
 
-export class CreateOrderResponseDto extends createZodDto(
-  CreateOrderCommand.ResponseSchema,
+export class CreateEmailTranslationOrderResponseDto extends createZodDto(
+  CreateEmailTranslationOrderCommand.ResponseSchema,
 ) {}
 
-zodToOpenAPI(CreateOrderCommand.BodySchema);
-zodToOpenAPI(CreateOrderCommand.ResponseSchema);
+zodToOpenAPI(CreateEmailTranslationOrderCommand.BodySchema);
+zodToOpenAPI(CreateEmailTranslationOrderCommand.ResponseSchema);

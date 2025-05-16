@@ -18,8 +18,8 @@ import {
 } from 'src/internal/auth/interfaces/jwt-payload.interface';
 import { ORDER_HTTP_CONTROLLER, ORDER_HTTP_ROUTES } from 'libs/contracts/order';
 import {
-  CreateOrderBodyDto,
-  CreateOrderResponseDto,
+  CreateEmailTranslationOrderBodyDto,
+  CreateEmailTranslationOrderResponseDto,
 } from '../dtos/create-order.dto';
 import {
   CreateOrderCommand,
@@ -27,6 +27,7 @@ import {
   ICreateOrderCommandResult,
 } from '../commands/create-order';
 import { GetJWTPayload } from 'src/internal/auth/decorators';
+import { OrderType } from '@prisma/client';
 
 @ApiTags('orders')
 @Controller(ORDER_HTTP_CONTROLLER.ROOT)
@@ -41,16 +42,16 @@ export class OrderController {
   @Roles(UserRole.CUSTOMER)
   @ApiOperation({ summary: 'Create a new order for translation' })
   async createOrder(
-    @Body() createOrderDto: CreateOrderBodyDto,
+    @Body() createOrderDto: CreateEmailTranslationOrderBodyDto,
     @GetJWTPayload() { id: customerId }: JwtPayload,
-  ): Promise<CreateOrderResponseDto> {
+  ): Promise<CreateEmailTranslationOrderResponseDto> {
     this.logger.log(`Received order creation from customer "${customerId}"`);
 
     const commandProps: ICreateOrderCommandProps = {
       customerId,
       languagePairId: createOrderDto.languagePairId,
-      originalText: createOrderDto.originalText,
-      taskSpecificInstructions: createOrderDto.taskSpecificInstructions,
+      sourceContent: createOrderDto.rawEmail,
+      type: OrderType.EMAIL,
     };
 
     const result = await this.commandBus.execute<

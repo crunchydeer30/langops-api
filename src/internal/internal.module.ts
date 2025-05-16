@@ -7,8 +7,8 @@ import { OrderModule } from './order/order.module';
 import { LanguageModule } from './language/language.module';
 import { LanguagePairModule } from './language-pair/language-pair.module';
 import { StaffModule } from './staff/staff.module';
-import { TranslationModule } from './translation/translation.module';
-import { TranslationTaskParsingModule } from './translation-task-parsing/translation-task-parsing.module';
+import { TranslationTaskModule } from './translation-task/translation.module';
+import { TranslationTaskParserModule } from './translation-task-parser/translation-task-parser.module';
 
 @Module({
   imports: [
@@ -20,8 +20,8 @@ import { TranslationTaskParsingModule } from './translation-task-parsing/transla
     LanguagePairModule,
     OrderModule,
     StaffModule,
-    TranslationTaskParsingModule,
-    TranslationModule,
+    TranslationTaskModule,
+    TranslationTaskParserModule,
   ],
 })
 export class InternalModule {}

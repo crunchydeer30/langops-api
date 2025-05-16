@@ -114,6 +114,15 @@ enum TranslationTaskSegmentStatus {
 enum TranslationTaskType {
   EMAIL
   PLAIN_TEXT
+
+  @@map("translation_task_type")
+}
+
+enum OrderType {
+  EMAIL
+  PLAIN_TEXT
+
+  @@map("order_type")
 }
 
 // Models
@@ -229,14 +238,14 @@ model EditorLanguagePair {
 }
 
 model Order {
-  id           String      @id @default(uuid()) @db.Uuid
-  originalText String      @map("original_text")
-  status       OrderStatus @default(PENDING_SUBMISSION) @map("status")
+  id     String      @id @default(uuid()) @db.Uuid
+  status OrderStatus @default(PENDING_SUBMISSION) @map("status")
 
   customerId     String       @map("customer_id") @db.Uuid
   customer       Customer     @relation("CustomerOrders", fields: [customerId], references: [id])
   languagePairId String       @map("language_pair_id") @db.Uuid
   languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])
+  type           OrderType
 
   translationTasks TranslationTask[]
 

@@ -10,7 +10,7 @@ import {
 export interface ITranslationTask {
   id: string;
   sourceContent: string;
-  taskSpecificInstructions?: string | null;
+  templatedContent?: string | null;
   currentStage: TranslationStage;
   status: TranslationTaskStatus;
   orderId: string;
@@ -26,12 +26,12 @@ export interface ITranslationTask {
 export interface ITranslationTaskCreateArgs {
   id?: string;
   sourceContent: string;
+  templatedContent?: string | null;
   orderId: string;
   languagePairId: string;
-  taskSpecificInstructions?: string | null;
   currentStage?: TranslationStage;
   status?: TranslationTaskStatus;
-  type: TranslationTaskType;
+  taskType: TranslationTaskType;
   editorId?: string | null;
   assignedAt?: Date | null;
   completedAt?: Date | null;
@@ -42,7 +42,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
 
   public id: string;
   public sourceContent: string;
-  public taskSpecificInstructions?: string | null;
+  public templatedContent?: string | null;
   public currentStage: TranslationStage;
   public status: TranslationTaskStatus;
   public orderId: string;
@@ -75,12 +75,12 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     const taskProps: ITranslationTask = {
       id,
       sourceContent: args.sourceContent,
-      taskSpecificInstructions: args.taskSpecificInstructions,
+      templatedContent: args.templatedContent,
       currentStage: args.currentStage ?? TranslationStage.READY_FOR_PROCESSING,
       status: args.status ?? TranslationTaskStatus.QUEUED,
       orderId: args.orderId,
       languagePairId: args.languagePairId,
-      type: args.type,
+      type: args.taskType,
       editorId: args.editorId,
       assignedAt: args.assignedAt,
       completedAt: args.completedAt,

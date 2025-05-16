@@ -49,6 +49,11 @@ export const ERRORS = {
       message: 'Invalid order status transition',
       httpStatus: 400,
     },
+    INVALID_ORDER_TYPE: {
+      code: 'ORDER_003',
+      message: 'Invalid or unsupported order type',
+      httpStatus: 400,
+    },
     NO_EDITOR_ASSIGNED: {
       code: 'ORDER_003',
       message: 'No editor assigned to this order',
@@ -201,6 +206,16 @@ export const ERRORS = {
       code: 'TRANSLATION_TASK_004',
       message: 'Failed to parse email content',
       httpStatus: 500,
+    },
+    CREATION_FAILED: {
+      code: 'TRANSLATION_TASK_005',
+      message: 'Failed to create translation task',
+      httpStatus: 500,
+    },
+    MISSING_SOURCE_CONTENT: {
+      code: 'TRANSLATION_TASK_006',
+      message: 'Missing source content for translation task',
+      httpStatus: 400,
     },
   },
 } as const;

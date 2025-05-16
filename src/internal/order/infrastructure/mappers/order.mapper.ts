@@ -9,8 +9,8 @@ export class OrderMapper {
       id: model.id,
       customerId: model.customerId,
       languagePairId: model.languagePairId,
-      originalText: model.originalText,
       status: model.status,
+      type: model.type,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     };
@@ -25,7 +25,7 @@ export class OrderMapper {
       id: entity.id,
       customerId: entity.customerId,
       languagePairId: entity.languagePairId,
-      originalText: entity.originalText,
+      type: entity.type,
       status: entity.status,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
