@@ -21,10 +21,10 @@ import {
 } from '../../application/dtos';
 import { SubmitEditorApplicationCommand } from '../../application/commands/submit-editor-application/submit-editor-application.command';
 import { ApproveEditorApplicationCommand } from '../../application/commands/approve-editor-application/approve-editor-application.command';
-import { JwtAuthGuard } from 'src/internal/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/internal/auth/guards/roles.guard';
-import { Roles } from 'src/internal/auth/decorators/roles.decorator';
-import { UserRole } from 'src/internal/auth/interfaces/jwt-payload.interface';
+import { JwtAuthGuard } from 'src/internal/auth/application/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/internal/auth/application/guards/roles.guard';
+import { Roles } from 'src/internal/auth/application/decorators/roles.decorator';
+import { UserRole } from 'src/internal/auth/application/interfaces/jwt-payload.interface';
 import { EditorApplication } from '../../domain';
 
 @Controller(EDITOR_APPLICATION_HTTP_CONTROLLER)

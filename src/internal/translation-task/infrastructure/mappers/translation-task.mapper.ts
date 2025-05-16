@@ -21,6 +21,7 @@ export class TranslationTaskMapper {
       editorId: model.editorId,
       assignedAt: model.assignedAt,
       type: model.type,
+      wordCount: model.wordCount,
       completedAt: model.completedAt,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,

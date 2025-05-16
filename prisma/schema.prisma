@@ -277,6 +277,14 @@ model TranslationTask {
 
   type TranslationTaskType
 
+  // Word count for pricing and metrics
+  wordCount              Int         @default(0) @map("word_count")
+  estimatedDurationSecs  Int?        @map("estimated_duration_secs")
+  
+  // Editor assignment tracking
+  editorAssignedAt       DateTime?   @map("editor_assigned_at")
+  editorCompletedAt      DateTime?   @map("editor_completed_at")
+  
   assignedAt  DateTime? @map("assigned_at")
   completedAt DateTime? @map("completed_at")
   createdAt   DateTime  @default(now()) @map("created_at")

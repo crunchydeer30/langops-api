@@ -2,10 +2,7 @@ import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { AuthenticateStaffCommand } from './authenticate-staff.command';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  JwtPayload,
-  UserRole,
-} from '../../../interfaces/jwt-payload.interface';
+import { JwtPayload, UserRole } from '../../interfaces/jwt-payload.interface';
 import { Email } from '@common/domain/value-objects';
 import { StaffMemberRepository } from 'src/internal/staff/infrastructure/repositories/staff-member.repository';
 

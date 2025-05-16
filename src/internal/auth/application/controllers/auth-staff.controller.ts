@@ -9,7 +9,7 @@ import {
 import {
   AuthenticateStaffCommand,
   IAuthenticateStaffCommandResult,
-} from '../application/commands/authenticate-staff';
+} from '../commands/authenticate-staff';
 import { Logger } from '@nestjs/common';
 
 @Controller(AUTH_HTTP_CONTROLLER.STAFF)

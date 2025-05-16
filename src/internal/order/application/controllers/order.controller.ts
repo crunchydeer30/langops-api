@@ -9,13 +9,13 @@ import {
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/internal/auth/guards';
-import { RolesGuard } from 'src/internal/auth/guards/roles.guard';
-import { Roles } from 'src/internal/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/internal/auth/application/guards';
+import { RolesGuard } from 'src/internal/auth/application/guards/roles.guard';
+import { Roles } from 'src/internal/auth/application/decorators/roles.decorator';
 import {
   JwtPayload,
   UserRole,
-} from 'src/internal/auth/interfaces/jwt-payload.interface';
+} from 'src/internal/auth/application/interfaces/jwt-payload.interface';
 import { ORDER_HTTP_CONTROLLER, ORDER_HTTP_ROUTES } from 'libs/contracts/order';
 import {
   CreateEmailTranslationOrderBodyDto,
@@ -26,7 +26,7 @@ import {
   ICreateOrderCommandProps,
   ICreateOrderCommandResult,
 } from '../commands/create-order';
-import { GetJWTPayload } from 'src/internal/auth/decorators';
+import { GetJWTPayload } from 'src/internal/auth/application/decorators';
 import { OrderType } from '@prisma/client';
 
 @ApiTags('orders')

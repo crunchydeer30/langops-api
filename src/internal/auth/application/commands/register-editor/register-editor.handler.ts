@@ -13,7 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import {
   JwtPayload,
   UserRole,
-} from 'src/internal/auth/interfaces/jwt-payload.interface';
+} from 'src/internal/auth/application/interfaces/jwt-payload.interface';
 
 @CommandHandler(RegisterEditorCommand)
 export class RegisterEditorHandler

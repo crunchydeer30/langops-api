@@ -55,17 +55,17 @@ export const ERRORS = {
       httpStatus: 400,
     },
     NO_EDITOR_ASSIGNED: {
-      code: 'ORDER_003',
+      code: 'ORDER_004',
       message: 'No editor assigned to this order',
       httpStatus: 400,
     },
     INVALID_OPERATION: {
-      code: 'ORDER_004',
+      code: 'ORDER_005',
       message: 'Invalid operation on order or translation segment',
       httpStatus: 400,
     },
     INVALID_PRICE: {
-      code: 'ORDER_005',
+      code: 'ORDER_006',
       message: 'Invalid price for order',
       httpStatus: 400,
     },
@@ -215,6 +215,29 @@ export const ERRORS = {
     MISSING_SOURCE_CONTENT: {
       code: 'TRANSLATION_TASK_006',
       message: 'Missing source content for translation task',
+      httpStatus: 400,
+    },
+    ALREADY_ASSIGNED: {
+      code: 'TRANSLATION_TASK_007',
+      message: 'Translation task is already assigned to an editor',
+      httpStatus: 409,
+    },
+    NOT_ASSIGNED_TO_EDITOR: {
+      code: 'TRANSLATION_TASK_008',
+      message:
+        'Translation task is not assigned to this editor or does not require editor completion',
+      httpStatus: 403,
+    },
+    INVALID_STATUS_FOR_ASSIGNMENT: {
+      code: 'TRANSLATION_TASK_009',
+      message:
+        'Translation task cannot be assigned in its current status or does not require an editor',
+      httpStatus: 400,
+    },
+    INVALID_STATUS_FOR_COMPLETION: {
+      code: 'TRANSLATION_TASK_010',
+      message:
+        'Translation task cannot be completed by an editor in its current status or was not assigned to one',
       httpStatus: 400,
     },
   },

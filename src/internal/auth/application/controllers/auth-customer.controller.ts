@@ -7,11 +7,11 @@ import {
 } from '../dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AUTH_HTTP_CONTROLLER, AUTH_HTTP_ROUTES } from '@libs/contracts/auth';
-import { AuthenticateCustomerCommand } from '../application/commands/authenticate-customer';
+import { AuthenticateCustomerCommand } from '../commands/authenticate-customer';
 import {
   RegisterCustomerCommand,
   IRegisterCustomerCommandResult,
-} from '../application/commands/register-customer';
+} from '../commands/register-customer';
 import { RegisterCustomerBodyDto } from '../dto';
 import { Logger } from '@nestjs/common';
 

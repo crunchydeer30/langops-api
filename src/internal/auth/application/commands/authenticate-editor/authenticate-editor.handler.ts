@@ -2,10 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AuthenticateEditorCommand } from './authenticate-editor.command';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  JwtPayload,
-  UserRole,
-} from '../../../interfaces/jwt-payload.interface';
+import { JwtPayload, UserRole } from '../../interfaces/jwt-payload.interface';
 import { Email } from '@common/domain/value-objects';
 import { EditorRepository } from 'src/internal/editor/infrastructure/repositories/editor.repository';
 

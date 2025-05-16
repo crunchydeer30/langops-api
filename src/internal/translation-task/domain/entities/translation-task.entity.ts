@@ -17,6 +17,14 @@ export interface ITranslationTask {
   languagePairId: string;
   type: TranslationTaskType;
   editorId?: string | null;
+
+  // Word count for pricing and metrics
+  wordCount: number;
+  estimatedDurationSecs?: number | null;
+  // Editor timing tracking
+  editorAssignedAt?: Date | null;
+  editorCompletedAt?: Date | null;
+  // Original fields
   assignedAt?: Date | null;
   completedAt?: Date | null;
   createdAt: Date;
@@ -33,6 +41,11 @@ export interface ITranslationTaskCreateArgs {
   status?: TranslationTaskStatus;
   taskType: TranslationTaskType;
   editorId?: string | null;
+
+  // Word count and time estimation
+  wordCount?: number;
+  estimatedDurationSecs?: number | null;
+  // Original timing fields
   assignedAt?: Date | null;
   completedAt?: Date | null;
 }
@@ -49,6 +62,14 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
   public languagePairId: string;
   public editorId?: string | null;
   public type: TranslationTaskType;
+
+  // Word count for pricing and metrics
+  public wordCount: number;
+  public estimatedDurationSecs?: number | null;
+  // Editor timing tracking
+  public editorAssignedAt?: Date | null;
+  public editorCompletedAt?: Date | null;
+  // Original timing fields
   public assignedAt?: Date | null;
   public completedAt?: Date | null;
   public createdAt: Date;
@@ -81,6 +102,10 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       orderId: args.orderId,
       languagePairId: args.languagePairId,
       type: args.taskType,
+      wordCount: args.wordCount ?? 0, // Default to 0 if not provided
+      estimatedDurationSecs: args.estimatedDurationSecs ?? null,
+      editorAssignedAt: null,
+      editorCompletedAt: null,
       editorId: args.editorId,
       assignedAt: args.assignedAt,
       completedAt: args.completedAt,

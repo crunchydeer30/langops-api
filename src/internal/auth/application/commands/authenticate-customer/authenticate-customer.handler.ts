@@ -2,10 +2,7 @@ import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { AuthenticateCustomerCommand } from './authenticate-customer.command';
 import { Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  JwtPayload,
-  UserRole,
-} from '../../../interfaces/jwt-payload.interface';
+import { JwtPayload, UserRole } from '../../interfaces/jwt-payload.interface';
 import { Email } from '@common/domain/value-objects';
 import { CustomerRepository } from 'src/internal/customer/infrastructure/repositories/customer.repository';
 import { CustomerLoggedInEvent } from 'src/internal/customer/domain/events';

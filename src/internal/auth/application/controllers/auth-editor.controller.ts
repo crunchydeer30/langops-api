@@ -13,11 +13,11 @@ import {
 import {
   AuthenticateEditorCommand,
   IAuthenticateEditorCommandResult,
-} from '../application/commands/authenticate-editor';
+} from '../commands/authenticate-editor';
 import {
   RegisterEditorCommand,
   IRegisterEditorCommandResult,
-} from '../application/commands/register-editor';
+} from '../commands/register-editor';
 import { Logger } from '@nestjs/common';
 
 @Controller(AUTH_HTTP_CONTROLLER.EDITOR)
