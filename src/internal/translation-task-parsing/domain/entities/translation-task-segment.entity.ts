@@ -66,6 +66,7 @@ export class TranslationTaskSegment
       translationTaskId,
       segmentOrder,
       sourceContent,
+      specialTokensMap = {},
       metadata = null,
     } = args;
 
@@ -76,7 +77,7 @@ export class TranslationTaskSegment
       sourceContent,
       machineTranslatedContent: null,
       editedContent: null,
-      specialTokensMap: {},
+      specialTokensMap,
       metadata,
       createdAt: now,
       updatedAt: now,

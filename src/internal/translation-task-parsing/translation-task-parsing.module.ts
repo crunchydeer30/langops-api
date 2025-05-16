@@ -5,6 +5,8 @@ import {
   TRANSLATION_TASK_PARSING_FLOW,
   TRANSLATION_TASK_PARSING_QUEUES,
 } from './infrastructure/queues';
+import { EmailParsingController } from './controllers/email-parsing.controller';
+import { EmailParsingService } from './application/services/email-parsing.service';
 
 @Module({
   imports: [
@@ -20,6 +22,7 @@ import {
       },
     ),
   ],
-  providers: [TranslationTaskParsingFlow],
+  controllers: [EmailParsingController],
+  providers: [TranslationTaskParsingFlow, EmailParsingService],
 })
 export class TranslationTaskParsingModule {}
