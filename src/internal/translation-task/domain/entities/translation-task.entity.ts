@@ -306,10 +306,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       this.estimatedDurationSecs = estimatedDurationSecs;
     }
 
-    if (!this.wordCount) {
-      throw new DomainException(ERRORS.TRANSLATION_TASK.MISSING_WORD_COUNT);
-    }
-
     const previousStatus = this.setNextStatus(TranslationTaskStatus.PENDING);
     this.currentStage = TranslationStage.QUEUED_FOR_MT;
     this.updatedAt = new Date();

@@ -58,9 +58,6 @@ export class TranslationTaskSegment
   ): TranslationTaskSegment {
     const id = args.id ?? uuidv4();
     const now = new Date();
-    const logger = new Logger(TranslationTaskSegment.name);
-
-    logger.log(`Creating translation task segment with ID ${id}`);
 
     const {
       translationTaskId,

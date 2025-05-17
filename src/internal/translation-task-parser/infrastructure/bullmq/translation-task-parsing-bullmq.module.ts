@@ -4,17 +4,13 @@ import {
   TRANSLATION_TASK_PARSING_FLOWS,
   TRANSLATION_TASK_PARSING_QUEUES,
 } from '../queues/constants';
-
 @Module({
   imports: [
+    BullModule.registerQueue({
+      name: TRANSLATION_TASK_PARSING_QUEUES.ORCHESTRATOR,
+    }),
     BullModule.registerFlowProducer({
-      name: TRANSLATION_TASK_PARSING_FLOWS.MAIN.name,
-    }),
-    BullModule.registerQueue({
-      name: TRANSLATION_TASK_PARSING_QUEUES.MAIN_FLOW,
-    }),
-    BullModule.registerQueue({
-      name: TRANSLATION_TASK_PARSING_QUEUES.MAIN_JOBS,
+      name: TRANSLATION_TASK_PARSING_FLOWS.ORCHESTRATOR.name,
     }),
     BullModule.registerFlowProducer({
       name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.name,

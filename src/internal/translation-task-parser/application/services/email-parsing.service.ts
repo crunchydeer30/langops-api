@@ -27,22 +27,12 @@ export class EmailParsingService {
   ) {}
 
   async parseEmailTask(taskId: string): Promise<void> {
-    this.logger.log(`Starting parsing of email task ${taskId}`);
-
     const task = await this.translationTaskRepository.findById(taskId);
     if (!task) {
       throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
     }
 
     try {
-      const existingSegments =
-        await this.segmentRepository.findByTranslationTaskId(taskId);
-      if (existingSegments.length > 0) {
-        this.logger.log(
-          `Found ${existingSegments.length} existing segments for task ${taskId}, cleaning up before re-parsing`,
-        );
-      }
-
       const sourceContent = task.sourceContent;
       const result = this.parseEmail(sourceContent);
 
@@ -59,10 +49,6 @@ export class EmailParsingService {
 
       this.eventBus.publish(
         new TaskSegmentsCreatedEvent(taskId, domainSegments.length),
-      );
-
-      this.logger.log(
-        `Successfully parsed email task ${taskId} into ${domainSegments.length} segments`,
       );
     } catch (error) {
       this.logger.error(
@@ -82,10 +68,6 @@ export class EmailParsingService {
     taskId: string,
     segments: TranslationTaskSegment[],
   ): Promise<TranslationTaskSegment[]> {
-    this.logger.log(
-      `Persisting ${segments.length} segments for task ${taskId}`,
-    );
-
     const domainSegments = segments.map((segment, index) => {
       return TranslationTaskSegment.create({
         id: segment.id,
@@ -102,9 +84,6 @@ export class EmailParsingService {
     });
 
     await this.segmentRepository.saveMany(domainSegments);
-    this.logger.log(
-      `Successfully persisted ${domainSegments.length} segments for task ${taskId}`,
-    );
 
     return domainSegments;
   }
@@ -243,10 +222,6 @@ export class EmailParsingService {
       });
 
       if (!found) {
-        this.logger.debug(
-          `No exact match found for segment: ${segment.sourceContent.substring(0, 30)}...`,
-        );
-
         template$(blockSelector).each((_, el) => {
           if (found) return;
 

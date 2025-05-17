@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Logger } from '@nestjs/common';
 import { TranslationTaskType } from '@prisma/client';
-import { TranslationTaskParsingFlowOrchestrator } from '../flows';
 import { StartParsingDto } from '../dtos';
+import { TranslationTaskParsingFlowOrchestrator } from '../flows/translation-task-parsing.orchestrator';
 
 @Controller('translation-task-parsing')
 export class TranslationTaskParsingController {
@@ -13,10 +13,6 @@ export class TranslationTaskParsingController {
 
   @Post('start')
   async startParsing(@Body() dto: StartParsingDto) {
-    this.logger.log(
-      `Starting parsing flow for task ${dto.taskId} of type ${dto.taskType}`,
-    );
-
     try {
       const taskType = dto.taskType as TranslationTaskType;
 
@@ -30,12 +26,6 @@ export class TranslationTaskParsingController {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      const errorStack = error instanceof Error ? error.stack : undefined;
-
-      this.logger.error(
-        `Error starting parsing flow: ${errorMessage}`,
-        errorStack,
-      );
 
       return {
         success: false,

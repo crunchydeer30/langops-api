@@ -12,8 +12,6 @@ export class TranslationTaskValidationService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async validateTask(taskId: string): Promise<void> {
-    this.logger.debug(`Validating task ${taskId}`);
-
     const task = await this.prismaService.translationTask.findUnique({
       where: { id: taskId },
       include: {
@@ -45,12 +43,9 @@ export class TranslationTaskValidationService {
         this.logger.error(`Unsupported task type: ${task.type}`);
         throw new DomainException(ERRORS.TRANSLATION_TASK.UNSUPPORTED_TYPE);
     }
-
-    this.logger.debug(`Task ${taskId} validation successful`);
   }
 
   private validateEmailTask(task: { id: string; sourceContent: string }): void {
-    this.logger.debug(`Validating email task ${task.id}`);
     const content = task.sourceContent;
 
     try {

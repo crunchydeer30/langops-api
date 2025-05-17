@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { TranslationTaskParsingFlowOrchestrator } from './application/flows/translation-task-parsing-flow.orchestrator';
 import { EmailTranslationTaskParsingFlowStrategy } from './application/flows/strategies/email-translation-task-parsing-flow.strategy';
 import { EmailTranslationTaskParsingProcessor } from './application/processors/email-translation-task-parsing.processor';
 import { EmailParsingService as EmailParsingOldService } from './application/services/email-parsing-old.service';
@@ -12,6 +11,8 @@ import { TranslationTaskValidationService } from './application/services/transla
 import { TranslationTaskModule } from '../translation-task/translation.module';
 import { TranslationTaskSegmentMapper } from './infrastructure/mappers/translation-task-segment.mapper';
 import { TranslationTaskSegmentRepository } from './infrastructure/repositories/translation-task-segment.repository';
+import { TranslationTaskParsingFlowOrchestrator } from './application/flows/translation-task-parsing.orchestrator';
+import { TranslationTaskParsingOrchestratorProcessor } from './application/processors/translation-task-parsing.processor';
 
 @Module({
   imports: [
@@ -27,9 +28,10 @@ import { TranslationTaskSegmentRepository } from './infrastructure/repositories/
     TranslationTaskValidationService,
 
     // Flow components
-    TranslationTaskParsingFlowOrchestrator,
     EmailTranslationTaskParsingFlowStrategy,
     EmailTranslationTaskParsingProcessor,
+    TranslationTaskParsingFlowOrchestrator,
+    TranslationTaskParsingOrchestratorProcessor,
 
     TranslationTaskSegmentMapper,
     TranslationTaskSegmentRepository,
