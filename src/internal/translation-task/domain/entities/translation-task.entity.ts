@@ -32,7 +32,6 @@ export interface ITranslationTask {
   createdAt: Date;
   updatedAt: Date;
 
-  // Error tracking for rejected tasks
   rejectionReason?: string | null;
 }
 
@@ -55,7 +54,7 @@ export interface ITranslationTaskCreateArgs {
 }
 
 export class TranslationTask extends AggregateRoot implements ITranslationTask {
-  private logger = new Logger(TranslationTask.name);
+  private readonly logger = new Logger(TranslationTask.name);
 
   public id: string;
   public sourceContent: string;
@@ -78,7 +77,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
   public createdAt: Date;
   public updatedAt: Date;
 
-  // Error reason tracking for rejected tasks
   public rejectionReason?: string | null;
 
   constructor(properties: ITranslationTask) {
@@ -94,16 +92,12 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     const id = args.id || uuidv4();
     const now = new Date();
 
-    this.prototype.logger.log(
-      `Creating translation task ${id} for order ${args.orderId}`,
-    );
-
     const taskProps: ITranslationTask = {
       id,
       sourceContent: args.sourceContent,
       templatedContent: args.templatedContent,
       currentStage: args.currentStage ?? TranslationStage.READY_FOR_PROCESSING,
-      status: args.status ?? TranslationTaskStatus.CREATED, // Use CREATED as the initial status
+      status: args.status ?? TranslationTaskStatus.CREATED,
       orderId: args.orderId,
       languagePairId: args.languagePairId,
       type: args.taskType,
@@ -116,17 +110,13 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       completedAt: args.completedAt,
       createdAt: now,
       updatedAt: now,
-      rejectionReason: null, // Initialize rejectionReason as null
+      rejectionReason: null,
     };
 
     const task = new TranslationTask(taskProps);
     return task;
   }
 
-  /**
-   * Mark the task as rejected due to validation failure or other critical issues
-   * that prevent the task from being processed
-   */
   public markAsRejected(reason: string): void {
     this.logger.log(`Marking task ${this.id} as REJECTED. Reason: ${reason}`);
 
@@ -135,13 +125,9 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.rejectionReason = reason;
     this.updatedAt = new Date();
 
-    // Apply domain event
     this.apply(new TaskRejectedEvent(this.id, previousStatus, reason));
   }
 
-  /**
-   * Mark the task as having a parsing error
-   */
   public markAsParsingError(errorMessage: string): void {
     this.logger.log(
       `Marking task ${this.id} as PARSING_ERROR. Error: ${errorMessage}`,
@@ -151,15 +137,11 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.status = TranslationTaskStatus.PARSING_ERROR;
     this.updatedAt = new Date();
 
-    // Apply domain event
     this.apply(
       new TaskParsingErrorEvent(this.id, previousStatus, errorMessage),
     );
   }
 
-  /**
-   * Mark the task as successfully parsed
-   */
   public markAsParsed(
     wordCount?: number,
     estimatedDurationSecs?: number,
@@ -168,7 +150,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       `Marking task ${this.id} as PARSED. Word count: ${wordCount}`,
     );
 
-    // Update word count and estimated duration if provided
     if (wordCount !== undefined) {
       this.wordCount = wordCount;
     }
@@ -181,7 +162,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.status = TranslationTaskStatus.PARSED;
     this.updatedAt = new Date();
 
-    // Apply domain event
     this.apply(
       new TaskParsingCompletedEvent(
         this.id,

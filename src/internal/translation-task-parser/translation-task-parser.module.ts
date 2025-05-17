@@ -3,12 +3,15 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { TranslationTaskParsingFlowOrchestrator } from './application/flows/translation-task-parsing-flow.orchestrator';
 import { EmailTranslationTaskParsingFlowStrategy } from './application/flows/strategies/email-translation-task-parsing-flow.strategy';
 import { EmailTranslationTaskParsingProcessor } from './application/processors/email-translation-task-parsing.processor';
+import { EmailParsingService as EmailParsingOldService } from './application/services/email-parsing-old.service';
 import { EmailParsingService } from './application/services/email-parsing.service';
 import { TranslationTaskParsingBullMQModule } from './infrastructure/bullmq/translation-task-parsing-bullmq.module';
 import { TranslationTaskParsingController } from './application/controllers/translation-task-parsing.controller';
 import { EmailParsingController } from './application/controllers/email-parsing.controller';
 import { TranslationTaskValidationService } from './application/services/translation-task-validation.service';
 import { TranslationTaskModule } from '../translation-task/translation.module';
+import { TranslationTaskSegmentMapper } from './infrastructure/mappers/translation-task-segment.mapper';
+import { TranslationTaskSegmentRepository } from './infrastructure/repositories/translation-task-segment.repository';
 
 @Module({
   imports: [
@@ -19,6 +22,7 @@ import { TranslationTaskModule } from '../translation-task/translation.module';
   controllers: [EmailParsingController, TranslationTaskParsingController],
   providers: [
     // Services
+    EmailParsingOldService,
     EmailParsingService,
     TranslationTaskValidationService,
 
@@ -26,7 +30,14 @@ import { TranslationTaskModule } from '../translation-task/translation.module';
     TranslationTaskParsingFlowOrchestrator,
     EmailTranslationTaskParsingFlowStrategy,
     EmailTranslationTaskParsingProcessor,
+
+    TranslationTaskSegmentMapper,
+    TranslationTaskSegmentRepository,
   ],
-  exports: [EmailParsingService, TranslationTaskParsingFlowOrchestrator],
+  exports: [
+    EmailParsingOldService,
+    EmailParsingService,
+    TranslationTaskParsingFlowOrchestrator,
+  ],
 })
 export class TranslationTaskParserModule {}

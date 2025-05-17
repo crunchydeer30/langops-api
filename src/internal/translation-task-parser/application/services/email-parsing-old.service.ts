@@ -1,13 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventBus } from '@nestjs/cqrs';
-import { DomainException } from '@common/exceptions';
-import { ERRORS } from 'libs/contracts/common/errors/errors';
-import { TranslationTaskRepository } from '../../../translation-task/infrastructure/repositories/translation-task.repository';
-import { TaskSegmentsCreatedEvent } from '../../../translation-task/domain/events/task-segments-created.event';
-import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
-import { TranslationTaskSegmentRepository } from '../../infrastructure/repositories/translation-task-segment.repository';
 import * as cheerio from 'cheerio';
 import { v4 as uuidv4 } from 'uuid';
+import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
 import {
   TranslationSpecialTokenType,
   TranslationSpecialTokenMap,
@@ -19,97 +13,39 @@ import {
 @Injectable()
 export class EmailParsingService {
   private readonly logger = new Logger(EmailParsingService.name);
-
-  constructor(
-    private readonly translationTaskRepository: TranslationTaskRepository,
-    private readonly segmentRepository: TranslationTaskSegmentRepository,
-    private readonly eventBus: EventBus,
-  ) {}
-
-  async parseEmailTask(taskId: string): Promise<void> {
-    this.logger.log(`Starting parsing of email task ${taskId}`);
-
-    const task = await this.translationTaskRepository.findById(taskId);
-    if (!task) {
-      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
-    }
-
-    try {
-      const existingSegments =
-        await this.segmentRepository.findByTranslationTaskId(taskId);
-      if (existingSegments.length > 0) {
-        this.logger.log(
-          `Found ${existingSegments.length} existing segments for task ${taskId}, cleaning up before re-parsing`,
-        );
-      }
-
-      const sourceContent = task.sourceContent;
-      const result = this.parseEmail(sourceContent);
-
-      task.templatedContent = result.task.templatedData;
-
-      const domainSegments = await this.persistSegments(
-        taskId,
-        result.segments,
-      );
-
-      task.markAsParsed(domainSegments.length);
-
-      await this.translationTaskRepository.save(task);
-
-      this.eventBus.publish(
-        new TaskSegmentsCreatedEvent(taskId, domainSegments.length),
-      );
-
-      this.logger.log(
-        `Successfully parsed email task ${taskId} into ${domainSegments.length} segments`,
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to parse email task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-
-      task.markAsParsingError(
-        error instanceof Error ? error.message : String(error),
-      );
-      await this.translationTaskRepository.save(task);
-
-      throw error;
-    }
-  }
-
-  private async persistSegments(
-    taskId: string,
+  reconstructEmail(
+    templatedData: string,
     segments: TranslationTaskSegment[],
-  ): Promise<TranslationTaskSegment[]> {
-    this.logger.log(
-      `Persisting ${segments.length} segments for task ${taskId}`,
-    );
+    useEditedContent = true,
+  ): string {
+    let result = templatedData;
 
-    const domainSegments = segments.map((segment, index) => {
-      return TranslationTaskSegment.create({
-        id: segment.id,
-        translationTaskId: taskId,
-        segmentOrder: index,
-        sourceContent: segment.sourceContent,
-        specialTokensMap: segment.specialTokensMap,
-        metadata: {
-          originalIndex: index,
-          createdFromParser: true,
-          parseTimestamp: new Date().toISOString(),
-        },
+    segments.forEach((segment) => {
+      const segmentContent =
+        (useEditedContent && segment.editedContent) ||
+        segment.machineTranslatedContent ||
+        segment.sourceContent;
+
+      result = result.replace(`{${segment.id}}`, `(!) ${segmentContent}`);
+    });
+
+    segments.forEach((segment) => {
+      const { specialTokensMap } = segment;
+      if (!specialTokensMap) return;
+
+      Object.entries(specialTokensMap).forEach(([tokenId, tokenData]) => {
+        const replacement = tokenData.sourceContent;
+
+        result = result.replace(
+          new RegExp(`\\{${tokenId}\\}`, 'g'),
+          replacement,
+        );
       });
     });
 
-    await this.segmentRepository.saveMany(domainSegments);
-    this.logger.log(
-      `Successfully persisted ${domainSegments.length} segments for task ${taskId}`,
-    );
-
-    return domainSegments;
+    return result;
   }
-
-  private parseEmail(email: string) {
+  parseEmail(email: string) {
     const taskId = uuidv4();
     const tokenCounters: Record<string, number> = {};
     const $ = cheerio.load(email);
@@ -167,7 +103,6 @@ export class EmailParsingService {
       const blockHtml = $.html(blockElem);
       const $$ = cheerio.load(blockHtml);
       const specialTokensMap: TranslationSpecialTokenMap = {};
-
       $$('b, strong, i, em, a, img, span, u, code, sup, sub, font').each(
         (_, el) => {
           const tagName = el.tagName.toLowerCase();
@@ -194,7 +129,7 @@ export class EmailParsingService {
             type: tokenType,
             attrs,
             innerHtml,
-          } as TranslationSpecialToken;
+          };
 
           if (tokenType === TranslationSpecialTokenType.URL) {
             const urlToken = tokenData as UrlSpecialToken;
@@ -210,7 +145,6 @@ export class EmailParsingService {
           $$(el).replaceWith(`{${tokenId}}`);
         },
       );
-
       const plainText = $$.root().text();
       const segment = TranslationTaskSegment.create({
         translationTaskId: taskId,
@@ -276,8 +210,17 @@ export class EmailParsingService {
       templatedData: template$.html(),
     };
 
+    const reconstructedData = this.reconstructEmail(
+      taskResult.templatedData,
+      segments,
+      false,
+    );
+
     return {
-      task: taskResult,
+      task: {
+        ...taskResult,
+        reconstructedData,
+      },
       segments,
     };
   }

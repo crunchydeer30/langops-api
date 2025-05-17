@@ -30,9 +30,16 @@ export class EmailTranslationTaskParsingFlowStrategy
       data: { taskId },
       children: [
         {
-          name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name,
+          name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.PARSE.name,
           data: { taskId },
           queueName: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS,
+          children: [
+            {
+              name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name,
+              data: { taskId },
+              queueName: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS,
+            },
+          ],
         },
       ],
     };

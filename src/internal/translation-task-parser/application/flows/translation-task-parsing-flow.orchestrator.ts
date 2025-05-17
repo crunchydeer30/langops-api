@@ -40,7 +40,6 @@ export class TranslationTaskParsingFlowOrchestrator {
         `Starting parsing flow for task ${taskId} of type ${taskType}`,
       );
 
-      // For now, only support email tasks
       if (taskType !== TranslationTaskType.EMAIL) {
         this.logger.warn(
           `Task type ${taskType} not yet supported, only EMAIL type is currently implemented`,

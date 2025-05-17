@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { EmailParsingService } from '../services/email-parsing.service';
+import { EmailParsingService } from '../services/email-parsing-old.service';
 
 @Controller('email-parse')
 export class EmailParsingController {

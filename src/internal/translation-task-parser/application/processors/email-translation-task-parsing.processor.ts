@@ -6,6 +6,7 @@ import {
 } from '../../infrastructure/queues/constants';
 import { Job } from 'bullmq';
 import { TranslationTaskValidationService } from '../services/translation-task-validation.service';
+import { EmailParsingService } from '../services/email-parsing.service';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class EmailTranslationTaskParsingProcessor extends WorkerHost {
 
   constructor(
     private readonly validationService: TranslationTaskValidationService,
+    private readonly emailParsingService: EmailParsingService,
     private readonly translationTaskRepository: TranslationTaskRepository,
   ) {
     super();
@@ -26,6 +28,9 @@ export class EmailTranslationTaskParsingProcessor extends WorkerHost {
     switch (job.name) {
       case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name:
         await this.handleValidationJob(job);
+        return;
+      case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.PARSE.name:
+        await this.handleParsingJob(job);
         return;
       default:
         this.logger.error(
@@ -42,9 +47,26 @@ export class EmailTranslationTaskParsingProcessor extends WorkerHost {
 
     try {
       await this.validationService.validateTask(taskId);
-      this.logger.debug(`Task ${taskId} validated successfully`);
+
+      this.logger.log(`Task ${taskId} validated successfully`);
     } catch (error) {
       await this.handleValidationError(taskId, error);
+    }
+  }
+
+  private async handleParsingJob(
+    job: Job<{ taskId: string }, any>,
+  ): Promise<void> {
+    const { taskId } = job.data;
+    this.logger.log(`Processing parsing job for task ${taskId}`);
+
+    try {
+      await this.emailParsingService.parseEmailTask(taskId);
+      this.logger.log(`Task ${taskId} parsed successfully`);
+    } catch (error) {
+      this.logger.error(
+        `Parsing job failed for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

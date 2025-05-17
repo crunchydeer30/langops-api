@@ -17,6 +17,9 @@ export const TRANSLATION_TASK_PARSING_FLOWS = {
       VALIDATE: {
         name: 'validate',
       },
+      PARSE: {
+        name: 'parse',
+      },
     },
   },
 } as const;
