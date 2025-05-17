@@ -20,11 +20,9 @@ enum EditorRole {
 }
 
 enum OrderStatus {
-  PENDING_SUBMISSION
+  PENDING
   IN_PROGRESS
   COMPLETED
-  PARTIALLY_COMPLETED
-  FAILED
   CANCELLED
 
   @@map("order_statuses")
@@ -76,43 +74,27 @@ enum StaffRole {
 }
 
 enum TranslationStage {
-  READY_FOR_PROCESSING
-  TEMPLATING
-  MACHINE_TRANSLATION
-  READY_FOR_EDITING
-  EDITED
+  CREATED
+  QUEUED_FOR_PARSING
+  PARSING
+  PARSED
+  PROCESSING_ERROR
+  QUEUED_FOR_EDITING
+  EDITING
+  COMPLETED
+  REJECTED
 
   @@map("translation_stages")
 }
 
 enum TranslationTaskStatus {
-  QUEUED
-  ACTIVE
-  SUCCESS
-  FAILURE
-  CANCELLED_BY_USER
-  PAUSED_BY_SYSTEM
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ERROR
   REJECTED
-  PARSING_ERROR
-  CREATED
-  PARSED
 
   @@map("translation_task_statuses")
-}
-
-enum TranslationTaskSegmentStatus {
-  PENDING_PARSING
-  PARSED
-  PENDING_MT
-  MACHINE_TRANSLATED
-  PENDING_HUMAN_EDIT
-  HUMAN_EDITED
-  COMPLETED
-  ERROR_PARSING
-  ERROR_MT
-  ERROR_PROCESSING
-
-  @@map("translation_task_segment_statuses")
 }
 
 enum TranslationTaskType {
@@ -243,7 +225,7 @@ model EditorLanguagePair {
 
 model Order {
   id     String      @id @default(uuid()) @db.Uuid
-  status OrderStatus @default(PENDING_SUBMISSION) @map("status")
+  status OrderStatus @default(PENDING) @map("status")
 
   customerId     String       @map("customer_id") @db.Uuid
   customer       Customer     @relation("CustomerOrders", fields: [customerId], references: [id])
@@ -273,8 +255,9 @@ model TranslationTask {
   sourceContent    String  @map("source_content")
   templatedContent String? @map("templated_content")
 
-  status       TranslationTaskStatus @default(QUEUED) @map("status")
-  currentStage TranslationStage      @default(READY_FOR_PROCESSING) @map("current_stage")
+  status       TranslationTaskStatus @default(PENDING) @map("status")
+  currentStage TranslationStage      @default(CREATED) @map("current_stage")
+  errorMessage String?               @map("error_message")
 
   segments TranslationTaskSegment[]
 
@@ -309,8 +292,6 @@ model TranslationTaskSegment {
 
   /// [TranslationSpecialTokenMap]
   specialTokensMap Json @map("special_tokens_map") @db.JsonB
-
-  status TranslationTaskSegmentStatus @default(PENDING_PARSING) @map("status")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

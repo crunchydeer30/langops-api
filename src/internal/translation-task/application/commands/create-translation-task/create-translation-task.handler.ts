@@ -35,7 +35,7 @@ export class CreateTranslationTaskHandler
       languagePairId: props.languagePairId,
       sourceContent: props.sourceContent,
       taskType: props.taskType,
-      status: TranslationTaskStatus.QUEUED,
+      status: TranslationTaskStatus.PENDING as TranslationTaskStatus,
     });
 
     const taskWithEvents = this.publisher.mergeObjectContext(translationTask);

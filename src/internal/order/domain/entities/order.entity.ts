@@ -1,11 +1,6 @@
 import { AggregateRoot } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import {
-  OrderStatus,
-  TranslationStage,
-  Prisma,
-  OrderType,
-} from '@prisma/client';
+import { OrderStatus, OrderType } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from '@libs/contracts/common';
@@ -18,9 +13,6 @@ export interface IOrder {
   status: OrderStatus;
   type: OrderType;
   totalPrice?: number | null;
-  currentStage?: TranslationStage | null;
-  sensitiveDataMaskedText?: string | null;
-  parsedTextSegments?: Prisma.JsonValue | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,9 +31,7 @@ export class Order extends AggregateRoot {
   public languagePairId: string;
   public status: OrderStatus;
   public type: OrderType;
-  public currentStage?: TranslationStage | null;
-  public sensitiveDataMaskedText?: string | null;
-  public parsedTextSegments?: Prisma.JsonValue | null;
+  public totalPrice?: number | null;
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -52,9 +42,7 @@ export class Order extends AggregateRoot {
     this.languagePairId = props.languagePairId;
     this.status = props.status;
     this.type = props.type;
-    this.currentStage = props.currentStage;
-    this.sensitiveDataMaskedText = props.sensitiveDataMaskedText;
-    this.parsedTextSegments = props.parsedTextSegments;
+    this.totalPrice = props.totalPrice;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
   }
@@ -68,11 +56,8 @@ export class Order extends AggregateRoot {
       customerId: args.customerId,
       languagePairId: args.languagePairId,
       type: args.type,
-      status: OrderStatus.PENDING_SUBMISSION,
+      status: OrderStatus.PENDING as OrderStatus,
       totalPrice: null,
-      currentStage: TranslationStage.READY_FOR_PROCESSING,
-      sensitiveDataMaskedText: null,
-      parsedTextSegments: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -84,14 +69,14 @@ export class Order extends AggregateRoot {
 
   public startProgress(): void {
     this.logger.log(`Starting progress for order: ${this.id}`);
-    if (this.status !== OrderStatus.PENDING_SUBMISSION) {
+    if (this.status !== OrderStatus.PENDING) {
       this.logger.warn(
         `Cannot start progress for order ${this.id} in status ${this.status}`,
       );
       throw new DomainException(ERRORS.ORDER.INVALID_STATUS_TRANSITION);
     }
     const previousStatus = this.status;
-    this.status = OrderStatus.IN_PROGRESS;
+    this.status = OrderStatus.IN_PROGRESS as OrderStatus;
     this.updatedAt = new Date();
     this.apply(
       new OrderStatusChangedEvent({
@@ -112,7 +97,7 @@ export class Order extends AggregateRoot {
       throw new DomainException(ERRORS.ORDER.INVALID_STATUS_TRANSITION);
     }
     const previousStatus = this.status;
-    this.status = OrderStatus.COMPLETED;
+    this.status = OrderStatus.COMPLETED as OrderStatus;
     this.updatedAt = new Date();
     this.apply(
       new OrderStatusChangedEvent({
@@ -127,7 +112,8 @@ export class Order extends AggregateRoot {
   public failOrder(): void {
     this.logger.log(`Failing order: ${this.id}`);
     const previousStatus = this.status;
-    this.status = OrderStatus.FAILED;
+    // Changed from FAILED to CANCELLED since we removed the FAILED status
+    this.status = OrderStatus.CANCELLED as OrderStatus;
     this.updatedAt = new Date();
     this.apply(
       new OrderStatusChangedEvent({
@@ -141,17 +127,14 @@ export class Order extends AggregateRoot {
 
   public cancelOrder(): void {
     this.logger.log(`Cancelling order: ${this.id}`);
-    if (
-      this.status === OrderStatus.COMPLETED ||
-      this.status === OrderStatus.FAILED
-    ) {
+    if (this.status === OrderStatus.COMPLETED) {
       this.logger.warn(
         `Cannot cancel order ${this.id} in status ${this.status}`,
       );
       throw new DomainException(ERRORS.ORDER.INVALID_STATUS_TRANSITION);
     }
     const previousStatus = this.status;
-    this.status = OrderStatus.CANCELLED;
+    this.status = OrderStatus.CANCELLED as OrderStatus;
     this.updatedAt = new Date();
     this.apply(
       new OrderStatusChangedEvent({

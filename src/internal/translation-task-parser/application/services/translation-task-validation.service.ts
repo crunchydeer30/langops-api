@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TranslationTaskType } from '@prisma/client';
+import { TranslationTaskStatus, TranslationTaskType } from '@prisma/client';
 import { JSDOM } from 'jsdom';
 import { DomainException } from '@common/exceptions';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
@@ -27,7 +27,7 @@ export class TranslationTaskValidationService {
       throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
     }
 
-    if (task.status !== 'CREATED' && task.status !== 'QUEUED') {
+    if (task.status !== TranslationTaskStatus.PENDING) {
       this.logger.error(`Task ${taskId} has invalid status: ${task.status}`);
       throw new DomainException(ERRORS.TRANSLATION_TASK.INVALID_STATUS);
     }

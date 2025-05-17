@@ -26,13 +26,14 @@ export interface ITranslationTask {
 
   editorAssignedAt?: Date | null;
   editorCompletedAt?: Date | null;
-
   assignedAt?: Date | null;
   completedAt?: Date | null;
+
   createdAt: Date;
   updatedAt: Date;
 
   rejectionReason?: string | null;
+  errorMessage?: string | null;
 }
 
 export interface ITranslationTaskCreateArgs {
@@ -49,6 +50,8 @@ export interface ITranslationTaskCreateArgs {
   wordCount?: number;
   estimatedDurationSecs?: number | null;
 
+  editorAssignedAt?: Date | null;
+  editorCompletedAt?: Date | null;
   assignedAt?: Date | null;
   completedAt?: Date | null;
 }
@@ -71,17 +74,35 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
 
   public editorAssignedAt?: Date | null;
   public editorCompletedAt?: Date | null;
-
   public assignedAt?: Date | null;
   public completedAt?: Date | null;
+
   public createdAt: Date;
   public updatedAt: Date;
 
   public rejectionReason?: string | null;
+  public errorMessage?: string | null;
 
   constructor(properties: ITranslationTask) {
     super();
-    Object.assign(this, properties);
+    this.id = properties.id;
+    this.sourceContent = properties.sourceContent;
+    this.templatedContent = properties.templatedContent;
+    this.currentStage = properties.currentStage;
+    this.status = properties.status;
+    this.orderId = properties.orderId;
+    this.languagePairId = properties.languagePairId;
+    this.type = properties.type;
+    this.wordCount = properties.wordCount;
+    this.estimatedDurationSecs = properties.estimatedDurationSecs;
+    this.editorAssignedAt = properties.editorAssignedAt;
+    this.editorCompletedAt = properties.editorCompletedAt;
+    this.assignedAt = properties.assignedAt;
+    this.completedAt = properties.completedAt;
+    this.rejectionReason = properties.rejectionReason;
+    this.errorMessage = properties.errorMessage;
+    this.createdAt = properties.createdAt;
+    this.updatedAt = properties.updatedAt;
   }
 
   public static reconstitute(properties: ITranslationTask): TranslationTask {
@@ -96,18 +117,20 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       id,
       sourceContent: args.sourceContent,
       templatedContent: args.templatedContent,
-      currentStage: args.currentStage ?? TranslationStage.READY_FOR_PROCESSING,
-      status: args.status ?? TranslationTaskStatus.CREATED,
+      currentStage:
+        args.currentStage ?? (TranslationStage.CREATED as TranslationStage),
+      status:
+        args.status ?? (TranslationTaskStatus.PENDING as TranslationTaskStatus),
       orderId: args.orderId,
       languagePairId: args.languagePairId,
       type: args.taskType,
       wordCount: args.wordCount ?? 0,
       estimatedDurationSecs: args.estimatedDurationSecs ?? null,
-      editorAssignedAt: null,
-      editorCompletedAt: null,
+      editorAssignedAt: args.editorAssignedAt ?? null,
+      editorCompletedAt: args.editorCompletedAt ?? null,
       editorId: args.editorId,
-      assignedAt: args.assignedAt,
-      completedAt: args.completedAt,
+      assignedAt: args.assignedAt ?? null,
+      completedAt: args.completedAt ?? null,
       createdAt: now,
       updatedAt: now,
       rejectionReason: null,
@@ -121,7 +144,8 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.logger.log(`Marking task ${this.id} as REJECTED. Reason: ${reason}`);
 
     const previousStatus = this.status;
-    this.status = TranslationTaskStatus.REJECTED;
+    this.status = TranslationTaskStatus.REJECTED as TranslationTaskStatus;
+    this.currentStage = TranslationStage.REJECTED as TranslationStage;
     this.rejectionReason = reason;
     this.updatedAt = new Date();
 
@@ -130,11 +154,13 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
 
   public markAsParsingError(errorMessage: string): void {
     this.logger.log(
-      `Marking task ${this.id} as PARSING_ERROR. Error: ${errorMessage}`,
+      `Marking task ${this.id} as ERROR with PROCESSING_ERROR stage. Error: ${errorMessage}`,
     );
 
     const previousStatus = this.status;
-    this.status = TranslationTaskStatus.PARSING_ERROR;
+    this.status = TranslationTaskStatus.ERROR as TranslationTaskStatus;
+    this.currentStage = TranslationStage.PROCESSING_ERROR as TranslationStage;
+    this.errorMessage = errorMessage;
     this.updatedAt = new Date();
 
     this.apply(
@@ -147,7 +173,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     estimatedDurationSecs?: number,
   ): void {
     this.logger.log(
-      `Marking task ${this.id} as PARSED. Word count: ${wordCount}`,
+      `Marking task ${this.id} as IN_PROGRESS with PARSED stage. Word count: ${wordCount}`,
     );
 
     if (wordCount !== undefined) {
@@ -159,7 +185,8 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     }
 
     const previousStatus = this.status;
-    this.status = TranslationTaskStatus.PARSED;
+    this.status = TranslationTaskStatus.IN_PROGRESS as TranslationTaskStatus;
+    this.currentStage = TranslationStage.PARSED as TranslationStage;
     this.updatedAt = new Date();
 
     this.apply(
