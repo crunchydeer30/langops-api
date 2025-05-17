@@ -207,7 +207,7 @@ export class EmailParsingService {
           }
 
           specialTokensMap[tokenId] = tokenData;
-          $$(el).replaceWith(`{${tokenId}}`);
+          $$(el).replaceWith(`[[TKN::${tokenId}]]`);
         },
       );
 
@@ -236,7 +236,7 @@ export class EmailParsingService {
         const exactMatch = elemText === sourceText;
 
         if (exactMatch && template$(el).find(blockSelector).length === 0) {
-          template$(el).html(`{${segment.id}}`);
+          template$(el).html(`[[TKN::${segment.id}]]`);
           found = true;
           return false;
         }
@@ -255,13 +255,13 @@ export class EmailParsingService {
 
           if (
             template$(el).find(blockSelector).length === 0 &&
-            !template$(el).html()?.includes('{')
+            !template$(el).html()?.includes('[[TKN::')
           ) {
             if (
               elemText.length > 20 &&
               (elemText.includes(sourceText) || sourceText.includes(elemText))
             ) {
-              template$(el).html(`{${segment.id}}`);
+              template$(el).html(`[[TKN::${segment.id}]]`);
               found = true;
               return false;
             }

@@ -276,8 +276,7 @@ model TranslationTask {
   status       TranslationTaskStatus @default(QUEUED) @map("status")
   currentStage TranslationStage      @default(READY_FOR_PROCESSING) @map("current_stage")
 
-  segments             TranslationTaskSegment[]
-  sensitiveDataMapping SensitiveDataMapping?
+  segments TranslationTaskSegment[]
 
   type TranslationTaskType
 
@@ -397,17 +396,4 @@ model EvaluationTask {
 
   @@unique([evaluationSetId, order], name: "uq_evaluation_tasks_set_order")
   @@map("evaluation_tasks")
-}
-
-model SensitiveDataMapping {
-  id       String @id @default(uuid()) @db.Uuid
-  tokenMap Json   @map("token_map") @db.JsonB
-
-  translationTaskId String          @unique @map("translation_task_id") @db.Uuid
-  translationTask   TranslationTask @relation(fields: [translationTaskId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("sensitive_data_mappings")
 }
