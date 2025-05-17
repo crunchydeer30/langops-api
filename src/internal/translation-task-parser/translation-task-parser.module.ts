@@ -1,28 +1,25 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
-import { TranslationTaskParsingFlow } from './application/flows/translation-task-parsing.flow';
-import {
-  TRANSLATION_TASK_PARSING_FLOW,
-  TRANSLATION_TASK_PARSING_QUEUES,
-} from './infrastructure/queues';
+import { CqrsModule } from '@nestjs/cqrs';
+import { TranslationTaskParsingFlowOrchestrator } from './application/flows/translation-task-parsing-flow.orchestrator';
+import { EmailTranslationTaskParsingFlowStrategy } from './application/flows/strategies/email-translation-task-parsing-flow.strategy';
+import { EmailTranslationTaskParsingProcessor } from './application/processors/email-translation-task-parsing.processor';
 import { EmailParsingController } from './controllers/email-parsing.controller';
+import { TranslationTaskParsingController } from './controllers/translation-task-parsing.controller';
 import { EmailParsingService } from './application/services/email-parsing.service';
+import { TranslationTaskParsingBullMQModule } from './infrastructure/bullmq/translation-task-parsing-bullmq.module';
 
 @Module({
-  imports: [
-    BullModule.registerFlowProducer({
-      name: TRANSLATION_TASK_PARSING_FLOW.name,
-    }),
-    BullModule.registerQueue(
-      {
-        name: TRANSLATION_TASK_PARSING_QUEUES.TRANSLATION_TASK_PARSING_FLOW_QUEUE,
-      },
-      {
-        name: TRANSLATION_TASK_PARSING_QUEUES.TRANSLATION_TASK_PARSING_JOBS_QUEUE,
-      },
-    ),
+  imports: [CqrsModule, TranslationTaskParsingBullMQModule],
+  controllers: [EmailParsingController, TranslationTaskParsingController],
+  providers: [
+    // Services
+    EmailParsingService,
+
+    // Flow components
+    TranslationTaskParsingFlowOrchestrator,
+    EmailTranslationTaskParsingFlowStrategy,
+    EmailTranslationTaskParsingProcessor,
   ],
-  controllers: [EmailParsingController],
-  providers: [TranslationTaskParsingFlow, EmailParsingService],
+  exports: [EmailParsingService, TranslationTaskParsingFlowOrchestrator],
 })
 export class TranslationTaskParserModule {}
