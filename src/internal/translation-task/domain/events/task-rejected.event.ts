@@ -1,9 +1,11 @@
 import { TranslationTaskStatus } from '@prisma/client';
 
+export interface TaskRejectedPayload {
+  taskId: string;
+  previousStatus: TranslationTaskStatus;
+  rejectionReason: string;
+}
+
 export class TaskRejectedEvent {
-  constructor(
-    public readonly taskId: string,
-    public readonly previousStatus: TranslationTaskStatus,
-    public readonly rejectionReason: string,
-  ) {}
+  constructor(public readonly payload: TaskRejectedPayload) {}
 }

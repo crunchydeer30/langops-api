@@ -260,13 +260,28 @@ export const ERRORS = {
       message: 'Email validation failed',
       httpStatus: 400,
     },
-    INVALID_HTML_STRUCTURE: {
+    HTML_PARSING_FAILED: {
       code: 'TRANSLATION_TASK_015',
+      message: 'HTML parsing failed',
+      httpStatus: 400,
+    },
+    EDITOR_NOT_ASSIGNED: {
+      code: 'TRANSLATION_TASK_015',
+      message: 'Editor ID must be set before starting editing',
+      httpStatus: 400,
+    },
+    MISSING_WORD_COUNT: {
+      code: 'TRANSLATION_TASK_016',
+      message: 'Word count must be set before marking as parsed',
+      httpStatus: 400,
+    },
+    INVALID_HTML_STRUCTURE: {
+      code: 'TRANSLATION_TASK_017',
       message: 'Invalid HTML structure in email content',
       httpStatus: 400,
     },
     NO_TRANSLATABLE_CONTENT: {
-      code: 'TRANSLATION_TASK_016',
+      code: 'TRANSLATION_TASK_018',
       message: 'No translatable content found in email',
       httpStatus: 400,
     },

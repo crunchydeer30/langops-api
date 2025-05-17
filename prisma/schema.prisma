@@ -74,15 +74,13 @@ enum StaffRole {
 }
 
 enum TranslationStage {
-  CREATED
-  QUEUED_FOR_PARSING
-  PARSING
-  PARSED
-  PROCESSING_ERROR
+  QUEUED_FOR_PROCESSING
+  PROCESSING
+  QUEUED_FOR_MT
+  MACHINE_TRANSLATING
   QUEUED_FOR_EDITING
   EDITING
   COMPLETED
-  REJECTED
 
   @@map("translation_stages")
 }
@@ -256,7 +254,7 @@ model TranslationTask {
   templatedContent String? @map("templated_content")
 
   status       TranslationTaskStatus @default(PENDING) @map("status")
-  currentStage TranslationStage      @default(CREATED) @map("current_stage")
+  currentStage TranslationStage      @default(QUEUED_FOR_PROCESSING) @map("current_stage")
   errorMessage String?               @map("error_message")
 
   segments TranslationTaskSegment[]

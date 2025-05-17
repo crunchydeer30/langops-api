@@ -1,14 +1,23 @@
 import { AggregateRoot } from '@nestjs/cqrs';
-import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '@nestjs/common';
 import {
   TranslationStage,
   TranslationTaskStatus,
   TranslationTaskType,
 } from '@prisma/client';
-import { TaskRejectedEvent } from '../events/task-rejected.event';
-import { TaskParsingErrorEvent } from '../events/task-parsing-error.event';
-import { TaskParsingCompletedEvent } from '../events/task-parsing-completed.event';
+import {
+  TaskCompletedEvent,
+  TaskEditingStartedEvent,
+  TaskMachineTranslationStartedEvent,
+  TaskParsingCompletedEvent,
+  TaskParsingErrorEvent,
+  TaskProcessingStartedEvent,
+  TaskQueuedForEditingEvent,
+  TaskRejectedEvent,
+} from '../events';
+import { v4 as uuidv4 } from 'uuid';
+import { DomainException } from '@common/exceptions';
+import { ERRORS } from 'libs/contracts/common/errors/errors';
 
 export interface ITranslationTask {
   id: string;
@@ -117,8 +126,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       id,
       sourceContent: args.sourceContent,
       templatedContent: args.templatedContent,
-      currentStage:
-        args.currentStage ?? (TranslationStage.CREATED as TranslationStage),
+      currentStage: args.currentStage ?? TranslationStage.QUEUED_FOR_PROCESSING,
       status:
         args.status ?? (TranslationTaskStatus.PENDING as TranslationTaskStatus),
       orderId: args.orderId,
@@ -140,62 +148,179 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     return task;
   }
 
-  public markAsRejected(reason: string): void {
-    this.logger.log(`Marking task ${this.id} as REJECTED. Reason: ${reason}`);
-
+  private setNextStatus(
+    newStatus: TranslationTaskStatus,
+  ): TranslationTaskStatus {
     const previousStatus = this.status;
-    this.status = TranslationTaskStatus.REJECTED as TranslationTaskStatus;
-    this.currentStage = TranslationStage.REJECTED as TranslationStage;
+    this.status = newStatus;
+    return previousStatus;
+  }
+
+  private async validateEditorAssignment(): Promise<void> {
+    if (!this.editorId) {
+      const error = new DomainException(
+        ERRORS.TRANSLATION_TASK.EDITOR_NOT_ASSIGNED,
+      );
+      this.logger.error(
+        `Failed to start editing for task ${this.id}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  public startProcessing(): void {
+    const previousStatus = this.setNextStatus(
+      TranslationTaskStatus.IN_PROGRESS,
+    );
+    const previousStage = this.currentStage;
+
+    this.currentStage = TranslationStage.PROCESSING;
+    this.updatedAt = new Date();
+
+    this.apply(
+      new TaskProcessingStartedEvent({
+        taskId: this.id,
+        previousStatus,
+        previousStage,
+      }),
+    );
+  }
+
+  public startMachineTranslation(): void {
+    const previousStatus = this.status;
+    const previousStage = this.currentStage;
+
+    this.currentStage = TranslationStage.MACHINE_TRANSLATING;
+    this.updatedAt = new Date();
+
+    this.apply(
+      new TaskMachineTranslationStartedEvent({
+        taskId: this.id,
+        previousStatus,
+        previousStage,
+      }),
+    );
+  }
+
+  public queueForEditing(): void {
+    const previousStatus = this.status;
+    const previousStage = this.currentStage;
+
+    this.status = TranslationTaskStatus.PENDING;
+    this.currentStage = TranslationStage.QUEUED_FOR_EDITING;
+    this.updatedAt = new Date();
+
+    this.apply(
+      new TaskQueuedForEditingEvent({
+        taskId: this.id,
+        previousStatus,
+        previousStage,
+      }),
+    );
+  }
+
+  public async startEditing(): Promise<void> {
+    await this.validateEditorAssignment();
+
+    const previousStatus = this.setNextStatus(
+      TranslationTaskStatus.IN_PROGRESS,
+    );
+    const previousStage = this.currentStage;
+
+    this.currentStage = TranslationStage.EDITING;
+    this.editorAssignedAt = new Date();
+    this.updatedAt = new Date();
+
+    this.apply(
+      new TaskEditingStartedEvent({
+        taskId: this.id,
+        previousStatus,
+        previousStage,
+        editorId: this.editorId || null,
+      }),
+    );
+  }
+
+  public completeTask(): void {
+    const previousStatus = this.setNextStatus(TranslationTaskStatus.COMPLETED);
+    const previousStage = this.currentStage;
+
+    this.currentStage = TranslationStage.COMPLETED;
+    if (!this.editorId) {
+      this.logger.warn(
+        `Task ${this.id} completed without an editor assignment.`,
+      );
+    }
+    this.completedAt = new Date();
+    if (this.editorId) {
+      this.editorCompletedAt = new Date();
+    }
+    this.updatedAt = new Date();
+
+    this.apply(
+      new TaskCompletedEvent({
+        taskId: this.id,
+        previousStatus,
+        previousStage,
+        editorId: this.editorId || null,
+      }),
+    );
+  }
+
+  public markAsRejected(reason: string): void {
+    const previousStatus = this.setNextStatus(TranslationTaskStatus.REJECTED);
+
     this.rejectionReason = reason;
     this.updatedAt = new Date();
 
-    this.apply(new TaskRejectedEvent(this.id, previousStatus, reason));
+    this.apply(
+      new TaskRejectedEvent({
+        taskId: this.id,
+        previousStatus,
+        rejectionReason: reason,
+      }),
+    );
   }
 
   public markAsParsingError(errorMessage: string): void {
-    this.logger.log(
-      `Marking task ${this.id} as ERROR with PROCESSING_ERROR stage. Error: ${errorMessage}`,
-    );
+    const previousStatus = this.setNextStatus(TranslationTaskStatus.ERROR);
 
-    const previousStatus = this.status;
-    this.status = TranslationTaskStatus.ERROR as TranslationTaskStatus;
-    this.currentStage = TranslationStage.PROCESSING_ERROR as TranslationStage;
     this.errorMessage = errorMessage;
     this.updatedAt = new Date();
 
     this.apply(
-      new TaskParsingErrorEvent(this.id, previousStatus, errorMessage),
+      new TaskParsingErrorEvent({
+        taskId: this.id,
+        previousStatus,
+        errorMessage,
+      }),
     );
   }
 
-  public markAsParsed(
-    wordCount?: number,
-    estimatedDurationSecs?: number,
-  ): void {
+  public markAsParsed(estimatedDurationSecs?: number): void {
     this.logger.log(
-      `Marking task ${this.id} as IN_PROGRESS with PARSED stage. Word count: ${wordCount}`,
+      `Marking task ${this.id} as PENDING with QUEUED_FOR_MT stage`,
     );
-
-    if (wordCount !== undefined) {
-      this.wordCount = wordCount;
-    }
 
     if (estimatedDurationSecs !== undefined) {
       this.estimatedDurationSecs = estimatedDurationSecs;
     }
 
-    const previousStatus = this.status;
-    this.status = TranslationTaskStatus.IN_PROGRESS as TranslationTaskStatus;
-    this.currentStage = TranslationStage.PARSED as TranslationStage;
+    if (!this.wordCount) {
+      throw new DomainException(ERRORS.TRANSLATION_TASK.MISSING_WORD_COUNT);
+    }
+
+    const previousStatus = this.setNextStatus(TranslationTaskStatus.PENDING);
+    this.currentStage = TranslationStage.QUEUED_FOR_MT;
     this.updatedAt = new Date();
 
     this.apply(
-      new TaskParsingCompletedEvent(
-        this.id,
+      new TaskParsingCompletedEvent({
+        taskId: this.id,
         previousStatus,
-        this.wordCount,
-        this.estimatedDurationSecs || null,
-      ),
+        wordCount: this.wordCount,
+        estimatedDurationSecs: this.estimatedDurationSecs || null,
+      }),
     );
   }
 }
