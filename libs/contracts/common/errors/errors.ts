@@ -240,5 +240,45 @@ export const ERRORS = {
         'Translation task cannot be completed by an editor in its current status or was not assigned to one',
       httpStatus: 400,
     },
+    INVALID_STATUS: {
+      code: 'TRANSLATION_TASK_011',
+      message: 'Task cannot be processed with its current status',
+      httpStatus: 400,
+    },
+    EMPTY_CONTENT: {
+      code: 'TRANSLATION_TASK_012',
+      message: 'Task has no content to parse',
+      httpStatus: 400,
+    },
+    UNSUPPORTED_TYPE: {
+      code: 'TRANSLATION_TASK_013',
+      message: 'Unsupported task type',
+      httpStatus: 400,
+    },
+    EMAIL_VALIDATION_FAILED: {
+      code: 'TRANSLATION_TASK_014',
+      message: 'Email validation failed',
+      httpStatus: 400,
+    },
+    INVALID_HTML_STRUCTURE: {
+      code: 'TRANSLATION_TASK_015',
+      message: 'Invalid HTML structure in email content',
+      httpStatus: 400,
+    },
+    NO_TRANSLATABLE_CONTENT: {
+      code: 'TRANSLATION_TASK_016',
+      message: 'No translatable content found in email',
+      httpStatus: 400,
+    },
+    CONTENT_SIZE_EXCEEDED: {
+      code: 'TRANSLATION_TASK_017',
+      message: 'Email content exceeds maximum allowed size',
+      httpStatus: 400,
+    },
+    HTML_EXTRACTION_FAILED: {
+      code: 'TRANSLATION_TASK_018',
+      message: 'Could not extract HTML content from email',
+      httpStatus: 400,
+    },
   },
 } as const;

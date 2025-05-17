@@ -15,5 +15,6 @@ import { EventHandlers } from './application/event-handlers';
     TranslationTaskMapper,
     TranslationTaskRepository,
   ],
+  exports: [TranslationTaskRepository],
 })
 export class TranslationTaskModule {}

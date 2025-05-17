@@ -11,13 +11,19 @@ import {
       name: TRANSLATION_TASK_PARSING_FLOWS.MAIN.name,
     }),
     BullModule.registerQueue({
-      name: TRANSLATION_TASK_PARSING_QUEUES.MAIN,
+      name: TRANSLATION_TASK_PARSING_QUEUES.MAIN_FLOW,
+    }),
+    BullModule.registerQueue({
+      name: TRANSLATION_TASK_PARSING_QUEUES.MAIN_JOBS,
     }),
     BullModule.registerFlowProducer({
       name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.name,
     }),
     BullModule.registerQueue({
-      name: TRANSLATION_TASK_PARSING_QUEUES.EMAIL,
+      name: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_FLOW,
+    }),
+    BullModule.registerQueue({
+      name: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS,
     }),
   ],
   exports: [BullModule],

@@ -26,13 +26,13 @@ export class EmailTranslationTaskParsingFlowStrategy
 
     return {
       name: `${TRANSLATION_TASK_PARSING_FLOWS.EMAIL.name}:${taskId}`,
-      queueName: TRANSLATION_TASK_PARSING_QUEUES.EMAIL,
+      queueName: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_FLOW,
       data: { taskId },
       children: [
         {
-          name: 'log-email-task',
+          name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name,
           data: { taskId },
-          queueName: TRANSLATION_TASK_PARSING_QUEUES.EMAIL,
+          queueName: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS,
         },
       ],
     };
