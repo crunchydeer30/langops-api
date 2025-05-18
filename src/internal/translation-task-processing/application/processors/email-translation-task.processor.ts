@@ -27,31 +27,26 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
   async process(job: Job<{ taskId: string }, any>): Promise<any> {
     const { taskId } = job.data;
 
-    try {
-      const taskData = await this.translationTaskRepository.findById(taskId);
-      if (!taskData) {
-        this.logger.error(`Task ${taskId} not found for processing`);
+    const task = await this.translationTaskRepository.findById(taskId);
+    if (!task) {
+      this.logger.error(`Task ${taskId} not found for processing`);
+      throw new Error(`Task ${taskId} not found for processing`);
+    }
+
+    switch (job.name) {
+      case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name:
+        await this.handleValidationJob(task, job);
         return;
-      }
-
-      const task = taskData;
-
-      switch (job.name) {
-        case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name:
-          await this.handleValidationJob(task, job);
-          return;
-        case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.PARSE.name:
-          await this.handleProcessingJob(task, job);
-          return;
-        default:
-          this.logger.error(
-            `Unsupported job ${job.name} in ${EmailTranslationTaskProcessor.name}`,
-          );
-      }
-    } catch (processError) {
-      this.logger.error(
-        `Error processing job ${job.name} for task ${taskId}: ${JSON.stringify(processError)}`,
-      );
+      case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.PARSE.name:
+        await this.handleProcessingJob(task, job);
+        return;
+      default:
+        this.logger.error(
+          `Unsupported job ${job.name} in ${EmailTranslationTaskProcessor.name}`,
+        );
+        throw new Error(
+          `Unsupported job ${job.name} in ${EmailTranslationTaskProcessor.name}`,
+        );
     }
   }
 
@@ -65,16 +60,17 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
     );
 
     try {
-      await this.validationService.validateTask(taskId);
+      this.validationService.validateTask(task);
       this.logger.debug(
         `Task ${taskId} of type ${TranslationTaskType.EMAIL} validated successfully`,
       );
     } catch (error) {
       this.logger.error(
-        `Task ${taskId} of type ${TranslationTaskType.EMAIL} failed validation`,
+        `Task ${taskId} of type ${TranslationTaskType.EMAIL} failed validation with error: ${JSON.stringify(error)}`,
       );
-      // Don't handle error state here - let the orchestrator detect the error through job failure
-      throw error; // Propagate error to BullMQ for flow control
+      task.handleProcessingError(JSON.stringify(error));
+      await this.translationTaskRepository.save(task);
+      throw error;
     }
   }
 
@@ -86,12 +82,9 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
     this.logger.log(`Processing email task ${taskId}`);
 
     try {
-      // The email processing service now returns word count info
       const { wordCount, segmentCount } =
         await this.emailProcessingService.parseEmailTask(taskId);
 
-      // Update word count in the task entity
-      // Note: We don't change task state here, the orchestrator does that
       task.wordCount = wordCount;
       await this.translationTaskRepository.save(task);
 
@@ -102,8 +95,9 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       this.logger.error(
         `Error during processing email task ${taskId}: ${JSON.stringify(error)}`,
       );
-      // Don't handle error state here - let the orchestrator detect the error through job failure
-      throw error; // Propagate error to BullMQ for flow control
+      task.handleProcessingError(JSON.stringify(error));
+      await this.translationTaskRepository.save(task);
+      throw error;
     }
   }
 }

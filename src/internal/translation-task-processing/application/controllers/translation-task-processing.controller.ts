@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Logger } from '@nestjs/common';
 import { TranslationTaskType } from '@prisma/client';
 import { StartParsingDto } from '../dtos';
-import { TranslationTaskProcessingOrchestratorProcessor } from '../processors/translation-task-orchestrator.processor';
+import { TranslationTaskProcessingOrchestrator } from '../flows/translation-task-processing.orchestrator';
 
 @Controller('translation-task-parsing')
 export class TranslationTaskProcessingController {
@@ -10,7 +10,7 @@ export class TranslationTaskProcessingController {
   );
 
   constructor(
-    private readonly flowOrchestrator: TranslationTaskProcessingOrchestratorProcessor,
+    private readonly flowOrchestrator: TranslationTaskProcessingOrchestrator,
   ) {}
 
   @Post('start')

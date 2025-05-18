@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TranslationTaskStatus, TranslationTaskType } from '@prisma/client';
+import { TranslationTaskType } from '@prisma/client';
 import { JSDOM } from 'jsdom';
 import { DomainException } from '@common/exceptions';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
+import { TranslationTask } from 'src/internal/translation-task/domain';
 
 @Injectable()
 export class TranslationTaskValidationService {
@@ -11,30 +12,7 @@ export class TranslationTaskValidationService {
 
   constructor(private readonly prismaService: PrismaService) {}
 
-  async validateTask(taskId: string): Promise<void> {
-    const task = await this.prismaService.translationTask.findUnique({
-      where: { id: taskId },
-      include: {
-        order: true,
-        languagePair: true,
-      },
-    });
-
-    if (!task) {
-      this.logger.error(`Task ${taskId} not found`);
-      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
-    }
-
-    if (task.status !== TranslationTaskStatus.PENDING) {
-      this.logger.error(`Task ${taskId} has invalid status: ${task.status}`);
-      throw new DomainException(ERRORS.TRANSLATION_TASK.INVALID_STATUS);
-    }
-
-    if (!task.sourceContent || task.sourceContent.trim() === '') {
-      this.logger.error(`Task ${taskId} has no content to parse`);
-      throw new DomainException(ERRORS.TRANSLATION_TASK.EMPTY_CONTENT);
-    }
-
+  validateTask(task: TranslationTask): void {
     switch (task.type) {
       case TranslationTaskType.EMAIL:
         this.validateEmailTask(task);
