@@ -92,7 +92,7 @@ export class EmailProcessingService {
     return domainSegments;
   }
 
-  private reconstructEmail(
+  public reconstructEmail(
     templatedData: string,
     segments: TranslationTaskSegment[],
     useEditedContent = true,

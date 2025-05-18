@@ -4,6 +4,7 @@ import { TranslationTaskModule } from '../translation-task/translation.module';
 import { EmailProcessingService } from './application/services/email-processing.service';
 import { TranslationTaskProcessingBullMQModule } from './infrastructure/bullmq/translation-task-processing-bullmq.module';
 import { TranslationTaskProcessingController } from './application/controllers/translation-task-processing.controller';
+import { ReconstructionController } from './application/controllers/reconstruction.controller';
 import { TranslationTaskValidationService } from './application/services/translation-task-validation.service';
 import { EmailProcessingFlowStrategy } from './application/flows';
 import { EmailTranslationTaskProcessor } from './application/processors';
@@ -18,7 +19,7 @@ import { TranslationTaskSegmentRepository } from './infrastructure/repositories/
     TranslationTaskProcessingBullMQModule,
     TranslationTaskModule,
   ],
-  controllers: [TranslationTaskProcessingController],
+  controllers: [TranslationTaskProcessingController, ReconstructionController],
   providers: [
     // Services
     EmailProcessingService,
