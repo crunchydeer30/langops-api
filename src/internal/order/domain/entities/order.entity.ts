@@ -112,7 +112,7 @@ export class Order extends AggregateRoot {
   public failOrder(): void {
     this.logger.log(`Failing order: ${this.id}`);
     const previousStatus = this.status;
-    // Changed from FAILED to CANCELLED since we removed the FAILED status
+
     this.status = OrderStatus.CANCELLED as OrderStatus;
     this.updatedAt = new Date();
     this.apply(

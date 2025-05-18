@@ -10,6 +10,7 @@ import { EmailProcessingService } from '../services/email-processing.service';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
 import { TranslationTaskType } from '@prisma/client';
 import { TranslationTask } from 'src/internal/translation-task/domain';
+import { EventPublisher } from '@nestjs/cqrs';
 
 @Injectable()
 @Processor(TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS)
@@ -20,6 +21,7 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
     private readonly validationService: TranslationTaskValidationService,
     private readonly emailProcessingService: EmailProcessingService,
     private readonly translationTaskRepository: TranslationTaskRepository,
+    private readonly eventPublisher: EventPublisher,
   ) {
     super();
   }
@@ -32,6 +34,7 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       this.logger.error(`Task ${taskId} not found for processing`);
       throw new Error(`Task ${taskId} not found for processing`);
     }
+    this.eventPublisher.mergeObjectContext(task);
 
     switch (job.name) {
       case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name:
@@ -71,6 +74,8 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       task.handleProcessingError(JSON.stringify(error));
       await this.translationTaskRepository.save(task);
       throw error;
+    } finally {
+      task.commit();
     }
   }
 
@@ -98,6 +103,8 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       task.handleProcessingError(JSON.stringify(error));
       await this.translationTaskRepository.save(task);
       throw error;
+    } finally {
+      task.commit();
     }
   }
 }

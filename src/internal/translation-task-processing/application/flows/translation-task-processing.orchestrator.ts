@@ -4,6 +4,7 @@ import { TranslationStage, TranslationTaskType } from '@prisma/client';
 import { Queue } from 'bullmq';
 import { TRANSLATION_TASK_PARSING_QUEUES } from '../../infrastructure/queues';
 import { TranslationTaskRepository } from '../../../translation-task/infrastructure/repositories/translation-task.repository';
+import { EventPublisher } from '@nestjs/cqrs';
 
 @Injectable()
 export class TranslationTaskProcessingOrchestrator {
@@ -15,6 +16,7 @@ export class TranslationTaskProcessingOrchestrator {
     @InjectQueue(TRANSLATION_TASK_PARSING_QUEUES.ORCHESTRATOR)
     private readonly orchestratorQueue: Queue,
     private readonly translationTaskRepository: TranslationTaskRepository,
+    private readonly eventPublisher: EventPublisher,
   ) {}
 
   async startParsingFlow(
@@ -29,10 +31,11 @@ export class TranslationTaskProcessingOrchestrator {
         );
         return;
       }
+      this.eventPublisher.mergeObjectContext(task);
 
       if (task.currentStage !== TranslationStage.QUEUED_FOR_PROCESSING) {
         this.logger.warn(
-          `Cannot start parsing flow: Task ${taskId} is not in QUEUED_FOR_PROCESSING stage (current: ${task.currentStage})`,
+          `Cannot start parsing flow: Task ${taskId} is not in ${TranslationStage.QUEUED_FOR_PROCESSING} stage (current: ${task.currentStage})`,
         );
         return;
       }
@@ -41,6 +44,7 @@ export class TranslationTaskProcessingOrchestrator {
         `Starting parsing flow for task ${taskId} of type ${taskType}`,
       );
       await this.orchestratorQueue.add('startFlow', { taskId, taskType });
+      task.commit();
     } catch (error) {
       this.logger.error(
         `Failed to queue task ${taskId} for processing: ${error instanceof Error ? error.message : JSON.stringify(error)}`,

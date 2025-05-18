@@ -33,6 +33,10 @@ import { TranslationTaskSegmentRepository } from './infrastructure/repositories/
     TranslationTaskSegmentMapper,
     TranslationTaskSegmentRepository,
   ],
-  exports: [EmailProcessingService, TranslationTaskProcessingOrchestrator],
+  exports: [
+    EmailProcessingService,
+    TranslationTaskSegmentRepository,
+    TranslationTaskProcessingOrchestrator,
+  ],
 })
 export class TranslationTaskProcessingModule {}

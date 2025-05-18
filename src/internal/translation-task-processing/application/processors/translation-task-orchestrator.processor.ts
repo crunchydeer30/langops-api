@@ -10,7 +10,7 @@ import {
   TRANSLATION_TASK_PARSING_FLOWS,
   TRANSLATION_TASK_PARSING_QUEUES,
 } from '../../infrastructure/queues';
-import { EventBus } from '@nestjs/cqrs';
+import { EventPublisher } from '@nestjs/cqrs';
 import { TranslationTaskRepository } from '../../../translation-task/infrastructure/repositories/translation-task.repository';
 
 @Injectable()
@@ -29,7 +29,7 @@ export class TranslationTaskProcessingOrchestratorProcessor extends WorkerHost {
     private readonly flowProducer: FlowProducer,
     private readonly emailFlowStrategy: EmailProcessingFlowStrategy,
     private readonly translationTaskRepository: TranslationTaskRepository,
-    private readonly eventBus: EventBus,
+    private readonly eventPublisher: EventPublisher,
   ) {
     super();
     this.strategies = new Map();
@@ -79,6 +79,7 @@ export class TranslationTaskProcessingOrchestratorProcessor extends WorkerHost {
       if (!task) {
         throw Error(`Task ${taskId} not found`);
       }
+      this.eventPublisher.mergeObjectContext(task);
 
       if (taskType !== TranslationTaskType.EMAIL) {
         throw Error(`Task type ${taskType} is not supported`);
@@ -93,6 +94,7 @@ export class TranslationTaskProcessingOrchestratorProcessor extends WorkerHost {
 
       task.startProcessing();
       await this.translationTaskRepository.save(task);
+      task.commit();
 
       const flowConfig = strategy.generateFlowConfig(taskId);
 
@@ -116,6 +118,7 @@ export class TranslationTaskProcessingOrchestratorProcessor extends WorkerHost {
       if (task) {
         task.handleProcessingError(JSON.stringify(error));
         await this.translationTaskRepository.save(task);
+        task.commit();
       }
       throw error;
     }
@@ -125,17 +128,16 @@ export class TranslationTaskProcessingOrchestratorProcessor extends WorkerHost {
     taskId: string,
     taskType: TranslationTaskType,
   ): Promise<void> {
+    const task = await this.translationTaskRepository.findById(taskId);
     try {
-      const task = await this.translationTaskRepository.findById(taskId);
       if (!task) {
-        this.logger.error(
-          `Task ${taskId} not found for completion notification`,
-        );
-        return;
+        throw new Error(`Task ${taskId} not found for completion notification`);
       }
+      this.eventPublisher.mergeObjectContext(task);
 
       task.completeProcessing();
       await this.translationTaskRepository.save(task);
+      task.commit();
 
       this.logger.log(
         `Task ${taskId} of type ${taskType} processing completed successfully`,

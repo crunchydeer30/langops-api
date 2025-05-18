@@ -21,6 +21,9 @@ export const envSchema = z.object({
   // REDIS (Queue)
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.coerce.number().default(6379),
+
+  // INTEGRATION
+  DEEPL_API_KEY: z.string(),
 });
 export type Env = z.infer<typeof envSchema>;
 

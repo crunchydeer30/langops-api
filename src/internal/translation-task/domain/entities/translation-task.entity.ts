@@ -294,8 +294,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
   }
 
   public handleProcessingError(errorMessage: string): void {
-    this.ensureStatus(TranslationTaskStatus.IN_PROGRESS, 'mark parsing error');
-
     this.status = TranslationTaskStatus.ERROR;
     this.errorMessage = errorMessage;
 

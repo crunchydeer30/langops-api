@@ -9,6 +9,7 @@ import { LanguagePairModule } from './language-pair/language-pair.module';
 import { StaffModule } from './staff/staff.module';
 import { TranslationTaskModule } from './translation-task/translation.module';
 import { TranslationTaskProcessingModule } from './translation-task-processing/translation-task-parser.module';
+import { MachineTranslationModule } from './machine-translation/machine-translation.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TranslationTaskProcessingModule } from './translation-task-processing/t
     EditorApplicationModule,
     LanguageModule,
     LanguagePairModule,
+    MachineTranslationModule,
     OrderModule,
     StaffModule,
     TranslationTaskModule,
