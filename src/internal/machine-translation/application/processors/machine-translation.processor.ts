@@ -64,6 +64,10 @@ export class MachineTranslationProcessor extends WorkerHost {
 
       await this.commandBus.execute(translationCommand);
 
+      task.completeMachineTranslation();
+      await this.translationTaskRepository.save(task);
+      task.commit();
+
       this.logger.log(`Machine translation completed for task ${taskId}`);
     } catch (error) {
       this.logger.error(

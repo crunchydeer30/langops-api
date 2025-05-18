@@ -1,4 +1,4 @@
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler } from '@nestjs/cqrs';
 import { ConfigService } from '@nestjs/config';
 import { Translator } from 'deepl-node';
 import { Injectable, Logger } from '@nestjs/common';
@@ -9,6 +9,7 @@ import { DeeplTranslateCommand } from './deepl-translate.command';
 import { Env } from '@common/config';
 import { TranslationTask } from 'src/internal/translation-task/domain';
 import { TranslationTaskSegment } from 'src/internal/translation-task-processing/domain/entities/translation-task-segment.entity';
+import { IBaseTranslationResult } from 'src/internal/machine-translation/application/commands/base-translate/base-translate.command';
 
 interface PreparedSegment {
   id: string;
@@ -27,9 +28,14 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
   constructor(
     protected readonly translationTaskRepository: TranslationTaskRepository,
     protected readonly translationTaskSegmentRepository: TranslationTaskSegmentRepository,
+    protected readonly commandBus: CommandBus,
     private readonly configService: ConfigService<Env>,
   ) {
-    super(translationTaskRepository, translationTaskSegmentRepository);
+    super(
+      translationTaskRepository,
+      translationTaskSegmentRepository,
+      commandBus,
+    );
     this.apiKey = this.configService.getOrThrow('DEEPL_API_KEY');
     this.translator = new Translator(this.apiKey);
   }
@@ -37,7 +43,7 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
   async translate(
     task: TranslationTask,
     segments: TranslationTaskSegment[],
-  ): Promise<void> {
+  ): Promise<IBaseTranslationResult> {
     try {
       this.logger.log(
         `Translating ${segments.length} segments for task ${task.id}`,
@@ -46,7 +52,7 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
       const preparedSegments = this.parseSegments(segments);
       if (preparedSegments.length === 0) {
         this.logger.warn(`No segments to translate for task ${task.id}`);
-        return;
+        return { results: [] };
       }
 
       this.logger.debug(
@@ -116,7 +122,8 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
       this.logger.debug(
         `Successfully translated ${translationResults.length} segments`,
       );
-      console.log(translationResults);
+
+      return { results: translationResults };
     } catch (error) {
       this.logger.error(
         `DeepL translation error for task ${task.id}: ${error instanceof Error ? error.message : JSON.stringify(error)}`,

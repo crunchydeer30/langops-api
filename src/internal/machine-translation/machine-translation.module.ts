@@ -4,6 +4,7 @@ import { TranslationTaskModule } from '../translation-task/translation.module';
 import { TranslationTaskProcessingModule } from '../translation-task-processing/translation-task-parser.module';
 import { MachineTranslationEventHandlers } from './application/event-handlers';
 import { MachineTranslationProcessors } from './application/processors';
+import { MachineTranslationCommandHandlers } from './application/commands';
 import { BullModule } from '@nestjs/bullmq';
 import { MACHINE_TRANSLATION_QUEUE } from './infrastructure/bullmq/constants';
 
@@ -19,6 +20,7 @@ import { MACHINE_TRANSLATION_QUEUE } from './infrastructure/bullmq/constants';
   providers: [
     ...MachineTranslationEventHandlers,
     ...MachineTranslationProcessors,
+    ...MachineTranslationCommandHandlers,
   ],
 })
 export class MachineTranslationModule {}
