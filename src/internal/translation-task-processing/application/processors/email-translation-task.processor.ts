@@ -9,7 +9,6 @@ import { TranslationTaskValidationService } from '../services/translation-task-v
 import { EmailProcessingService } from '../services/email-processing.service';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
 import { TranslationTaskType } from '@prisma/client';
-import { TranslationTask } from 'src/internal/translation-task/domain';
 import { EventPublisher } from '@nestjs/cqrs';
 
 @Injectable()
@@ -28,20 +27,12 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
 
   async process(job: Job<{ taskId: string }, any>): Promise<any> {
     const { taskId } = job.data;
-
-    const task = await this.translationTaskRepository.findById(taskId);
-    if (!task) {
-      this.logger.error(`Task ${taskId} not found for processing`);
-      throw new Error(`Task ${taskId} not found for processing`);
-    }
-    this.eventPublisher.mergeObjectContext(task);
-
     switch (job.name) {
       case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name:
-        await this.handleValidationJob(task, job);
+        await this.handleValidationJob(taskId);
         return;
       case TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.PARSE.name:
-        await this.handleProcessingJob(task, job);
+        await this.handleProcessingJob(taskId);
         return;
       default:
         this.logger.error(
@@ -53,16 +44,17 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
     }
   }
 
-  private async handleValidationJob(
-    task: TranslationTask,
-    job: Job<{ taskId: string }, any>,
-  ): Promise<void> {
-    const { taskId } = job.data;
+  private async handleValidationJob(taskId: string): Promise<void> {
     this.logger.debug(
       `Validating task ${taskId} of type ${TranslationTaskType.EMAIL}`,
     );
+    const task = await this.translationTaskRepository.findById(taskId);
 
     try {
+      if (!task) {
+        throw new Error(`Task ${taskId} not found`);
+      }
+      this.eventPublisher.mergeObjectContext(task);
       this.validationService.validateTask(task);
       this.logger.debug(
         `Task ${taskId} of type ${TranslationTaskType.EMAIL} validated successfully`,
@@ -71,27 +63,32 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       this.logger.error(
         `Task ${taskId} of type ${TranslationTaskType.EMAIL} failed validation with error: ${JSON.stringify(error)}`,
       );
-      task.handleProcessingError(JSON.stringify(error));
-      await this.translationTaskRepository.save(task);
+      if (task) {
+        task.handleProcessingError(JSON.stringify(error));
+        await this.translationTaskRepository.save(task);
+        task.commit();
+      }
       throw error;
-    } finally {
-      task.commit();
     }
   }
 
-  private async handleProcessingJob(
-    task: TranslationTask,
-    job: Job<{ taskId: string }, any>,
-  ): Promise<void> {
-    const { taskId } = job.data;
+  private async handleProcessingJob(taskId: string): Promise<void> {
     this.logger.log(`Processing email task ${taskId}`);
+    const task = await this.translationTaskRepository.findById(taskId);
 
     try {
-      const { wordCount, segmentCount } =
+      if (!task) {
+        throw new Error(`Task ${taskId} not found`);
+      }
+      this.eventPublisher.mergeObjectContext(task);
+
+      const { wordCount, segmentCount, templatedContent } =
         await this.emailProcessingService.parseEmailTask(taskId);
 
       task.wordCount = wordCount;
+      task.templatedContent = templatedContent;
       await this.translationTaskRepository.save(task);
+      task.commit();
 
       this.logger.debug(
         `Email task ${taskId} processed successfully: ${segmentCount} segments, ${wordCount} words`,
@@ -100,11 +97,12 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       this.logger.error(
         `Error during processing email task ${taskId}: ${JSON.stringify(error)}`,
       );
-      task.handleProcessingError(JSON.stringify(error));
-      await this.translationTaskRepository.save(task);
+      if (task) {
+        task.handleProcessingError(JSON.stringify(error));
+        await this.translationTaskRepository.save(task);
+        task.commit();
+      }
       throw error;
-    } finally {
-      task.commit();
     }
   }
 }

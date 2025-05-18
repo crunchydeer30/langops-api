@@ -14,6 +14,7 @@ export class TranslationTaskMapper {
     const taskProps: ITranslationTask = {
       id: model.id,
       sourceContent: model.sourceContent,
+      templatedContent: model.templatedContent,
       currentStage: model.currentStage,
       status: model.status,
       orderId: model.orderId,
@@ -35,17 +36,19 @@ export class TranslationTaskMapper {
   ): Prisma.TranslationTaskUpdateInput {
     const {
       sourceContent,
+      templatedContent,
       currentStage,
       status,
       languagePairId,
       editorId,
-      type,
       assignedAt,
+      type,
       completedAt,
     } = task;
 
     return {
       sourceContent,
+      templatedContent,
       currentStage,
       status,
       type,
@@ -62,6 +65,7 @@ export class TranslationTaskMapper {
     const {
       id,
       sourceContent,
+      templatedContent,
       currentStage,
       status,
       orderId,
@@ -75,6 +79,7 @@ export class TranslationTaskMapper {
     return {
       id,
       sourceContent,
+      templatedContent,
       currentStage,
       status,
       type,

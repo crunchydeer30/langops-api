@@ -29,6 +29,7 @@ export class EmailProcessingService {
   async parseEmailTask(taskId: string): Promise<{
     wordCount: number;
     segmentCount: number;
+    templatedContent: string;
   }> {
     this.logger.debug(`Parsing email task ${taskId}`);
 
@@ -45,18 +46,12 @@ export class EmailProcessingService {
     );
 
     const result = this.parseEmail(sourceContent);
+    const templatedContent = result.task.templatedData;
 
-    // Update templated content only
-    task.templatedContent = result.task.templatedData;
-    await this.translationTaskRepository.save(task);
-
-    // Process segments
     const domainSegments = await this.persistSegments(taskId, result.segments);
     const segmentCount = domainSegments.length;
 
-    // Calculate word counts (this can be expanded for more accurate counting)
     const wordCount = domainSegments.reduce((total, segment) => {
-      // Simple word count by spaces - can be improved with proper tokenization
       const words = segment.sourceContent.split(/\s+/).filter(Boolean).length;
       return total + words;
     }, 0);
@@ -70,7 +65,7 @@ export class EmailProcessingService {
       new TaskSegmentsCreatedEvent(taskId, segmentCount, wordCount),
     );
 
-    return { wordCount, segmentCount };
+    return { wordCount, segmentCount, templatedContent };
   }
 
   private async persistSegments(
