@@ -5,7 +5,7 @@ import { Queue } from 'bullmq';
 import { TRANSLATION_TASK_PARSING_QUEUES } from '../../infrastructure/queues';
 
 @Injectable()
-export class TranslationTaskParsingFlowOrchestrator {
+export class TranslationTaskProcessingOrchestrator {
   constructor(
     @InjectQueue(TRANSLATION_TASK_PARSING_QUEUES.ORCHESTRATOR)
     private readonly orchestratorQueue: Queue,

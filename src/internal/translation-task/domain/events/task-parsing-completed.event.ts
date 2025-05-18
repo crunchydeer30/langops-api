@@ -1,12 +1,12 @@
 import { TranslationTaskStatus } from '@prisma/client';
 
-export interface TaskParsingCompletedPayload {
+export interface TaskProcessingCompletedPayload {
   taskId: string;
-  previousStatus: TranslationTaskStatus;
-  wordCount: number;
-  estimatedDurationSecs: number | null;
+  previousStatus?: TranslationTaskStatus;
+  wordCount?: number;
+  estimatedDurationSecs?: number | null;
 }
 
-export class TaskParsingCompletedEvent {
-  constructor(public readonly payload: TaskParsingCompletedPayload) {}
+export class TaskProcessingCompletedEvent {
+  constructor(public readonly payload: TaskProcessingCompletedPayload) {}
 }

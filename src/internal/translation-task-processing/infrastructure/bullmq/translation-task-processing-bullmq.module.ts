@@ -24,4 +24,4 @@ import {
   ],
   exports: [BullModule],
 })
-export class TranslationTaskParsingBullMQModule {}
+export class TranslationTaskProcessingBullMQModule {}

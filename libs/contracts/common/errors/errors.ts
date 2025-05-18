@@ -296,4 +296,11 @@ export const ERRORS = {
       httpStatus: 400,
     },
   },
+  COMMON: {
+    INVALID_STATE: {
+      code: 'COMMON_001',
+      message: 'Invalid state transition',
+      httpStatus: 400,
+    },
+  },
 } as const;

@@ -17,8 +17,8 @@ import {
 } from '../../domain/interfaces/translation-segment-token-map.interface';
 
 @Injectable()
-export class EmailParsingService {
-  private readonly logger = new Logger(EmailParsingService.name);
+export class EmailProcessingService {
+  private readonly logger = new Logger(EmailProcessingService.name);
 
   constructor(
     private readonly translationTaskRepository: TranslationTaskRepository,
@@ -26,42 +26,51 @@ export class EmailParsingService {
     private readonly eventBus: EventBus,
   ) {}
 
-  async parseEmailTask(taskId: string): Promise<void> {
+  async parseEmailTask(taskId: string): Promise<{
+    wordCount: number;
+    segmentCount: number;
+  }> {
+    this.logger.debug(`Parsing email task ${taskId}`);
+
     const task = await this.translationTaskRepository.findById(taskId);
     if (!task) {
+      this.logger.error(`Task ${taskId} not found for parsing`);
       throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
     }
 
-    try {
-      const sourceContent = task.sourceContent;
-      const result = this.parseEmail(sourceContent);
+    // Parse email content
+    const sourceContent = task.sourceContent;
+    this.logger.debug(
+      `Parsing content for task ${taskId} (length: ${sourceContent.length})`,
+    );
 
-      task.templatedContent = result.task.templatedData;
+    const result = this.parseEmail(sourceContent);
 
-      const domainSegments = await this.persistSegments(
-        taskId,
-        result.segments,
-      );
+    // Update templated content only
+    task.templatedContent = result.task.templatedData;
+    await this.translationTaskRepository.save(task);
 
-      task.markAsParsed(domainSegments.length);
+    // Process segments
+    const domainSegments = await this.persistSegments(taskId, result.segments);
+    const segmentCount = domainSegments.length;
 
-      await this.translationTaskRepository.save(task);
+    // Calculate word counts (this can be expanded for more accurate counting)
+    const wordCount = domainSegments.reduce((total, segment) => {
+      // Simple word count by spaces - can be improved with proper tokenization
+      const words = segment.sourceContent.split(/\s+/).filter(Boolean).length;
+      return total + words;
+    }, 0);
 
-      this.eventBus.publish(
-        new TaskSegmentsCreatedEvent(taskId, domainSegments.length),
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to parse email task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+    this.logger.debug(
+      `Email parsing complete for task ${taskId}: ${segmentCount} segments, ${wordCount} words`,
+    );
 
-      task.markAsParsingError(
-        error instanceof Error ? error.message : String(error),
-      );
-      await this.translationTaskRepository.save(task);
+    // Emit domain event about segments creation
+    this.eventBus.publish(
+      new TaskSegmentsCreatedEvent(taskId, segmentCount, wordCount),
+    );
 
-      throw error;
-    }
+    return { wordCount, segmentCount };
   }
 
   private async persistSegments(
