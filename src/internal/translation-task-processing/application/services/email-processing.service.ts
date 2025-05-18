@@ -97,6 +97,35 @@ export class EmailProcessingService {
     return domainSegments;
   }
 
+  private reconstructEmail(
+    templatedData: string,
+    segments: TranslationTaskSegment[],
+    useEditedContent = true,
+  ): string {
+    let result = templatedData;
+    segments.forEach((segment) => {
+      const segmentContent =
+        (useEditedContent && segment.editedContent) ||
+        segment.machineTranslatedContent ||
+        segment.sourceContent;
+      result = result.replace(
+        new RegExp(`\\[\\[TKN::${segment.id}\\]\\]`, 'g'),
+        segmentContent,
+      );
+    });
+    segments.forEach((segment) => {
+      const { specialTokensMap } = segment;
+      if (!specialTokensMap) return;
+      Object.entries(specialTokensMap).forEach(([tokenId, tokenData]) => {
+        result = result.replace(
+          new RegExp(`\\[\\[TKN::${tokenId}\\]\\]`, 'g'),
+          tokenData.sourceContent,
+        );
+      });
+    });
+    return result;
+  }
+
   private parseEmail(email: string) {
     const taskId = uuidv4();
     const tokenCounters: Record<string, number> = {};
@@ -259,9 +288,14 @@ export class EmailProcessingService {
       originalData: email,
       templatedData: template$.html(),
     };
+    const reconstructedData = this.reconstructEmail(
+      taskResult.templatedData,
+      segments,
+      false,
+    );
 
     return {
-      task: taskResult,
+      task: { ...taskResult, reconstructedData },
       segments,
     };
   }
