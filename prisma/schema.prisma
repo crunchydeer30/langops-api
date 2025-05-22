@@ -80,6 +80,8 @@ enum TranslationStage {
   MACHINE_TRANSLATING
   QUEUED_FOR_EDITING
   EDITING
+  DEANONYMIZATION_PROCESSING
+  DEANONYMIZATION_COMPLETED
   COMPLETED
 
   @@map("translation_stages")
@@ -98,6 +100,9 @@ enum TranslationTaskStatus {
 enum TranslationTaskType {
   EMAIL
   PLAIN_TEXT
+  XLIFF
+  SRT
+  CSV
 
   @@map("translation_task_type")
 }
@@ -107,6 +112,17 @@ enum OrderType {
   PLAIN_TEXT
 
   @@map("order_type")
+}
+
+enum ContentSegmentType {
+  TEXT
+  HTML_BLOCK
+  HTML_INLINE
+  XLIFF_UNIT
+  SRT_SUBTITLE
+  CSV_CELL
+
+  @@map("content_segment_types")
 }
 
 // Models
@@ -250,22 +266,21 @@ model TranslationTask {
   editorId String? @map("editor_id") @db.Uuid
   editor   Editor? @relation("EditorTasks", fields: [editorId], references: [id])
 
-  sourceContent    String  @map("source_content")
-  templatedContent String? @map("templated_content")
+  originalContent   String              @map("original_content")
+  formatType        TranslationTaskType @map("format_type")
+  /// [OriginalStructure]
+  originalStructure Json?               @map("original_structure") @db.JsonB
 
   status       TranslationTaskStatus @default(PENDING) @map("status")
   currentStage TranslationStage      @default(QUEUED_FOR_PROCESSING) @map("current_stage")
   errorMessage String?               @map("error_message")
 
-  segments TranslationTaskSegment[]
+  segments              TranslationTaskSegment[]
+  sensitiveDataMappings SensitiveDataMapping[]
 
-  type TranslationTaskType
-
-  // Word count for pricing and metrics
   wordCount             Int  @default(0) @map("word_count")
   estimatedDurationSecs Int? @map("estimated_duration_secs")
 
-  // Editor assignment tracking
   editorAssignedAt  DateTime? @map("editor_assigned_at")
   editorCompletedAt DateTime? @map("editor_completed_at")
 
@@ -282,14 +297,19 @@ model TranslationTaskSegment {
   translationTaskId String          @map("translation_task_id") @db.Uuid
   translationTask   TranslationTask @relation(fields: [translationTaskId], references: [id], onDelete: Cascade)
 
-  segmentOrder Int @map("segment_order")
+  segmentOrder Int                @map("segment_order")
+  segmentType  ContentSegmentType @map("segment_type")
 
   sourceContent            String  @map("source_content")
+  anonymizedContent        String? @map("anonymized_content")
   machineTranslatedContent String? @map("machine_translated_content")
   editedContent            String? @map("edited_content")
+  deanonymizedContent      String? @map("deanonymized_content")
 
   /// [TranslationSpecialTokenMap]
-  specialTokensMap Json @map("special_tokens_map") @db.JsonB
+  specialTokensMap Json? @map("special_tokens_map") @db.JsonB
+  /// [FormatMetadata]
+  formatMetadata   Json? @map("format_metadata") @db.JsonB
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -375,4 +395,20 @@ model EvaluationTask {
 
   @@unique([evaluationSetId, order], name: "uq_evaluation_tasks_set_order")
   @@map("evaluation_tasks")
+}
+
+model SensitiveDataMapping {
+  id                String          @id @default(uuid()) @db.Uuid
+  translationTaskId String          @map("translation_task_id") @db.Uuid
+  translationTask   TranslationTask @relation(fields: [translationTaskId], references: [id], onDelete: Cascade)
+
+  tokenIdentifier String @map("token_identifier")
+  sensitiveType   String @map("sensitive_type")
+  originalValue   String @map("original_value")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([translationTaskId, tokenIdentifier])
+  @@map("sensitive_data_mappings")
 }

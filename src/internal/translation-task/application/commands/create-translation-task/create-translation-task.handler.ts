@@ -27,14 +27,15 @@ export class CreateTranslationTaskHandler
     props,
   }: CreateTranslationTaskCommand): Promise<ICreateTranslationTaskCommandResult> {
     this.logger.log(
-      `Creating translation task for order: ${props.orderId}, type: ${props.taskType}`,
+      `Creating translation task for order: ${props.orderId}, type: ${props.formatType}`,
     );
 
     const translationTask = TranslationTask.create({
       orderId: props.orderId,
       languagePairId: props.languagePairId,
-      sourceContent: props.sourceContent,
-      taskType: props.taskType,
+      originalContent: props.originalContent,
+      originalStructure: props.originalStructure ?? null,
+      taskType: props.formatType,
       status: TranslationTaskStatus.PENDING as TranslationTaskStatus,
     });
 

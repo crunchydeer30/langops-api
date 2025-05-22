@@ -145,14 +145,14 @@ export class EmailParsingService {
           $$(el).replaceWith(`{${tokenId}}`);
         },
       );
-      const plainText = $$.root().text();
-      const segment = TranslationTaskSegment.create({
-        translationTaskId: taskId,
-        segmentOrder: index,
-        sourceContent: plainText,
-        specialTokensMap,
-      });
-      segments.push(segment);
+      // const plainText = $$.root().text();
+      // const segment = TranslationTaskSegment.create({
+      //   translationTaskId: taskId,
+      //   segmentOrder: index,
+      //   sourceContent: plainText,
+      //   specialTokensMap,
+      // });
+      // segments.push(segment);
     };
 
     findLeafBlocks($.root());

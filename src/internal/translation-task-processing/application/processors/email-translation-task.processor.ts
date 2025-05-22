@@ -82,17 +82,17 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       }
       this.eventPublisher.mergeObjectContext(task);
 
-      const { wordCount, segmentCount, templatedContent } =
-        await this.emailProcessingService.parseEmailTask(taskId);
+      // const { wordCount, segmentCount, templatedContent } =
+      //   await this.emailProcessingService.parseEmailTask(taskId);
 
-      task.wordCount = wordCount;
-      task.templatedContent = templatedContent;
-      await this.translationTaskRepository.save(task);
-      task.commit();
+      // task.wordCount = wordCount;
+      // task.templatedContent = templatedContent;
+      // await this.translationTaskRepository.save(task);
+      // task.commit();
 
-      this.logger.debug(
-        `Email task ${taskId} processed successfully: ${segmentCount} segments, ${wordCount} words`,
-      );
+      // this.logger.debug(
+      //   `Email task ${taskId} processed successfully: ${segmentCount} segments, ${wordCount} words`,
+      // );
     } catch (error) {
       this.logger.error(
         `Error during processing email task ${taskId}: ${JSON.stringify(error)}`,

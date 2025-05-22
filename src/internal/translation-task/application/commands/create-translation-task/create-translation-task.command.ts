@@ -1,11 +1,13 @@
 import { ICommand } from '@nestjs/cqrs';
 import { TranslationTaskType } from '@prisma/client';
+import type { OriginalStructure } from 'src/internal/translation-task-processing/domain/interfaces/original-structure.interface';
 
 export interface ICreateTranslationTaskCommandProps {
   orderId: string;
   languagePairId: string;
-  sourceContent: string;
-  taskType: TranslationTaskType;
+  originalContent: string;
+  originalStructure?: OriginalStructure;
+  formatType: TranslationTaskType;
 }
 
 export interface ICreateTranslationTaskCommandResult {

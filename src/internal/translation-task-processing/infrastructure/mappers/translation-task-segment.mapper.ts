@@ -7,6 +7,8 @@ import {
   TranslationTaskSegment,
   ITranslationTaskSegment,
 } from '../../domain/entities/translation-task-segment.entity';
+import type { TranslationSpecialTokenMap } from '../../domain/interfaces/translation-segment-token-map.interface';
+import type { FormatMetadata } from '../../domain/interfaces/format-metadata.interface';
 
 @Injectable()
 export class TranslationTaskSegmentMapper {
@@ -15,10 +17,15 @@ export class TranslationTaskSegmentMapper {
       id: model.id,
       translationTaskId: model.translationTaskId,
       segmentOrder: model.segmentOrder,
+      segmentType: model.segmentType,
       sourceContent: model.sourceContent,
+      anonymizedContent: model.anonymizedContent,
       machineTranslatedContent: model.machineTranslatedContent,
       editedContent: model.editedContent,
-      specialTokensMap: model.specialTokensMap,
+      deanonymizedContent: model.deanonymizedContent,
+      specialTokensMap:
+        model.specialTokensMap as unknown as TranslationSpecialTokenMap,
+      formatMetadata: model.formatMetadata as unknown as FormatMetadata,
 
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
@@ -36,10 +43,14 @@ export class TranslationTaskSegmentMapper {
         connect: { id: entity.translationTaskId },
       },
       segmentOrder: entity.segmentOrder,
+      segmentType: entity.segmentType,
       sourceContent: entity.sourceContent,
+      anonymizedContent: entity.anonymizedContent,
       machineTranslatedContent: entity.machineTranslatedContent,
       editedContent: entity.editedContent,
-      specialTokensMap: entity.specialTokensMap,
+      deanonymizedContent: entity.deanonymizedContent,
+      specialTokensMap: entity.specialTokensMap || {},
+      formatMetadata: entity.formatMetadata || ({} as FormatMetadata),
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
@@ -50,10 +61,14 @@ export class TranslationTaskSegmentMapper {
   ): Prisma.TranslationTaskSegmentUpdateInput {
     return {
       segmentOrder: entity.segmentOrder,
+      segmentType: entity.segmentType,
       sourceContent: entity.sourceContent,
+      anonymizedContent: entity.anonymizedContent,
       machineTranslatedContent: entity.machineTranslatedContent,
       editedContent: entity.editedContent,
-      specialTokensMap: entity.specialTokensMap,
+      deanonymizedContent: entity.deanonymizedContent,
+      specialTokensMap: entity.specialTokensMap || {},
+      formatMetadata: entity.formatMetadata || ({} as FormatMetadata),
       updatedAt: entity.updatedAt,
     };
   }

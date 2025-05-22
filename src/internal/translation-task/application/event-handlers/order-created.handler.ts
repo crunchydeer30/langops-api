@@ -47,8 +47,8 @@ export class OrderCreatedHandler implements IEventHandler<OrderCreatedEvent> {
         new CreateTranslationTaskCommand({
           orderId,
           languagePairId,
-          sourceContent,
-          taskType: TranslationTaskType.EMAIL,
+          originalContent: sourceContent,
+          formatType: TranslationTaskType.EMAIL,
         }),
       );
 
@@ -88,8 +88,8 @@ export class OrderCreatedHandler implements IEventHandler<OrderCreatedEvent> {
         new CreateTranslationTaskCommand({
           orderId,
           languagePairId,
-          sourceContent,
-          taskType: TranslationTaskType.PLAIN_TEXT,
+          originalContent: sourceContent,
+          formatType: TranslationTaskType.PLAIN_TEXT,
         }),
       );
 

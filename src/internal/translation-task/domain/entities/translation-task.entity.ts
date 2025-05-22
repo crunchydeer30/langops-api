@@ -18,18 +18,18 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
+import type { OriginalStructure } from 'src/internal/translation-task-processing/domain/interfaces/original-structure.interface';
 
 export interface ITranslationTask {
   id: string;
-  sourceContent: string;
-  templatedContent?: string | null;
+  originalContent: string;
+  type: TranslationTaskType;
+  originalStructure?: OriginalStructure | null;
   currentStage: TranslationStage;
   status: TranslationTaskStatus;
   orderId: string;
   languagePairId: string;
   editorId?: string | null;
-  type: TranslationTaskType;
-
   wordCount: number;
   estimatedDurationSecs?: number | null;
 
@@ -47,13 +47,13 @@ export interface ITranslationTask {
 
 export interface ITranslationTaskCreateArgs {
   id?: string;
-  sourceContent: string;
-  templatedContent?: string | null;
+  originalContent: string;
+  taskType: TranslationTaskType;
+  originalStructure: OriginalStructure | null;
   orderId: string;
   languagePairId: string;
   currentStage?: TranslationStage;
   status?: TranslationTaskStatus;
-  taskType: TranslationTaskType;
   editorId?: string | null;
 
   wordCount?: number;
@@ -69,15 +69,14 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
   private readonly logger = new Logger(TranslationTask.name);
 
   public id: string;
-  public sourceContent: string;
-  public templatedContent?: string | null;
+  public originalContent: string;
+  public type: TranslationTaskType;
+  public originalStructure?: OriginalStructure | null;
   public currentStage: TranslationStage;
   public status: TranslationTaskStatus;
   public orderId: string;
   public languagePairId: string;
   public editorId?: string | null;
-  public type: TranslationTaskType;
-
   public wordCount: number;
   public estimatedDurationSecs?: number | null;
 
@@ -107,18 +106,18 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
 
     const task = new TranslationTask({
       id,
-      sourceContent: args.sourceContent,
-      templatedContent: args.templatedContent ?? null,
+      originalContent: args.originalContent,
+      type: args.taskType,
+      originalStructure: args.originalStructure ?? null,
       currentStage: args.currentStage ?? TranslationStage.QUEUED_FOR_PROCESSING,
       status: args.status ?? TranslationTaskStatus.PENDING,
       orderId: args.orderId,
       languagePairId: args.languagePairId,
-      type: args.taskType,
+      editorId: args.editorId ?? null,
       wordCount: args.wordCount ?? 0,
       estimatedDurationSecs: args.estimatedDurationSecs ?? null,
       editorAssignedAt: args.editorAssignedAt ?? null,
       editorCompletedAt: args.editorCompletedAt ?? null,
-      editorId: args.editorId ?? null,
       assignedAt: args.assignedAt ?? null,
       completedAt: args.completedAt ?? null,
       createdAt: now,

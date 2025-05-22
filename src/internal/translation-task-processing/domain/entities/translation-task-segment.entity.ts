@@ -2,16 +2,21 @@ import { AggregateRoot } from '@nestjs/cqrs';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from '@nestjs/common';
 import { TranslationSpecialTokenMap } from '../interfaces/translation-segment-token-map.interface';
+import { FormatMetadata } from '../interfaces/format-metadata.interface';
+import { ContentSegmentType } from '@prisma/client';
 
 export interface ITranslationTaskSegment {
   id: string;
   translationTaskId: string;
   segmentOrder: number;
+  segmentType: ContentSegmentType;
   sourceContent: string;
-  machineTranslatedContent: string | null;
-  editedContent: string | null;
-  specialTokensMap: TranslationSpecialTokenMap | null;
-  metadata?: Record<string, any> | null;
+  anonymizedContent?: string | null;
+  machineTranslatedContent?: string | null;
+  editedContent?: string | null;
+  deanonymizedContent?: string | null;
+  specialTokensMap?: TranslationSpecialTokenMap | null;
+  formatMetadata?: FormatMetadata | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,9 +25,14 @@ export interface ITranslationTaskSegmentCreateArgs {
   id?: string;
   translationTaskId: string;
   segmentOrder: number;
+  segmentType: ContentSegmentType;
   sourceContent: string;
+  anonymizedContent?: string | null;
+  machineTranslatedContent?: string | null;
+  editedContent?: string | null;
+  deanonymizedContent?: string | null;
   specialTokensMap?: TranslationSpecialTokenMap;
-  metadata?: Record<string, any> | null;
+  formatMetadata?: FormatMetadata | null;
 }
 
 export class TranslationTaskSegment
@@ -34,11 +44,14 @@ export class TranslationTaskSegment
   public id: string;
   public translationTaskId: string;
   public segmentOrder: number;
+  public segmentType: ContentSegmentType;
   public sourceContent: string;
+  public anonymizedContent: string | null;
   public machineTranslatedContent: string | null;
   public editedContent: string | null;
-  public specialTokensMap: TranslationSpecialTokenMap;
-  public metadata: Record<string, any> | null;
+  public deanonymizedContent: string | null;
+  public specialTokensMap: TranslationSpecialTokenMap | null;
+  public formatMetadata: FormatMetadata | null;
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -62,20 +75,28 @@ export class TranslationTaskSegment
     const {
       translationTaskId,
       segmentOrder,
+      segmentType,
       sourceContent,
+      anonymizedContent = null,
+      machineTranslatedContent = null,
+      editedContent = null,
+      deanonymizedContent = null,
       specialTokensMap = {},
-      metadata = null,
+      formatMetadata = null,
     } = args;
 
     const segment = new TranslationTaskSegment({
       id,
       translationTaskId,
       segmentOrder,
+      segmentType,
       sourceContent,
-      machineTranslatedContent: null,
-      editedContent: null,
+      anonymizedContent,
+      machineTranslatedContent,
+      editedContent,
+      deanonymizedContent,
       specialTokensMap,
-      metadata,
+      formatMetadata,
       createdAt: now,
       updatedAt: now,
     });
