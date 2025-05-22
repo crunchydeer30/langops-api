@@ -8,6 +8,7 @@ import { Job } from 'bullmq';
 import { TranslationTaskValidationService } from '../services/translation-task-validation.service';
 import { EmailProcessingService } from '../services/email-processing.service';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
+import { TranslationTaskSegmentRepository } from '../../infrastructure/repositories/translation-task-segment.repository';
 import { TranslationTaskType } from '@prisma/client';
 import { EventPublisher } from '@nestjs/cqrs';
 
@@ -20,6 +21,7 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
     private readonly validationService: TranslationTaskValidationService,
     private readonly emailProcessingService: EmailProcessingService,
     private readonly translationTaskRepository: TranslationTaskRepository,
+    private readonly translationTaskSegmentRepository: TranslationTaskSegmentRepository,
     private readonly eventPublisher: EventPublisher,
   ) {
     super();
@@ -82,17 +84,16 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       }
       this.eventPublisher.mergeObjectContext(task);
 
-      // const { wordCount, segmentCount, templatedContent } =
-      await this.emailProcessingService.parseEmailTask(taskId);
-
-      // task.wordCount = wordCount;
-      // task.templatedContent = templatedContent;
-      // await this.translationTaskRepository.save(task);
-      // task.commit();
-
-      // this.logger.debug(
-      //   `Email task ${taskId} processed successfully: ${segmentCount} segments, ${wordCount} words`,
-      // );
+      const { segments, wordCount, originalStructure } =
+        await this.emailProcessingService.parseEmailTask(taskId);
+      await this.translationTaskSegmentRepository.saveMany(segments);
+      task.originalStructure = originalStructure;
+      task.wordCount = wordCount;
+      await this.translationTaskRepository.save(task);
+      task.commit();
+      this.logger.debug(
+        `Email task ${taskId} processed successfully: ${segments.length} segments, ${wordCount} words`,
+      );
     } catch (error) {
       this.logger.error(
         `Error during processing email task ${taskId}: ${JSON.stringify(error)}`,
