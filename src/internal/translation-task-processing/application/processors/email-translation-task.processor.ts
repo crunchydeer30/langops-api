@@ -86,22 +86,18 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       }
       this.eventPublisher.mergeObjectContext(task);
 
-      // Make sure we have original content to process
       if (!task.originalContent) {
         throw new Error(`Task ${taskId} has no original content`);
       }
 
-      // Parse email content and get segments, sensitive data mappings, etc.
       const { segments, sensitiveDataMappings, wordCount, originalStructure } =
         await this.emailProcessingService.parseEmailTask(
           taskId,
           task.originalContent,
         );
 
-      // Save segments and update task
       await this.translationTaskSegmentRepository.saveMany(segments);
 
-      // If we have sensitive data mappings, save them
       if (sensitiveDataMappings.length > 0) {
         this.logger.debug(
           `Saving ${sensitiveDataMappings.length} sensitive data mappings for task ${taskId}`,
@@ -111,7 +107,6 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
         );
       }
 
-      // Update task with original structure and word count
       task.originalStructure = originalStructure;
       task.wordCount = wordCount;
       await this.translationTaskRepository.save(task);

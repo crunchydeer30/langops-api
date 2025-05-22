@@ -3,13 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { Translator } from 'deepl-node';
 import { Injectable, Logger } from '@nestjs/common';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure/repositories/translation-task.repository';
-import { TranslationTaskSegmentRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/translation-task-segment.repository';
 import { BaseTranslateHandler } from 'src/internal/machine-translation/application/commands/base-translate/base-translate.handler';
 import { DeeplTranslateCommand } from './deepl-translate.command';
 import { Env } from '@common/config';
-import { TranslationTask } from 'src/internal/translation-task/domain';
-import { TranslationTaskSegment } from 'src/internal/translation-task-processing/domain/entities/translation-task-segment.entity';
-import { IBaseTranslationResult } from 'src/internal/machine-translation/application/commands/base-translate/base-translate.command';
+import {
+  IBaseTranslationResult,
+  TranslationSegment,
+} from 'src/internal/machine-translation/application/commands/base-translate/base-translate.command';
 
 interface PreparedSegment {
   id: string;
@@ -27,47 +27,27 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
 
   constructor(
     protected readonly translationTaskRepository: TranslationTaskRepository,
-    protected readonly translationTaskSegmentRepository: TranslationTaskSegmentRepository,
     protected readonly commandBus: CommandBus,
     private readonly configService: ConfigService<Env>,
   ) {
-    super(
-      translationTaskRepository,
-      translationTaskSegmentRepository,
-      commandBus,
-    );
+    super(translationTaskRepository, commandBus);
     this.apiKey = this.configService.getOrThrow('DEEPL_API_KEY');
     this.translator = new Translator(this.apiKey);
   }
 
   async translate(
-    task: TranslationTask,
-    segments: TranslationTaskSegment[],
+    segments: TranslationSegment[],
+    sourceLanguage: string,
+    targetLanguage: string,
   ): Promise<IBaseTranslationResult> {
     try {
-      this.logger.log(
-        `Translating ${segments.length} segments for task ${task.id}`,
-      );
+      this.logger.log(`Translating ${segments.length} segments`);
 
       const preparedSegments = this.parseSegments(segments);
       if (preparedSegments.length === 0) {
-        this.logger.warn(`No segments to translate for task ${task.id}`);
+        this.logger.warn(`No segments to translate`);
         return { results: [] };
       }
-
-      this.logger.debug(
-        `Prepared segments examples: ${JSON.stringify(
-          preparedSegments.slice(0, 2).map((s) => ({
-            id: s.id,
-            originalText:
-              s.originalText.substring(0, 30) +
-              (s.originalText.length > 30 ? '...' : ''),
-            preparedText:
-              s.preparedText.substring(0, 30) +
-              (s.preparedText.length > 30 ? '...' : ''),
-          })),
-        )}`,
-      );
 
       const batchSize = 25;
       const translationResults: {
@@ -85,8 +65,8 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
 
         const translationResponse = await this.translator.translateText(
           textsToTranslate,
-          'en',
-          'ru',
+          sourceLanguage as any,
+          targetLanguage as any,
           {
             tagHandling: 'xml',
             ignoreTags: ['x'],
@@ -126,14 +106,14 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
       return { results: translationResults };
     } catch (error) {
       this.logger.error(
-        `DeepL translation error for task ${task.id}: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
+        `DeepL translation error: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
   }
 
-  private parseSegments(segments: TranslationTaskSegment[]): PreparedSegment[] {
+  private parseSegments(segments: TranslationSegment[]): PreparedSegment[] {
     this.logger.debug(
       `Parsing ${segments.length} segments for DeepL translation`,
     );
@@ -141,13 +121,10 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
     return segments.map((segment) => {
       const tokenMap: Record<string, string> = {};
 
-      // Use anonymizedContent if available, otherwise fall back to sourceContent
-      const contentToTranslate =
-        segment.anonymizedContent || segment.sourceContent;
+      // Use the content from the segment
+      const contentToTranslate = segment.content;
 
-      this.logger.debug(
-        `Segment ${segment.id}: using ${segment.anonymizedContent ? 'anonymized' : 'source'} content`,
-      );
+      this.logger.debug(`Preparing segment ${segment.id} for translation`);
 
       const preparedText = contentToTranslate.replace(
         /\[\[TKN::([A-Z0-9-]+)\]\]/g,

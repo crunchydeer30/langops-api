@@ -63,40 +63,6 @@ export class EmailProcessingService {
         `${sensitiveDataMappings.length} sensitive data mappings`,
     );
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('======= EMAIL PARSING RESULTS =======');
-      console.log(`Task ID: ${taskId}`);
-      console.log(`Original Content Length: ${originalContent.length} chars`);
-      console.log(`Segments Created: ${segments.length}`);
-      console.log(`Word Count: ${wordCount}`);
-      console.log('\nOriginal Structure:');
-      console.log(JSON.stringify(originalStructure, null, 2));
-      console.log('\nSegments:');
-      segments.forEach((segment, index) => {
-        console.log(`\nSegment #${index + 1}:`);
-        console.log(`  ID: ${segment.id}`);
-        console.log(`  Order: ${segment.segmentOrder}`);
-        console.log(`  Type: ${segment.segmentType}`);
-        console.log(`  Source Content: ${segment.sourceContent}`);
-        console.log(
-          `  Special Tokens: ${Object.keys(segment.specialTokensMap || {}).length}`,
-        );
-        console.log(
-          `  Format Metadata: ${JSON.stringify(segment.formatMetadata)}`,
-        );
-      });
-      console.log('======= END OF RESULTS =======');
-
-      // Validate reconstruction works
-      const reconstructed = this.reconstructEmailContent(
-        originalStructure,
-        segments,
-      );
-      console.log('======= EMAIL RECONSTRUCTION =======');
-      console.log(reconstructed);
-      console.log('======= END OF RECONSTRUCTION =======');
-    }
-
     return {
       segments,
       sensitiveDataMappings,

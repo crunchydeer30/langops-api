@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AnonymizerHttpAdapter } from './anonymizer.http.adapter';
-import { AnonTestController } from './anonymizer-test.controller';
 import { Env } from '@common/config';
 
 @Module({
@@ -16,7 +15,6 @@ import { Env } from '@common/config';
       }),
     }),
   ],
-  controllers: [AnonTestController],
   providers: [AnonymizerHttpAdapter],
   exports: [AnonymizerHttpAdapter],
 })
