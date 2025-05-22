@@ -22,6 +22,7 @@ import {
   NodeStructure,
   ElementNodeStruct,
 } from '../../domain/interfaces/original-structure.interface';
+import { URL } from 'url';
 
 @Injectable()
 export class EmailProcessingService {
@@ -260,6 +261,9 @@ export class EmailProcessingService {
 
       const originalHtml = $.html($elem);
       const attrs = $elem.attr() || {};
+      const innerHtml = $elem.html() ?? '';
+      const displayText = $elem.text() ?? '';
+      const href = attrs.href || '';
 
       const token = `<URL_${tokenId}>`;
       specialTokensMap[token] = {
@@ -267,12 +271,43 @@ export class EmailProcessingService {
         type: TranslationSpecialTokenType.URL,
         sourceContent: originalHtml,
         attrs,
-        innerHtml: $elem.html()?.toString() ?? '',
-        href: $elem.attr('href') ?? '',
-        displayText: $elem.text() ?? '',
+        innerHtml,
+        href,
+        displayText,
       };
 
-      $elem.replaceWith(`<ph id="${tokenId}" type="${tagName}"/>`);
+      // Check if the inner text looks like a URL using Node's URL class or matches the href
+      const innerText = $elem.text().trim();
+
+      // Use Node's URL class for validation
+      const isValidUrl = (text: string): boolean => {
+        // Add protocol if missing for URL constructor
+        const urlToTest =
+          text.startsWith('http://') || text.startsWith('https://')
+            ? text
+            : `http://${text}`;
+
+        try {
+          new URL(urlToTest);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+
+      const isURL =
+        // Check if the text is a valid URL
+        isValidUrl(innerText) ||
+        // Or if it matches the href with or without protocol
+        innerText === href ||
+        innerText === href.replace(/^https?:\/\//, '');
+      if (!innerHtml.includes('<') && !isURL) {
+        $elem.replaceWith(
+          `<g id="${tokenId}" type="${tagName}">${innerHtml}</g>`,
+        );
+      } else {
+        $elem.replaceWith(`<ph id="${tokenId}" type="${tagName}"/>`);
+      }
     });
 
     $clone.find('img, br, hr').each((_, elem) => {
@@ -415,11 +450,30 @@ export class EmailProcessingService {
         Object.values(tokenMap).forEach((entry) => {
           const id = entry.id;
           if (entry.type === TranslationSpecialTokenType.INLINE_FORMATTING) {
+            // replace formatting placeholders
             html = html.replace(
               new RegExp(`<g[^>]*id=["']${id}["'][^>]*>.*?<\\/g>`, 'g'),
               entry.sourceContent,
             );
+          } else if (entry.type === TranslationSpecialTokenType.URL) {
+            // reconstruct link with proper href and text content
+            const href = entry.href || '#';
+            const displayText = entry.displayText || href;
+
+            // For <g> placeholders (translatable link text)
+            html = html.replace(
+              new RegExp(`<g[^>]*id=["']${id}["'][^>]*>(.*?)<\/g>`, 'g'),
+              (match, content) => `<a href="${href}">${content}</a>`,
+            );
+
+            // For <ph> placeholders (opaque links)
+            html = html.replace(
+              new RegExp(`<ph[^>]*id=["']${id}["'][^>]*>(?:</ph>)?`, 'g'),
+              // Sanitize display text - if it contains HTML or looks problematic, just use 'Link'
+              `<a href="${href}">${displayText?.includes('<') || displayText?.includes('/>') ? 'Link' : displayText}</a>`,
+            );
           } else {
+            // replace generic placeholders
             html = html.replace(
               new RegExp(`<ph[^>]*id=["']${id}["'][^>]*>(?:</ph>)?`, 'g'),
               entry.sourceContent,
