@@ -24,6 +24,8 @@ export const envSchema = z.object({
 
   // INTEGRATION
   DEEPL_API_KEY: z.string(),
+  ANONYMIZER_URL: z.string(),
+  ANONYMIZER_TIMEOUT: z.coerce.number(),
 });
 export type Env = z.infer<typeof envSchema>;
 

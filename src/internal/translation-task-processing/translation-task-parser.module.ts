@@ -20,11 +20,9 @@ import { TranslationTaskSegmentRepository } from './infrastructure/repositories/
   ],
   controllers: [TranslationTaskProcessingController],
   providers: [
-    // Services
     EmailProcessingService,
     TranslationTaskValidationService,
 
-    // Flow components
     EmailProcessingFlowStrategy,
     EmailTranslationTaskProcessor,
     TranslationTaskProcessingOrchestrator,

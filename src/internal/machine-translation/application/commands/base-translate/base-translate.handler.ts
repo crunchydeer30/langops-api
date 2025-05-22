@@ -40,10 +40,8 @@ export abstract class BaseTranslateHandler
         return;
       }
 
-      // Execute the specific translation strategy
       const translationResult = await this.translate(task, segments);
 
-      // Persist translation results using the dedicated command
       if (translationResult && translationResult.results.length > 0) {
         await this.commandBus.execute(
           new PersistMachineTranslationsCommand({
@@ -63,5 +61,5 @@ export abstract class BaseTranslateHandler
   abstract translate(
     task: TranslationTask,
     segments: TranslationTaskSegment[],
-  ): Promise<IBaseTranslationResult>; // Figure out an interface for persisting the result later
+  ): Promise<IBaseTranslationResult>;
 }

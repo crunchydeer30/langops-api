@@ -127,9 +127,6 @@ export class EmailProcessingService {
     };
   }
 
-  /**
-   * Recursively processes HTML nodes and builds the structure
-   */
   private processNode(
     node: DomNode,
     $: cheerio.CheerioAPI,
@@ -167,9 +164,6 @@ export class EmailProcessingService {
     }
   }
 
-  /**
-   * Process an element node (tag)
-   */
   private processElementNode(
     element: DomElement,
     $: cheerio.CheerioAPI,
@@ -211,9 +205,6 @@ export class EmailProcessingService {
     }
   }
 
-  /**
-   * Processes a block element into a translatable segment
-   */
   private processBlockForTranslation(
     node: DomElement,
     $: cheerio.CheerioAPI,
@@ -276,12 +267,9 @@ export class EmailProcessingService {
         displayText,
       };
 
-      // Check if the inner text looks like a URL using Node's URL class or matches the href
       const innerText = $elem.text().trim();
 
-      // Use Node's URL class for validation
       const isValidUrl = (text: string): boolean => {
-        // Add protocol if missing for URL constructor
         const urlToTest =
           text.startsWith('http://') || text.startsWith('https://')
             ? text
@@ -296,9 +284,7 @@ export class EmailProcessingService {
       };
 
       const isURL =
-        // Check if the text is a valid URL
         isValidUrl(innerText) ||
-        // Or if it matches the href with or without protocol
         innerText === href ||
         innerText === href.replace(/^https?:\/\//, '');
       if (!innerHtml.includes('<') && !isURL) {
@@ -357,9 +343,6 @@ export class EmailProcessingService {
     return segment;
   }
 
-  /**
-   * Extracts format metadata from a node
-   */
   private extractFormatMetadata(
     node: DomElement,
     $: cheerio.CheerioAPI,
@@ -386,9 +369,6 @@ export class EmailProcessingService {
     return metadata;
   }
 
-  /**
-   * Checks if a node is a block element
-   */
   private isBlockElement(node: DomElement): boolean {
     const blockElements = [
       'p',
@@ -405,9 +385,6 @@ export class EmailProcessingService {
     return Boolean(node?.name && blockElements.includes(node.name));
   }
 
-  /**
-   * Checks if a node has block element children
-   */
   private hasBlockChildren(node: DomElement, $: cheerio.CheerioAPI): boolean {
     let hasBlocks = false;
     $(node)
@@ -421,9 +398,6 @@ export class EmailProcessingService {
     return hasBlocks;
   }
 
-  /**
-   * Counts words in all segments
-   */
   private countWords(segments: TranslationTaskSegment[]): number {
     return segments.reduce((total, segment) => {
       const words = segment.sourceContent.split(/\s+/).filter(Boolean).length;
@@ -431,9 +405,6 @@ export class EmailProcessingService {
     }, 0);
   }
 
-  /**
-   * Reconstructs the email HTML from segments and original structure
-   */
   private reconstructEmailContent(
     originalStructure: OriginalStructure,
     segments: TranslationTaskSegment[],
@@ -450,30 +421,26 @@ export class EmailProcessingService {
         Object.values(tokenMap).forEach((entry) => {
           const id = entry.id;
           if (entry.type === TranslationSpecialTokenType.INLINE_FORMATTING) {
-            // replace formatting placeholders
+            //
             html = html.replace(
               new RegExp(`<g[^>]*id=["']${id}["'][^>]*>.*?<\\/g>`, 'g'),
               entry.sourceContent,
             );
           } else if (entry.type === TranslationSpecialTokenType.URL) {
-            // reconstruct link with proper href and text content
             const href = entry.href || '#';
             const displayText = entry.displayText || href;
 
-            // For <g> placeholders (translatable link text)
             html = html.replace(
               new RegExp(`<g[^>]*id=["']${id}["'][^>]*>(.*?)<\/g>`, 'g'),
               (match, content) => `<a href="${href}">${content}</a>`,
             );
 
-            // For <ph> placeholders (opaque links)
             html = html.replace(
               new RegExp(`<ph[^>]*id=["']${id}["'][^>]*>(?:</ph>)?`, 'g'),
-              // Sanitize display text - if it contains HTML or looks problematic, just use 'Link'
+
               `<a href="${href}">${displayText?.includes('<') || displayText?.includes('/>') ? 'Link' : displayText}</a>`,
             );
           } else {
-            // replace generic placeholders
             html = html.replace(
               new RegExp(`<ph[^>]*id=["']${id}["'][^>]*>(?:</ph>)?`, 'g'),
               entry.sourceContent,
