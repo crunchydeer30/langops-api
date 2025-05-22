@@ -7,6 +7,7 @@ import {
   ITranslationTask,
 } from '../../domain/entities/translation-task.entity';
 import { Injectable } from '@nestjs/common';
+import { OriginalStructure } from 'src/internal/translation-task-processing/domain/interfaces/original-structure.interface';
 
 @Injectable()
 export class TranslationTaskMapper {
@@ -49,7 +50,7 @@ export class TranslationTaskMapper {
     return {
       originalContent,
       formatType,
-      originalStructure: originalStructure || {},
+      originalStructure: originalStructure || ({} as OriginalStructure),
       currentStage,
       status,
       languagePair: { connect: { id: languagePairId } },
@@ -80,7 +81,7 @@ export class TranslationTaskMapper {
       id,
       originalContent,
       formatType,
-      originalStructure: originalStructure || {},
+      originalStructure: originalStructure || ({} as OriginalStructure),
       currentStage,
       status,
       order: { connect: { id: orderId } },

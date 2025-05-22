@@ -6,20 +6,22 @@ import { ContentSegmentType } from '@prisma/client';
 import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
 import * as cheerio from 'cheerio';
 import { v4 as uuidv4 } from 'uuid';
+import type {
+  Node as DomNode,
+  Element as DomElement,
+  Text as DomText,
+} from 'domhandler';
+import { ElementType } from 'domelementtype';
 import {
   TranslationSpecialTokenType,
   TranslationSpecialTokenMap,
 } from '../../domain/interfaces/translation-segment-token-map.interface';
 import { HtmlFormatMetadata } from '../../domain/interfaces/format-metadata.interface';
-import { OriginalStructure } from '../../domain/interfaces/original-structure.interface';
-
-// Type for node structure with children array
-interface NodeStructure {
-  children: any[];
-  [key: string]: unknown;
-}
-import type { Element, Node, Text as TextNode } from 'domhandler';
-import { ElementType } from 'domelementtype';
+import {
+  OriginalStructure,
+  NodeStructure,
+  ElementNodeStruct,
+} from '../../domain/interfaces/original-structure.interface';
 
 @Injectable()
 export class EmailProcessingService {
@@ -31,11 +33,6 @@ export class EmailProcessingService {
     private readonly eventBus: EventBus,
   ) {}
 
-  /**
-   * Parses an email translation task and creates segments
-   * @param taskId ID of the translation task to parse
-   * @returns Object containing segments, word count, and original structure
-   */
   async parseEmailTask(taskId: string): Promise<{
     segments: TranslationTaskSegment[];
     wordCount: number;
@@ -49,22 +46,18 @@ export class EmailProcessingService {
       throw new Error(`Task ${taskId} not found for parsing`);
     }
 
-    // Get the content from the task
     const htmlContent = task.originalContent;
     this.logger.debug(
       `Parsing content for task ${taskId} (length: ${htmlContent.length})`,
     );
 
-    // Parse the content
     const { originalStructure, segments } = this.parseEmailContent(
       taskId,
       htmlContent,
     );
 
-    // Calculate metrics
     const wordCount = this.countWords(segments);
 
-    // Log results for debugging
     console.log('======= EMAIL PARSING RESULTS =======');
     console.log(`Task ID: ${taskId}`);
     console.log(`Original Content Length: ${htmlContent.length} chars`);
@@ -88,7 +81,6 @@ export class EmailProcessingService {
     });
     console.log('======= END OF RESULTS =======');
 
-    // Reconstruct original email HTML for debugging
     const reconstructed = this.reconstructEmailContent(
       originalStructure,
       segments,
@@ -104,26 +96,20 @@ export class EmailProcessingService {
     };
   }
 
-  /**
-   * Parses HTML content and extracts segments with special tokens
-   */
   private parseEmailContent(
     taskId: string,
     htmlContent: string,
   ): {
-    originalStructure: OriginalStructure & NodeStructure;
+    originalStructure: OriginalStructure;
     segments: TranslationTaskSegment[];
   } {
-    // Initialize the structure with a children array
-    const originalStructure: OriginalStructure & NodeStructure = {
+    const originalStructure: OriginalStructure = {
       children: [],
     };
     const segments: TranslationTaskSegment[] = [];
 
-    // Load HTML with Cheerio
     const $ = cheerio.load(htmlContent);
 
-    // Process the HTML content
     const bodyElement = $('body')[0];
 
     if (bodyElement) {
@@ -144,20 +130,17 @@ export class EmailProcessingService {
    * Recursively processes HTML nodes and builds the structure
    */
   private processNode(
-    node: Node,
+    node: DomNode,
     $: cheerio.CheerioAPI,
-    parentStructure: NodeStructure,
+    parentStructure: OriginalStructure | ElementNodeStruct,
     segments: TranslationTaskSegment[],
     taskId: string,
   ) {
-    // Skip if no node
     if (!node) return;
 
-    // Handle node based on its type
     if (node.type === ElementType.Tag) {
-      const element = node as Element;
+      const element = node as DomElement;
 
-      // Skip non-visible elements
       if (
         element.name === 'style' ||
         element.name === 'script' ||
@@ -168,13 +151,12 @@ export class EmailProcessingService {
 
       this.processElementNode(element, $, parentStructure, segments, taskId);
     } else if (node.type === ElementType.Text) {
-      const textNode = node as TextNode;
-      // Skip empty text nodes
+      const textNode = node as DomText;
+
       if (!textNode.data || textNode.data.trim() === '') {
         return;
       }
 
-      // Add text node to parent structure if it has content
       if (parentStructure.children) {
         parentStructure.children.push({
           type: 'text',
@@ -182,41 +164,36 @@ export class EmailProcessingService {
         });
       }
     }
-    // Ignore other node types (comments, etc.)
   }
 
   /**
    * Process an element node (tag)
    */
   private processElementNode(
-    element: Element,
+    element: DomElement,
     $: cheerio.CheerioAPI,
-    parentStructure: NodeStructure,
+    parentStructure: OriginalStructure | ElementNodeStruct,
     segments: TranslationTaskSegment[],
     taskId: string,
   ) {
-    // Create structure entry for this element
-    const nodeStructure: any = {
+    const nodeStructure: ElementNodeStruct = {
+      type: 'element',
       tag: element.name,
       attributes: element.attribs || {},
       children: [],
     };
 
-    // Add to parent
     if (parentStructure.children) {
       parentStructure.children.push(nodeStructure);
     }
 
-    // Check if this is a leaf block element that should be a segment
     if (this.isBlockElement(element) && !this.hasBlockChildren(element, $)) {
-      // This is a translatable segment, create a placeholder in structure
       const segmentId = segments.length + 1;
       nodeStructure.children.push({
         type: 'segment',
         id: segmentId,
       });
 
-      // Process the content of this block for translation
       const segment = this.processBlockForTranslation(
         element,
         $,
@@ -225,7 +202,6 @@ export class EmailProcessingService {
       );
       segments.push(segment);
     } else {
-      // Process children recursively
       $(element)
         .children()
         .each((_, child) => {
@@ -238,39 +214,32 @@ export class EmailProcessingService {
    * Processes a block element into a translatable segment
    */
   private processBlockForTranslation(
-    node: Element,
+    node: DomElement,
     $: cheerio.CheerioAPI,
     segmentOrder: number,
     taskId: string,
   ): TranslationTaskSegment {
-    // Clone the node to avoid modifying original
     const $clone = $(node).clone();
 
-    // Initialize a map to track special tokens
     const specialTokensMap: TranslationSpecialTokenMap = {};
 
-    // Track token IDs
     let tokenCounter = 1;
 
-    // Process inline formatting elements - transform to <g> tags
     $clone.find('b, strong, i, em, u, span, font, sup, sub').each((_, elem) => {
       const $elem = $(elem);
       const tokenId = String(tokenCounter++);
 
-      // Store original HTML before replacing
       const originalHtml = $.html($elem);
       const tagName = ($elem.prop('tagName') ?? '').toLowerCase();
       const attrs = $elem.attr() || {};
       const innerHtml = $elem.html() ?? '';
 
-      // Format type based on tag
       let formatType = '';
       if (['b', 'strong'].includes(tagName)) formatType = 'bold';
       else if (['i', 'em'].includes(tagName)) formatType = 'italic';
       else if (tagName === 'u') formatType = 'underline';
       else formatType = tagName;
 
-      // Create token entry
       const token = `<INLINE_${tokenId}>`;
       specialTokensMap[token] = {
         id: tokenId,
@@ -280,22 +249,18 @@ export class EmailProcessingService {
         innerHtml,
       };
 
-      // Replace with <g> tag with text preserved inside
       const text = $elem.text();
       $elem.replaceWith(`<g id="${tokenId}" type="${formatType}">${text}</g>`);
     });
 
-    // Process URLs - transform to <ph> tags
     $clone.find('a').each((_, elem) => {
       const $elem = $(elem);
       const tokenId = String(tokenCounter++);
       const tagName = ($elem.prop('tagName') ?? '').toLowerCase();
 
-      // Store original HTML
       const originalHtml = $.html($elem);
       const attrs = $elem.attr() || {};
 
-      // Create token entry for URL
       const token = `<URL_${tokenId}>`;
       specialTokensMap[token] = {
         id: tokenId,
@@ -307,21 +272,17 @@ export class EmailProcessingService {
         displayText: $elem.text() ?? '',
       };
 
-      // Replace with <ph> tag - no text inside
       $elem.replaceWith(`<ph id="${tokenId}" type="${tagName}"/>`);
     });
 
-    // Process other self-closed elements - transform to <ph> tags
     $clone.find('img, br, hr').each((_, elem) => {
       const $elem = $(elem);
       const tokenId = String(tokenCounter++);
       const tagName = ($elem.prop('tagName') ?? '').toLowerCase();
 
-      // Store original HTML
       const originalHtml = $.html($elem);
       const attrs = $elem.attr() || {};
 
-      // Create token entry based on type
       if (tagName === 'img') {
         const token = `<IMG_${tokenId}>`;
         specialTokensMap[token] = {
@@ -343,14 +304,11 @@ export class EmailProcessingService {
         };
       }
 
-      // Replace with <ph> tag - no text inside
       $elem.replaceWith(`<ph id="${tokenId}" type="${tagName}"/>`);
     });
 
-    // Extract the HTML content with our <g> and <ph> tags preserved
     const htmlWithTokens = $clone.html() ?? '';
 
-    // Create segment object
     const segment = TranslationTaskSegment.create({
       id: uuidv4(),
       translationTaskId: taskId,
@@ -368,26 +326,22 @@ export class EmailProcessingService {
    * Extracts format metadata from a node
    */
   private extractFormatMetadata(
-    node: Element,
+    node: DomElement,
     $: cheerio.CheerioAPI,
   ): HtmlFormatMetadata {
-    // Initialize metadata
     const metadata: HtmlFormatMetadata = {
       container: node.name?.toLowerCase() || 'div',
       row: 0,
       col: 0,
     };
 
-    // If inside a table, add row/col info
     if ($(node).closest('td,th').length > 0) {
       const cell = $(node).closest('td,th')[0];
       const row = $(cell).parent('tr')[0];
       const table = $(row).closest('table')[0];
 
-      // Calculate row index
       const rowIndex = $(table).find('tr').index(row) + 1;
 
-      // Calculate col index
       const colIndex = $(row).find('td,th').index(cell) + 1;
 
       metadata.row = rowIndex;
@@ -400,7 +354,7 @@ export class EmailProcessingService {
   /**
    * Checks if a node is a block element
    */
-  private isBlockElement(node: Element): boolean {
+  private isBlockElement(node: DomElement): boolean {
     const blockElements = [
       'p',
       'h1',
@@ -419,14 +373,14 @@ export class EmailProcessingService {
   /**
    * Checks if a node has block element children
    */
-  private hasBlockChildren(node: Element, $: cheerio.CheerioAPI): boolean {
+  private hasBlockChildren(node: DomElement, $: cheerio.CheerioAPI): boolean {
     let hasBlocks = false;
     $(node)
       .children()
       .each((_, child) => {
         if (this.isBlockElement(child)) {
           hasBlocks = true;
-          return false; // break the each loop
+          return false;
         }
       });
     return hasBlocks;
@@ -437,7 +391,6 @@ export class EmailProcessingService {
    */
   private countWords(segments: TranslationTaskSegment[]): number {
     return segments.reduce((total, segment) => {
-      // Count words in content
       const words = segment.sourceContent.split(/\s+/).filter(Boolean).length;
       return total + words;
     }, 0);
@@ -447,14 +400,14 @@ export class EmailProcessingService {
    * Reconstructs the email HTML from segments and original structure
    */
   private reconstructEmailContent(
-    originalStructure: OriginalStructure & NodeStructure,
+    originalStructure: OriginalStructure,
     segments: TranslationTaskSegment[],
   ): string {
-    const buildNode = (node: any): string => {
-      if (node.type === 'text' && typeof node.data === 'string') {
+    const buildNode = (node: NodeStructure): string => {
+      if (node.type === 'text') {
         return node.data;
       }
-      if (node.type === 'segment' && typeof node.id === 'number') {
+      if (node.type === 'segment') {
         const seg = segments.find((s) => s.segmentOrder === node.id);
         if (!seg) return '';
         let html = seg.sourceContent;
@@ -463,35 +416,32 @@ export class EmailProcessingService {
           const id = entry.id;
           if (entry.type === TranslationSpecialTokenType.INLINE_FORMATTING) {
             html = html.replace(
-              new RegExp(`<g[^>]*id=["']${id}["'][^>]*>.*?<\/g>`, 'g'),
+              new RegExp(`<g[^>]*id=["']${id}["'][^>]*>.*?<\\/g>`, 'g'),
               entry.sourceContent,
             );
           } else {
             html = html.replace(
-              new RegExp(`<ph[^>]*id=["']${id}["'][^>]*>(?:<\/ph>)?`, 'g'),
+              new RegExp(`<ph[^>]*id=["']${id}["'][^>]*>(?:</ph>)?`, 'g'),
               entry.sourceContent,
             );
           }
         });
         return html;
       }
-      if (node.tag) {
-        const attrs = node.attributes || {};
-        const attrString = Object.entries(attrs)
-          .map(([k, v]) => `${k}="${v}"`)
-          .join(' ');
-        const openTag = attrString
-          ? `<${node.tag} ${attrString}>`
-          : `<${node.tag}>`;
-        const inner = (node.children || []).map(buildNode).join('');
-        return `${openTag}${inner}</${node.tag}>`;
+      if (node.type === 'element') {
+        const { tag, attributes, children } = node;
+        const attrString = Object.entries(attributes)
+          .map(([k, v]) => ` ${k}="${v}"`)
+          .join('');
+        const inner = children.map(buildNode).join('');
+        return `<${tag}${attrString}>${inner}</${tag}>`;
       }
       return '';
     };
 
-    let roots = originalStructure.children as any[];
-    if (roots.length === 1 && (roots[0] as any).tag === 'body') {
-      roots = (roots[0] as any).children;
+    let roots = originalStructure.children;
+    if (roots.length === 1 && (roots[0] as ElementNodeStruct).tag === 'body') {
+      roots = (roots[0] as ElementNodeStruct).children;
     }
     return roots.map(buildNode).join('');
   }
