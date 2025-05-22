@@ -18,7 +18,6 @@ import {
 } from '../commands/base-translate/base-translate.command';
 import { TranslationTaskType } from '@prisma/client';
 import { TranslationTaskSegment } from 'src/internal/translation-task-processing/domain/entities/translation-task-segment.entity';
-import { LanguageRepository } from 'src/internal/language/infrastructure/repositories/language.repository';
 import { TranslationTask } from 'src/internal/translation-task/domain';
 import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories';
 
@@ -32,7 +31,6 @@ export class MachineTranslationProcessor extends WorkerHost {
     private readonly translationTaskSegmentRepository: TranslationTaskSegmentRepository,
     private readonly eventPublisher: EventPublisher,
     private readonly languagePairRepository: LanguagePairRepository,
-    private readonly languageRepository: LanguageRepository,
   ) {
     super();
   }
@@ -207,32 +205,19 @@ export class MachineTranslationProcessor extends WorkerHost {
       this.logger.error(
         `Language pair with ID ${task.languagePairId} not found`,
       );
-      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
+      throw new DomainException(ERRORS.LANGUAGE_PAIR.NOT_FOUND);
     }
 
-    const sourceLanguage = await this.languageRepository.findById(
-      languagePair.sourceLanguageId,
-    );
-    if (!sourceLanguage) {
+    if (!languagePair.sourceLanguage || !languagePair.targetLanguage) {
       this.logger.error(
-        `Source language with ID ${languagePair.sourceLanguageId} not found`,
+        `Language information missing for language pair ${task.languagePairId}`,
       );
-      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
-    }
-
-    const targetLanguage = await this.languageRepository.findById(
-      languagePair.targetLanguageId,
-    );
-    if (!targetLanguage) {
-      this.logger.error(
-        `Target language with ID ${languagePair.targetLanguageId} not found`,
-      );
-      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
+      throw new DomainException(ERRORS.LANGUAGE.NOT_FOUND);
     }
 
     return {
-      sourceLanguage: sourceLanguage.code,
-      targetLanguage: targetLanguage.code,
+      sourceLanguage: languagePair.sourceLanguage.code,
+      targetLanguage: languagePair.targetLanguage.code,
     };
   }
 }

@@ -12,6 +12,7 @@ import { TranslationTaskSegmentRepository } from '../../infrastructure/repositor
 import { SensitiveDataMappingRepository } from '../../infrastructure/repositories/sensitive-data-mapping.repository';
 import { TranslationTaskType } from '@prisma/client';
 import { EventPublisher } from '@nestjs/cqrs';
+import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories';
 
 @Injectable()
 @Processor(TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS)
@@ -25,6 +26,7 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
     private readonly translationTaskSegmentRepository: TranslationTaskSegmentRepository,
     private readonly sensitiveDataMappingRepository: SensitiveDataMappingRepository,
     private readonly eventPublisher: EventPublisher,
+    private readonly languagePairRepository: LanguagePairRepository,
   ) {
     super();
   }
@@ -90,10 +92,18 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
         throw new Error(`Task ${taskId} has no original content`);
       }
 
+      const languagePair = await this.languagePairRepository.findById(
+        task.languagePairId,
+      );
+      if (!languagePair) {
+        throw new Error(`Failed to find language pair for task ${taskId}`);
+      }
+
       const { segments, sensitiveDataMappings, wordCount, originalStructure } =
         await this.emailProcessingService.parseEmailTask(
           taskId,
           task.originalContent,
+          languagePair.sourceLanguage.code,
         );
 
       await this.translationTaskSegmentRepository.saveMany(segments);

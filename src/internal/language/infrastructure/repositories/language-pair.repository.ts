@@ -14,6 +14,10 @@ export class LanguagePairRepository implements ILanguagePairRepository {
   async findById(id: string): Promise<LanguagePair | null> {
     const languagePair = await this.prisma.languagePair.findUnique({
       where: { id },
+      include: {
+        sourceLanguage: true,
+        targetLanguage: true,
+      },
     });
 
     return languagePair ? this.mapper.toDomain(languagePair) : null;
@@ -25,6 +29,10 @@ export class LanguagePairRepository implements ILanguagePairRepository {
         id: {
           in: ids,
         },
+      },
+      include: {
+        sourceLanguage: true,
+        targetLanguage: true,
       },
     });
 
@@ -44,13 +52,22 @@ export class LanguagePairRepository implements ILanguagePairRepository {
           targetLanguageId,
         },
       },
+      include: {
+        sourceLanguage: true,
+        targetLanguage: true,
+      },
     });
 
     return languagePair ? this.mapper.toDomain(languagePair) : null;
   }
 
   async findAll(): Promise<LanguagePair[]> {
-    const languagePairs = await this.prisma.languagePair.findMany();
+    const languagePairs = await this.prisma.languagePair.findMany({
+      include: {
+        sourceLanguage: true,
+        targetLanguage: true,
+      },
+    });
     return languagePairs.map((languagePair) =>
       this.mapper.toDomain(languagePair),
     );
@@ -61,6 +78,10 @@ export class LanguagePairRepository implements ILanguagePairRepository {
 
     const savedLanguagePair = await this.prisma.languagePair.upsert({
       where: { id: languagePair.id },
+      include: {
+        sourceLanguage: true,
+        targetLanguage: true,
+      },
       update: data,
       create: data,
     });

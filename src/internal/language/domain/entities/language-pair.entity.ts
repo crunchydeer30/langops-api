@@ -5,6 +5,14 @@ export interface ILanguagePair {
   id: string;
   sourceLanguageId: string;
   targetLanguageId: string;
+  sourceLanguage: {
+    code: string;
+    name: string;
+  };
+  targetLanguage: {
+    code: string;
+    name: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +27,14 @@ export class LanguagePair extends AggregateRoot implements ILanguagePair {
   public id: string;
   public sourceLanguageId: string;
   public targetLanguageId: string;
+  public sourceLanguage: {
+    code: string;
+    name: string;
+  };
+  public targetLanguage: {
+    code: string;
+    name: string;
+  };
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -39,6 +55,14 @@ export class LanguagePair extends AggregateRoot implements ILanguagePair {
       id,
       sourceLanguageId: args.sourceLanguageId,
       targetLanguageId: args.targetLanguageId,
+      sourceLanguage: {
+        code: '',
+        name: '',
+      },
+      targetLanguage: {
+        code: '',
+        name: '',
+      },
       createdAt: now,
       updatedAt: now,
     };

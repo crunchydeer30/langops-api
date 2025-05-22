@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TranslationTaskRepository } from '../../../translation-task/infrastructure/repositories/translation-task.repository';
 import { SensitiveDataMapping } from '../../domain/entities/sensitive-data-mapping.entity';
 import { ContentSegmentType } from '@prisma/client';
 import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
@@ -29,14 +28,12 @@ import { AnonymizerHttpAdapter } from 'src/integration/anonymizer/anonymizer.htt
 export class EmailProcessingService {
   private readonly logger = new Logger(EmailProcessingService.name);
 
-  constructor(
-    private readonly translationTaskRepository: TranslationTaskRepository,
-    private readonly anonymizerClient: AnonymizerHttpAdapter,
-  ) {}
+  constructor(private readonly anonymizerClient: AnonymizerHttpAdapter) {}
 
   async parseEmailTask(
     taskId: string,
     originalContent: string,
+    sourceLanguageCode: string,
   ): Promise<{
     segments: TranslationTaskSegment[];
     sensitiveDataMappings: SensitiveDataMapping[];
@@ -54,6 +51,7 @@ export class EmailProcessingService {
     const sensitiveDataMappings = await this.anonymizeSegments(
       taskId,
       segments,
+      sourceLanguageCode,
     );
 
     const wordCount = this.countWords(segments);
@@ -382,6 +380,7 @@ export class EmailProcessingService {
   private async anonymizeSegments(
     taskId: string,
     segments: TranslationTaskSegment[],
+    sourceLanguageCode: string,
   ): Promise<SensitiveDataMapping[]> {
     this.logger.debug(`Anonymizing segments for task ${taskId}`);
 
@@ -389,7 +388,7 @@ export class EmailProcessingService {
 
     const batchItems: AnonymizeBatchItem[] = segments.map((segment) => ({
       text: segment.sourceContent,
-      language: 'en',
+      language: sourceLanguageCode,
     }));
 
     try {
