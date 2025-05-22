@@ -7,6 +7,7 @@ import { MachineTranslationProcessors } from './application/processors';
 import { MachineTranslationCommandHandlers } from './application/commands';
 import { BullModule } from '@nestjs/bullmq';
 import { MACHINE_TRANSLATION_QUEUE } from './infrastructure/bullmq/constants';
+import { LanguageModule } from '../language/language.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MACHINE_TRANSLATION_QUEUE } from './infrastructure/bullmq/constants';
     }),
     TranslationTaskModule,
     TranslationTaskProcessingModule,
+    LanguageModule,
   ],
   providers: [
     ...MachineTranslationEventHandlers,

@@ -6,7 +6,7 @@ import { Email } from '@common/domain/value-objects';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
 import { EditorApplicationRepository } from 'src/internal/editor-application/infrastructure';
-import { LanguagePairRepository } from 'src/internal/language-pair/infrastructure';
+import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories';
 
 @CommandHandler(SubmitEditorApplicationCommand)
 export class SubmitEditorApplicationHandler

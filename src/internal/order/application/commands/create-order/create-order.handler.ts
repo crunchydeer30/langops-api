@@ -7,9 +7,9 @@ import {
 import { Order } from '../../../domain/entities/order.entity';
 import { OrderCreatedEvent } from '../../../domain/events';
 import { OrderRepository } from 'src/internal/order/infrastructure';
-import { LanguagePairRepository } from 'src/internal/language-pair/infrastructure';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
+import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories';
 
 @CommandHandler(CreateOrderCommand)
 export class CreateOrderHandler

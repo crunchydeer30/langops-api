@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EditorMapper, EditorRepository } from './infrastructure';
-import { LanguagePairModule } from '../language-pair/language-pair.module';
+import { LanguageModule } from '../language/language.module';
 
 @Module({
-  imports: [CqrsModule, LanguagePairModule],
+  imports: [CqrsModule, LanguageModule],
   controllers: [],
   providers: [EditorRepository, EditorMapper],
   exports: [EditorRepository],

@@ -14,6 +14,7 @@ import { TranslationTaskSegmentRepository } from './infrastructure/repositories/
 import { SensitiveDataMappingMapper } from './infrastructure/mappers/sensitive-data-mapping.mapper';
 import { SensitiveDataMappingRepository } from './infrastructure/repositories/sensitive-data-mapping.repository';
 import { AnonymizerModule } from 'src/integration/anonymizer/anonymizer.module';
+import { LanguageModule } from '../language/language.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AnonymizerModule } from 'src/integration/anonymizer/anonymizer.module';
     TranslationTaskProcessingBullMQModule,
     AnonymizerModule,
     TranslationTaskModule,
+    LanguageModule,
   ],
   controllers: [TranslationTaskProcessingController],
   providers: [

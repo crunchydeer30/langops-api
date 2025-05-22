@@ -18,6 +18,9 @@ import {
 } from '../commands/base-translate/base-translate.command';
 import { TranslationTaskType } from '@prisma/client';
 import { TranslationTaskSegment } from 'src/internal/translation-task-processing/domain/entities/translation-task-segment.entity';
+import { LanguageRepository } from 'src/internal/language/infrastructure/repositories/language.repository';
+import { TranslationTask } from 'src/internal/translation-task/domain';
+import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories';
 
 @Processor(MACHINE_TRANSLATION_QUEUE)
 export class MachineTranslationProcessor extends WorkerHost {
@@ -28,6 +31,8 @@ export class MachineTranslationProcessor extends WorkerHost {
     private readonly translationTaskRepository: TranslationTaskRepository,
     private readonly translationTaskSegmentRepository: TranslationTaskSegmentRepository,
     private readonly eventPublisher: EventPublisher,
+    private readonly languagePairRepository: LanguagePairRepository,
+    private readonly languageRepository: LanguageRepository,
   ) {
     super();
   }
@@ -54,6 +59,7 @@ export class MachineTranslationProcessor extends WorkerHost {
 
   private async translate(taskId: string) {
     const task = await this.translationTaskRepository.findById(taskId);
+
     try {
       this.logger.log(`Starting machine translation for task ${taskId}`);
       if (!task) {
@@ -186,11 +192,47 @@ export class MachineTranslationProcessor extends WorkerHost {
   }
 
   private async getLanguagePair(
-    task: any,
+    task: TranslationTask,
   ): Promise<{ sourceLanguage: string; targetLanguage: string }> {
+    if (!task.languagePairId) {
+      this.logger.error(`Task ${task.id} does not have a language pair ID`);
+      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
+    }
+
+    const languagePair = await this.languagePairRepository.findById(
+      task.languagePairId,
+    );
+
+    if (!languagePair) {
+      this.logger.error(
+        `Language pair with ID ${task.languagePairId} not found`,
+      );
+      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
+    }
+
+    const sourceLanguage = await this.languageRepository.findById(
+      languagePair.sourceLanguageId,
+    );
+    if (!sourceLanguage) {
+      this.logger.error(
+        `Source language with ID ${languagePair.sourceLanguageId} not found`,
+      );
+      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
+    }
+
+    const targetLanguage = await this.languageRepository.findById(
+      languagePair.targetLanguageId,
+    );
+    if (!targetLanguage) {
+      this.logger.error(
+        `Target language with ID ${languagePair.targetLanguageId} not found`,
+      );
+      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
+    }
+
     return {
-      sourceLanguage: 'en',
-      targetLanguage: 'ru',
+      sourceLanguage: sourceLanguage.code,
+      targetLanguage: targetLanguage.code,
     };
   }
 }
