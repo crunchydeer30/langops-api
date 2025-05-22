@@ -24,37 +24,37 @@ export class TranslationTaskValidationService {
   }
 
   private validateEmailTask(task: TranslationTask): void {
-    // // const content = task.sourceContent;
-    // try {
-    //   const isFullEmail = this.isFullEmailFormat(content);
-    //   const htmlContent = isFullEmail
-    //     ? this.extractHtmlFromFullEmail(content)
-    //     : content;
-    //   if (!this.isValidHtml(htmlContent)) {
-    //     throw new DomainException(
-    //       ERRORS.TRANSLATION_TASK.INVALID_HTML_STRUCTURE,
-    //     );
-    //   }
-    //   if (!this.hasTranslatableContent(htmlContent)) {
-    //     throw new DomainException(
-    //       ERRORS.TRANSLATION_TASK.NO_TRANSLATABLE_CONTENT,
-    //     );
-    //   }
-    //   if (htmlContent.length > 10 * 1024 * 1024) {
-    //     throw new DomainException(
-    //       ERRORS.TRANSLATION_TASK.CONTENT_SIZE_EXCEEDED,
-    //     );
-    //   }
-    // } catch (error) {
-    //   const errorMessage =
-    //     error instanceof Error ? error.message : String(error);
-    //   this.logger.error(
-    //     `Email validation failed for task ${task.id}: ${errorMessage}`,
-    //   );
-    //   throw new DomainException(
-    //     ERRORS.TRANSLATION_TASK.EMAIL_VALIDATION_FAILED,
-    //   );
-    // }
+    const content = task.originalContent;
+    try {
+      const isFullEmail = this.isFullEmailFormat(content);
+      const htmlContent = isFullEmail
+        ? this.extractHtmlFromFullEmail(content)
+        : content;
+      if (!this.isValidHtml(htmlContent)) {
+        throw new DomainException(
+          ERRORS.TRANSLATION_TASK.INVALID_HTML_STRUCTURE,
+        );
+      }
+      if (!this.hasTranslatableContent(htmlContent)) {
+        throw new DomainException(
+          ERRORS.TRANSLATION_TASK.NO_TRANSLATABLE_CONTENT,
+        );
+      }
+      if (htmlContent.length > 10 * 1024 * 1024) {
+        throw new DomainException(
+          ERRORS.TRANSLATION_TASK.CONTENT_SIZE_EXCEEDED,
+        );
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Email validation failed for task ${task.id}: ${errorMessage}`,
+      );
+      throw new DomainException(
+        ERRORS.TRANSLATION_TASK.EMAIL_VALIDATION_FAILED,
+      );
+    }
   }
 
   private isFullEmailFormat(content: string): boolean {
