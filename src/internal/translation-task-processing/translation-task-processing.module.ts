@@ -11,11 +11,15 @@ import { TranslationTaskProcessingOrchestrator } from './application/flows/trans
 import { TranslationTaskProcessingOrchestratorProcessor } from './application/processors/translation-task-orchestrator.processor';
 import { TranslationTaskSegmentMapper } from './infrastructure/mappers/translation-task-segment.mapper';
 import { TranslationTaskSegmentRepository } from './infrastructure/repositories/translation-task-segment.repository';
+import { SensitiveDataMappingMapper } from './infrastructure/mappers/sensitive-data-mapping.mapper';
+import { SensitiveDataMappingRepository } from './infrastructure/repositories/sensitive-data-mapping.repository';
+import { AnonymizerModule } from 'src/integration/anonymizer/anonymizer.module';
 
 @Module({
   imports: [
     CqrsModule,
     TranslationTaskProcessingBullMQModule,
+    AnonymizerModule,
     TranslationTaskModule,
   ],
   controllers: [TranslationTaskProcessingController],
@@ -30,6 +34,8 @@ import { TranslationTaskSegmentRepository } from './infrastructure/repositories/
 
     TranslationTaskSegmentMapper,
     TranslationTaskSegmentRepository,
+    SensitiveDataMappingMapper,
+    SensitiveDataMappingRepository,
   ],
   exports: [
     EmailProcessingService,

@@ -9,6 +9,7 @@ import { TranslationTaskValidationService } from '../services/translation-task-v
 import { EmailProcessingService } from '../services/email-processing.service';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
 import { TranslationTaskSegmentRepository } from '../../infrastructure/repositories/translation-task-segment.repository';
+import { SensitiveDataMappingRepository } from '../../infrastructure/repositories/sensitive-data-mapping.repository';
 import { TranslationTaskType } from '@prisma/client';
 import { EventPublisher } from '@nestjs/cqrs';
 
@@ -22,6 +23,7 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
     private readonly emailProcessingService: EmailProcessingService,
     private readonly translationTaskRepository: TranslationTaskRepository,
     private readonly translationTaskSegmentRepository: TranslationTaskSegmentRepository,
+    private readonly sensitiveDataMappingRepository: SensitiveDataMappingRepository,
     private readonly eventPublisher: EventPublisher,
   ) {
     super();
@@ -84,19 +86,43 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       }
       this.eventPublisher.mergeObjectContext(task);
 
-      const { segments, wordCount, originalStructure } =
-        await this.emailProcessingService.parseEmailTask(taskId);
+      // Make sure we have original content to process
+      if (!task.originalContent) {
+        throw new Error(`Task ${taskId} has no original content`);
+      }
+
+      // Parse email content and get segments, sensitive data mappings, etc.
+      const { segments, sensitiveDataMappings, wordCount, originalStructure } =
+        await this.emailProcessingService.parseEmailTask(
+          taskId,
+          task.originalContent,
+        );
+
+      // Save segments and update task
       await this.translationTaskSegmentRepository.saveMany(segments);
+
+      // If we have sensitive data mappings, save them
+      if (sensitiveDataMappings.length > 0) {
+        this.logger.debug(
+          `Saving ${sensitiveDataMappings.length} sensitive data mappings for task ${taskId}`,
+        );
+        await this.sensitiveDataMappingRepository.saveMany(
+          sensitiveDataMappings,
+        );
+      }
+
+      // Update task with original structure and word count
       task.originalStructure = originalStructure;
       task.wordCount = wordCount;
       await this.translationTaskRepository.save(task);
       task.commit();
+
       this.logger.debug(
-        `Email task ${taskId} processed successfully: ${segments.length} segments, ${wordCount} words`,
+        `Email task ${taskId} processed successfully: ${segments.length} segments, ${wordCount} words, ${sensitiveDataMappings.length} sensitive data mappings`,
       );
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
-        `Error during processing email task ${taskId}: ${JSON.stringify(error)}`,
+        `Error during processing email task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
       );
       if (task) {
         task.handleProcessingError(JSON.stringify(error));

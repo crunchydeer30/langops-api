@@ -1,11 +1,9 @@
-import { Controller, Get, Inject } from '@nestjs/common';
-import { IAnonymizerClient } from 'src/internal/translation-task-processing/domain/ports/anonymizer.client';
+import { Controller, Get } from '@nestjs/common';
+import { AnonymizerHttpAdapter } from './anonymizer.http.adapter';
 
 @Controller('anon')
 export class AnonTestController {
-  constructor(
-    @Inject(IAnonymizerClient) private readonly client: IAnonymizerClient,
-  ) {}
+  constructor(private readonly client: AnonymizerHttpAdapter) {}
 
   @Get('test')
   async test() {

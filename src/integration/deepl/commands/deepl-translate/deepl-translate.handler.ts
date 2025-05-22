@@ -141,7 +141,15 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
     return segments.map((segment) => {
       const tokenMap: Record<string, string> = {};
 
-      const preparedText = segment.sourceContent.replace(
+      // Use anonymizedContent if available, otherwise fall back to sourceContent
+      const contentToTranslate =
+        segment.anonymizedContent || segment.sourceContent;
+
+      this.logger.debug(
+        `Segment ${segment.id}: using ${segment.anonymizedContent ? 'anonymized' : 'source'} content`,
+      );
+
+      const preparedText = contentToTranslate.replace(
         /\[\[TKN::([A-Z0-9-]+)\]\]/g,
         (match, tokenId) => {
           const placeholder = `<x id="${tokenId}"></x>`;
@@ -152,7 +160,7 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
 
       return {
         id: segment.id,
-        originalText: segment.sourceContent,
+        originalText: contentToTranslate,
         preparedText,
         tokenMap,
       };

@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventBus } from '@nestjs/cqrs';
 import { TranslationTaskRepository } from '../../../translation-task/infrastructure/repositories/translation-task.repository';
-import { TranslationTaskSegmentRepository } from '../../infrastructure/repositories/translation-task-segment.repository';
+import { SensitiveDataMapping } from '../../domain/entities/sensitive-data-mapping.entity';
 import { ContentSegmentType } from '@prisma/client';
 import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
 import * as cheerio from 'cheerio';
@@ -23,6 +22,8 @@ import {
   ElementNodeStruct,
 } from '../../domain/interfaces/original-structure.interface';
 import { URL } from 'url';
+import { AnonymizeBatchItem } from '../../domain/ports/anonymizer.client';
+import { AnonymizerHttpAdapter } from 'src/integration/anonymizer/anonymizer.http.adapter';
 
 @Injectable()
 export class EmailProcessingService {
@@ -30,68 +31,75 @@ export class EmailProcessingService {
 
   constructor(
     private readonly translationTaskRepository: TranslationTaskRepository,
-    private readonly segmentRepository: TranslationTaskSegmentRepository,
-    private readonly eventBus: EventBus,
+    private readonly anonymizerClient: AnonymizerHttpAdapter,
   ) {}
 
-  async parseEmailTask(taskId: string): Promise<{
+  async parseEmailTask(
+    taskId: string,
+    originalContent: string,
+  ): Promise<{
     segments: TranslationTaskSegment[];
+    sensitiveDataMappings: SensitiveDataMapping[];
     wordCount: number;
     originalStructure: OriginalStructure;
   }> {
-    this.logger.debug(`Parsing email task ${taskId}`);
-
-    const task = await this.translationTaskRepository.findById(taskId);
-    if (!task) {
-      this.logger.error(`Task ${taskId} not found for parsing`);
-      throw new Error(`Task ${taskId} not found for parsing`);
-    }
-
-    const htmlContent = task.originalContent;
-    this.logger.debug(
-      `Parsing content for task ${taskId} (length: ${htmlContent.length})`,
-    );
+    this.logger.debug(`Parsing email content for task ${taskId}`);
+    this.logger.debug(`Content length: ${originalContent.length} characters`);
 
     const { originalStructure, segments } = this.parseEmailContent(
       taskId,
-      htmlContent,
+      originalContent,
+    );
+
+    const sensitiveDataMappings = await this.anonymizeSegments(
+      taskId,
+      segments,
     );
 
     const wordCount = this.countWords(segments);
 
-    console.log('======= EMAIL PARSING RESULTS =======');
-    console.log(`Task ID: ${taskId}`);
-    console.log(`Original Content Length: ${htmlContent.length} chars`);
-    console.log(`Segments Created: ${segments.length}`);
-    console.log(`Word Count: ${wordCount}`);
-    console.log('\nOriginal Structure:');
-    console.log(JSON.stringify(originalStructure, null, 2));
-    console.log('\nSegments:');
-    segments.forEach((segment, index) => {
-      console.log(`\nSegment #${index + 1}:`);
-      console.log(`  ID: ${segment.id}`);
-      console.log(`  Order: ${segment.segmentOrder}`);
-      console.log(`  Type: ${segment.segmentType}`);
-      console.log(`  Source Content: ${segment.sourceContent}`);
-      console.log(
-        `  Special Tokens: ${Object.keys(segment.specialTokensMap || {}).length}`,
-      );
-      console.log(
-        `  Format Metadata: ${JSON.stringify(segment.formatMetadata)}`,
-      );
-    });
-    console.log('======= END OF RESULTS =======');
-
-    const reconstructed = this.reconstructEmailContent(
-      originalStructure,
-      segments,
+    this.logger.debug(
+      `Parsed ${segments.length} segments with ${wordCount} words and ` +
+        `${sensitiveDataMappings.length} sensitive data mappings`,
     );
-    console.log('======= EMAIL RECONSTRUCTION =======');
-    console.log(reconstructed);
-    console.log('======= END OF RECONSTRUCTION =======');
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('======= EMAIL PARSING RESULTS =======');
+      console.log(`Task ID: ${taskId}`);
+      console.log(`Original Content Length: ${originalContent.length} chars`);
+      console.log(`Segments Created: ${segments.length}`);
+      console.log(`Word Count: ${wordCount}`);
+      console.log('\nOriginal Structure:');
+      console.log(JSON.stringify(originalStructure, null, 2));
+      console.log('\nSegments:');
+      segments.forEach((segment, index) => {
+        console.log(`\nSegment #${index + 1}:`);
+        console.log(`  ID: ${segment.id}`);
+        console.log(`  Order: ${segment.segmentOrder}`);
+        console.log(`  Type: ${segment.segmentType}`);
+        console.log(`  Source Content: ${segment.sourceContent}`);
+        console.log(
+          `  Special Tokens: ${Object.keys(segment.specialTokensMap || {}).length}`,
+        );
+        console.log(
+          `  Format Metadata: ${JSON.stringify(segment.formatMetadata)}`,
+        );
+      });
+      console.log('======= END OF RESULTS =======');
+
+      // Validate reconstruction works
+      const reconstructed = this.reconstructEmailContent(
+        originalStructure,
+        segments,
+      );
+      console.log('======= EMAIL RECONSTRUCTION =======');
+      console.log(reconstructed);
+      console.log('======= END OF RECONSTRUCTION =======');
+    }
 
     return {
       segments,
+      sensitiveDataMappings,
       wordCount,
       originalStructure,
     };
@@ -405,6 +413,58 @@ export class EmailProcessingService {
     }, 0);
   }
 
+  private async anonymizeSegments(
+    taskId: string,
+    segments: TranslationTaskSegment[],
+  ): Promise<SensitiveDataMapping[]> {
+    this.logger.debug(`Anonymizing segments for task ${taskId}`);
+
+    const sensitiveDataMappings: SensitiveDataMapping[] = [];
+
+    const batchItems: AnonymizeBatchItem[] = segments.map((segment) => ({
+      text: segment.sourceContent,
+      language: 'en',
+    }));
+
+    try {
+      const anonymizationResults =
+        await this.anonymizerClient.anonymizeBatch(batchItems);
+
+      for (let i = 0; i < anonymizationResults.length; i++) {
+        const result = anonymizationResults[i];
+        const segment = segments[i];
+
+        segment.anonymizedContent = result.anonymized_text;
+
+        if (result.mappings && result.mappings.length > 0) {
+          for (const mapping of result.mappings) {
+            const sensitiveDataMapping = SensitiveDataMapping.create({
+              id: uuidv4(),
+              translationTaskId: taskId,
+              tokenIdentifier: mapping.placeholder,
+              sensitiveType: mapping.entity_type,
+              originalValue: mapping.original,
+            });
+
+            sensitiveDataMappings.push(sensitiveDataMapping);
+          }
+        }
+      }
+
+      this.logger.debug(
+        `Anonymization completed for task ${taskId}: ` +
+          `${sensitiveDataMappings.length} sensitive entities identified`,
+      );
+
+      return sensitiveDataMappings;
+    } catch (error: unknown) {
+      this.logger.error(
+        `Anonymization service error for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
   private reconstructEmailContent(
     originalStructure: OriginalStructure,
     segments: TranslationTaskSegment[],
@@ -421,7 +481,6 @@ export class EmailProcessingService {
         Object.values(tokenMap).forEach((entry) => {
           const id = entry.id;
           if (entry.type === TranslationSpecialTokenType.INLINE_FORMATTING) {
-            //
             html = html.replace(
               new RegExp(`<g[^>]*id=["']${id}["'][^>]*>.*?<\\/g>`, 'g'),
               entry.sourceContent,
