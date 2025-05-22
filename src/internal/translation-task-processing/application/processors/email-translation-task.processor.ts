@@ -83,7 +83,7 @@ export class EmailTranslationTaskProcessor extends WorkerHost {
       this.eventPublisher.mergeObjectContext(task);
 
       // const { wordCount, segmentCount, templatedContent } =
-      //   await this.emailProcessingService.parseEmailTask(taskId);
+      await this.emailProcessingService.parseEmailTask(taskId);
 
       // task.wordCount = wordCount;
       // task.templatedContent = templatedContent;
