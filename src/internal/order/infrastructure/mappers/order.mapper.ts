@@ -10,7 +10,6 @@ export class OrderMapper {
       customerId: model.customerId,
       languagePairId: model.languagePairId,
       status: model.status,
-      type: model.type,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     };
@@ -25,7 +24,6 @@ export class OrderMapper {
       id: entity.id,
       customerId: entity.customerId,
       languagePairId: entity.languagePairId,
-      type: entity.type,
       status: entity.status,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,

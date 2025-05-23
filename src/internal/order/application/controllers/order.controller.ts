@@ -27,7 +27,6 @@ import {
   ICreateOrderCommandResult,
 } from '../commands/create-order';
 import { GetJWTPayload } from 'src/internal/auth/application/decorators';
-import { OrderType } from '@prisma/client';
 
 @ApiTags('orders')
 @Controller(ORDER_HTTP_CONTROLLER.ROOT)
@@ -51,7 +50,6 @@ export class OrderController {
       customerId,
       languagePairId: createOrderDto.languagePairId,
       sourceContent: createOrderDto.rawEmail,
-      type: OrderType.EMAIL,
     };
 
     const result = await this.commandBus.execute<

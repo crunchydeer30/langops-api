@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { EventsHandler, IEventHandler, CommandBus } from '@nestjs/cqrs';
 import { OrderCreatedEvent } from 'src/internal/order/domain/events';
-import { OrderType, TranslationTaskType } from '@prisma/client';
+import { TranslationTaskType } from '@prisma/client';
 import { CreateTranslationTaskCommand } from '../commands/create-translation-task/create-translation-task.command';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from '@libs/contracts/common';
@@ -14,20 +14,7 @@ export class OrderCreatedHandler implements IEventHandler<OrderCreatedEvent> {
 
   async handle(event: OrderCreatedEvent): Promise<void> {
     this.logger.log(`Processing order created event: ${event.payload.orderId}`);
-
-    switch (event.payload.type) {
-      case OrderType.EMAIL:
-        await this.handleEmailOrder(event);
-        break;
-      case OrderType.PLAIN_TEXT:
-        await this.handlePlainTextOrder(event);
-        break;
-      default:
-        this.logger.error(
-          `Unsupported order type: ${event.payload.type as string}`,
-        );
-        throw new DomainException(ERRORS.ORDER.INVALID_ORDER_TYPE);
-    }
+    // TODO: remove
   }
 
   private async handleEmailOrder(event: OrderCreatedEvent): Promise<void> {

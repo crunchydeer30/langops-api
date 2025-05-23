@@ -27,15 +27,8 @@ export class OrderRepository implements IOrderRepository {
   }
 
   async save(order: Order): Promise<void> {
-    const {
-      id,
-      customerId,
-      languagePairId,
-      status,
-      type,
-      createdAt,
-      updatedAt,
-    } = this.mapper.toPersistence(order);
+    const { id, customerId, languagePairId, status, createdAt, updatedAt } =
+      this.mapper.toPersistence(order);
 
     const updatePayload = {
       status,
@@ -47,7 +40,6 @@ export class OrderRepository implements IOrderRepository {
       status,
       createdAt,
       updatedAt,
-      type,
       customer: { connect: { id: customerId } },
       languagePair: { connect: { id: languagePairId } },
     };

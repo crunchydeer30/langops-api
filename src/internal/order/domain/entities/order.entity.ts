@@ -1,6 +1,6 @@
 import { AggregateRoot } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { OrderStatus, OrderType } from '@prisma/client';
+import { OrderStatus } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from '@libs/contracts/common';
@@ -11,7 +11,6 @@ export interface IOrder {
   customerId: string;
   languagePairId: string;
   status: OrderStatus;
-  type: OrderType;
   totalPrice?: number | null;
   createdAt: Date;
   updatedAt: Date;
@@ -20,7 +19,6 @@ export interface IOrder {
 export interface IOrderCreateArgs {
   customerId: string;
   languagePairId: string;
-  type: OrderType;
 }
 
 export class Order extends AggregateRoot {
@@ -30,7 +28,6 @@ export class Order extends AggregateRoot {
   public customerId: string;
   public languagePairId: string;
   public status: OrderStatus;
-  public type: OrderType;
   public totalPrice?: number | null;
   public createdAt: Date;
   public updatedAt: Date;
@@ -41,7 +38,6 @@ export class Order extends AggregateRoot {
     this.customerId = props.customerId;
     this.languagePairId = props.languagePairId;
     this.status = props.status;
-    this.type = props.type;
     this.totalPrice = props.totalPrice;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
@@ -55,7 +51,6 @@ export class Order extends AggregateRoot {
       id: orderId,
       customerId: args.customerId,
       languagePairId: args.languagePairId,
-      type: args.type,
       status: OrderStatus.PENDING as OrderStatus,
       totalPrice: null,
       createdAt: now,

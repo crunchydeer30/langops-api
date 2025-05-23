@@ -1,11 +1,8 @@
-import { OrderType } from '@prisma/client';
-
 export interface IOrderCreatedEventProps {
   orderId: string;
   customerId: string;
   languagePairId: string;
   sourceContent: string;
-  type: OrderType;
   taskSpecificInstructions?: string | null;
   createdAt: Date;
 }

@@ -43,7 +43,6 @@ export class CreateOrderHandler
     const order = Order.create({
       customerId: props.customerId,
       languagePairId: props.languagePairId,
-      type: props.type,
     });
 
     const orderWithEvents = this.publisher.mergeObjectContext(order);
@@ -54,7 +53,6 @@ export class CreateOrderHandler
         customerId: props.customerId,
         languagePairId: props.languagePairId,
         sourceContent: props.sourceContent,
-        type: props.type,
         createdAt: new Date(),
       }),
     );
