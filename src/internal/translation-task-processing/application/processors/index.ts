@@ -1,1 +1,1 @@
-export * from './email-translation-task.processor';
+export * from './html-translation-task.processor';

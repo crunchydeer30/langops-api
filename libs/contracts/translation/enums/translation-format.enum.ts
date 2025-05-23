@@ -1,5 +1,5 @@
 export enum TranslationFormat {
-  EMAIL = 'EMAIL',
+  HTML = 'HTML',
   PLAIN_TEXT = 'PLAIN_TEXT',
   XLIFF = 'XLIFF',
   SRT = 'SRT',

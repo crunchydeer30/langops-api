@@ -255,9 +255,9 @@ export const ERRORS = {
       message: 'Unsupported task type',
       httpStatus: 400,
     },
-    EMAIL_VALIDATION_FAILED: {
+    HTML_VALIDATION_FAILED: {
       code: 'TRANSLATION_TASK_014',
-      message: 'Email validation failed',
+      message: 'HTML validation failed',
       httpStatus: 400,
     },
     HTML_PARSING_FAILED: {

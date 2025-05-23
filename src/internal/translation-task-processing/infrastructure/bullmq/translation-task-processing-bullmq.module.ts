@@ -13,13 +13,13 @@ import {
       name: TRANSLATION_TASK_PARSING_FLOWS.ORCHESTRATOR.name,
     }),
     BullModule.registerFlowProducer({
-      name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.name,
+      name: TRANSLATION_TASK_PARSING_FLOWS.HTML.name,
     }),
     BullModule.registerQueue({
-      name: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_FLOW,
+      name: TRANSLATION_TASK_PARSING_QUEUES.HTML_FLOW,
     }),
     BullModule.registerQueue({
-      name: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS,
+      name: TRANSLATION_TASK_PARSING_QUEUES.HTML_JOBS,
     }),
   ],
   exports: [BullModule],

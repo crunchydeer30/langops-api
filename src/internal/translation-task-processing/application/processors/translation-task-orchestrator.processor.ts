@@ -2,7 +2,7 @@ import { InjectFlowProducer, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { FlowProducer, Job } from 'bullmq';
 import {
-  EmailProcessingFlowStrategy,
+  HTMLProcessingFlowStrategy,
   TranslationTaskProcessingFlowStrategy,
 } from '../flows';
 import { TranslationTaskType } from '@prisma/client';
@@ -27,13 +27,13 @@ export class TranslationTaskProcessingOrchestratorProcessor extends WorkerHost {
   constructor(
     @InjectFlowProducer(TRANSLATION_TASK_PARSING_FLOWS.ORCHESTRATOR.name)
     private readonly flowProducer: FlowProducer,
-    private readonly emailFlowStrategy: EmailProcessingFlowStrategy,
+    private readonly htmlFlowStrategy: HTMLProcessingFlowStrategy,
     private readonly translationTaskRepository: TranslationTaskRepository,
     private readonly eventPublisher: EventPublisher,
   ) {
     super();
     this.strategies = new Map();
-    this.registerStrategy(this.emailFlowStrategy);
+    this.registerStrategy(this.htmlFlowStrategy);
   }
 
   private registerStrategy(
@@ -81,7 +81,7 @@ export class TranslationTaskProcessingOrchestratorProcessor extends WorkerHost {
       }
       this.eventPublisher.mergeObjectContext(task);
 
-      if (taskType !== TranslationTaskType.EMAIL) {
+      if (taskType !== TranslationTaskType.HTML) {
         throw Error(`Task type ${taskType} is not supported`);
       }
 

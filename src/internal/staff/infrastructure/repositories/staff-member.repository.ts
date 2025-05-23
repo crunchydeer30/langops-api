@@ -39,6 +39,6 @@ export class StaffMemberRepository implements IStaffMemberRepository {
       create: data,
     });
 
-    return this.mapper.toDomain(model)!;
+    return this.mapper.toDomain(model);
   }
 }

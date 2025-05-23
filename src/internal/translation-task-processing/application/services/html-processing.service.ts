@@ -25,12 +25,12 @@ import { AnonymizeBatchItem } from '../../domain/ports/anonymizer.client';
 import { AnonymizerHttpAdapter } from 'src/integration/anonymizer/anonymizer.http.adapter';
 
 @Injectable()
-export class EmailProcessingService {
-  private readonly logger = new Logger(EmailProcessingService.name);
+export class HTMLProcessingService {
+  private readonly logger = new Logger(HTMLProcessingService.name);
 
   constructor(private readonly anonymizerClient: AnonymizerHttpAdapter) {}
 
-  async parseEmailTask(
+  async parseHTMLTask(
     taskId: string,
     originalContent: string,
     sourceLanguageCode: string,
@@ -40,10 +40,10 @@ export class EmailProcessingService {
     wordCount: number;
     originalStructure: OriginalStructure;
   }> {
-    this.logger.debug(`Parsing email content for task ${taskId}`);
+    this.logger.debug(`Parsing html content for task ${taskId}`);
     this.logger.debug(`Content length: ${originalContent.length} characters`);
 
-    const { originalStructure, segments } = this.parseEmailContent(
+    const { originalStructure, segments } = this.parseHTMLContent(
       taskId,
       originalContent,
     );
@@ -69,7 +69,7 @@ export class EmailProcessingService {
     };
   }
 
-  private parseEmailContent(
+  private parseHTMLContent(
     taskId: string,
     htmlContent: string,
   ): {
@@ -89,7 +89,7 @@ export class EmailProcessingService {
       this.processNode(bodyElement, $, originalStructure, segments, taskId);
     } else {
       this.logger.warn(
-        `No body element found in email content for task ${taskId}`,
+        `No body element found in html content for task ${taskId}`,
       );
     }
 
@@ -430,7 +430,7 @@ export class EmailProcessingService {
     }
   }
 
-  private reconstructEmailContent(
+  private reconstructHTMLContent(
     originalStructure: OriginalStructure,
     segments: TranslationTaskSegment[],
   ): string {

@@ -14,8 +14,8 @@ export class TranslationTaskValidationService {
 
   validateTask(task: TranslationTask): void {
     switch (task.type) {
-      case TranslationTaskType.EMAIL:
-        this.validateEmailTask(task);
+      case TranslationTaskType.HTML:
+        this.validateHTMLTask(task);
         break;
       default:
         this.logger.error(`Unsupported task type: ${task.type}`);
@@ -23,12 +23,12 @@ export class TranslationTaskValidationService {
     }
   }
 
-  private validateEmailTask(task: TranslationTask): void {
+  private validateHTMLTask(task: TranslationTask): void {
     const content = task.originalContent;
     try {
-      const isFullEmail = this.isFullEmailFormat(content);
-      const htmlContent = isFullEmail
-        ? this.extractHtmlFromFullEmail(content)
+      const isFullHTML = this.isFullHTMLFormat(content);
+      const htmlContent = isFullHTML
+        ? this.extractHtmlFromFullHTML(content)
         : content;
       if (!this.isValidHtml(htmlContent)) {
         throw new DomainException(
@@ -49,15 +49,13 @@ export class TranslationTaskValidationService {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Email validation failed for task ${task.id}: ${errorMessage}`,
+        `HTML validation failed for task ${task.id}: ${errorMessage}`,
       );
-      throw new DomainException(
-        ERRORS.TRANSLATION_TASK.EMAIL_VALIDATION_FAILED,
-      );
+      throw new DomainException(ERRORS.TRANSLATION_TASK.HTML_VALIDATION_FAILED);
     }
   }
 
-  private isFullEmailFormat(content: string): boolean {
+  private isFullHTMLFormat(content: string): boolean {
     const headerPatterns = [
       /^From:/im,
       /^To:/im,
@@ -73,8 +71,8 @@ export class TranslationTaskValidationService {
     return matchCount >= 3;
   }
 
-  private extractHtmlFromFullEmail(fullEmail: string): string {
-    const htmlPartMatch = fullEmail.match(
+  private extractHtmlFromFullHTML(fullHTML: string): string {
+    const htmlPartMatch = fullHTML.match(
       /Content-Type: text\/html;[\s\S]*?(?=--[^\r\n]*(?:\r?\n|$)--)/i,
     );
 
@@ -87,7 +85,7 @@ export class TranslationTaskValidationService {
       }
     }
 
-    const htmlTagMatch = fullEmail.match(/<html[\s\S]*?<\/html>/i);
+    const htmlTagMatch = fullHTML.match(/<html[\s\S]*?<\/html>/i);
     if (htmlTagMatch) {
       return htmlTagMatch[0];
     }

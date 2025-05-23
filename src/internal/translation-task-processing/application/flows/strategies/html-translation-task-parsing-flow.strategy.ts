@@ -8,31 +8,31 @@ import {
 } from '../../../infrastructure/queues/constants';
 
 @Injectable()
-export class EmailProcessingFlowStrategy
+export class HTMLProcessingFlowStrategy
   implements TranslationTaskProcessingFlowStrategy
 {
-  private readonly logger = new Logger(EmailProcessingFlowStrategy.name);
+  private readonly logger = new Logger(HTMLProcessingFlowStrategy.name);
 
   getTaskType(): TranslationTaskType {
-    return TranslationTaskType.EMAIL;
+    return TranslationTaskType.HTML;
   }
 
   generateFlowConfig(taskId: string): FlowChildJob[] {
     this.logger.log(
-      `Generating flow config for email translation task ${taskId}`,
+      `Generating flow config for html translation task ${taskId}`,
     );
 
     return [
       {
-        name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.PARSE.name,
+        name: TRANSLATION_TASK_PARSING_FLOWS.HTML.JOBS.PARSE.name,
         data: { taskId },
-        queueName: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS,
+        queueName: TRANSLATION_TASK_PARSING_QUEUES.HTML_JOBS,
         opts: { failParentOnFailure: true },
         children: [
           {
-            name: TRANSLATION_TASK_PARSING_FLOWS.EMAIL.JOBS.VALIDATE.name,
+            name: TRANSLATION_TASK_PARSING_FLOWS.HTML.JOBS.VALIDATE.name,
             data: { taskId },
-            queueName: TRANSLATION_TASK_PARSING_QUEUES.EMAIL_JOBS,
+            queueName: TRANSLATION_TASK_PARSING_QUEUES.HTML_JOBS,
             opts: { failParentOnFailure: true },
           },
         ],

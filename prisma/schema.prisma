@@ -98,7 +98,7 @@ enum TranslationTaskStatus {
 }
 
 enum TranslationTaskType {
-  EMAIL
+  HTML
   PLAIN_TEXT
   XLIFF
   SRT

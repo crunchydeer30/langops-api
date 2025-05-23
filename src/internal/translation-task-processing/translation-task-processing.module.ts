@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TranslationTaskModule } from '../translation-task/translation-task.module';
-import { EmailProcessingService } from './application/services/email-processing.service';
+import { HTMLProcessingService } from './application/services/html-processing.service';
 import { TranslationTaskProcessingBullMQModule } from './infrastructure/bullmq/translation-task-processing-bullmq.module';
 import { TranslationTaskProcessingController } from './application/controllers/translation-task-processing.controller';
 import { TranslationTaskValidationService } from './application/services/translation-task-validation.service';
-import { EmailProcessingFlowStrategy } from './application/flows';
-import { EmailTranslationTaskProcessor } from './application/processors';
+import { HTMLProcessingFlowStrategy } from './application/flows';
+import { HTMLTranslationTaskProcessor } from './application/processors';
 import { TranslationTaskProcessingOrchestrator } from './application/flows/translation-task-processing.orchestrator';
 import { TranslationTaskProcessingOrchestratorProcessor } from './application/processors/translation-task-orchestrator.processor';
 import { TranslationTaskSegmentMapper } from './infrastructure/mappers/translation-task-segment.mapper';
@@ -29,11 +29,11 @@ import { TranslationTaskProcessingEventHandlers } from './application/event-hand
   providers: [
     ...TranslationTaskProcessingEventHandlers,
 
-    EmailProcessingService,
+    HTMLProcessingService,
     TranslationTaskValidationService,
 
-    EmailProcessingFlowStrategy,
-    EmailTranslationTaskProcessor,
+    HTMLProcessingFlowStrategy,
+    HTMLTranslationTaskProcessor,
     TranslationTaskProcessingOrchestrator,
     TranslationTaskProcessingOrchestratorProcessor,
 
@@ -43,7 +43,7 @@ import { TranslationTaskProcessingEventHandlers } from './application/event-hand
     SensitiveDataMappingRepository,
   ],
   exports: [
-    EmailProcessingService,
+    HTMLProcessingService,
     TranslationTaskSegmentRepository,
     TranslationTaskProcessingOrchestrator,
   ],
