@@ -9,6 +9,7 @@ import { StaffModule } from './staff/staff.module';
 import { TranslationTaskModule } from './translation-task/translation.module';
 import { TranslationTaskProcessingModule } from './translation-task-processing/translation-task-processing.module';
 import { MachineTranslationModule } from './machine-translation/machine-translation.module';
+import { TranslationModule } from './translation/translation.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MachineTranslationModule } from './machine-translation/machine-translat
     MachineTranslationModule,
     OrderModule,
     StaffModule,
+    TranslationModule,
     TranslationTaskModule,
     TranslationTaskProcessingModule,
   ],

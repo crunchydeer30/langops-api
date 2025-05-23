@@ -61,6 +61,26 @@ export class LanguagePairRepository implements ILanguagePairRepository {
     return languagePair ? this.mapper.toDomain(languagePair) : null;
   }
 
+  async findByLanguageCodes(
+    sourceLanguageCode: string,
+    targetLanguageCode: string,
+  ): Promise<LanguagePair | null> {
+    const languagePair = await this.prisma.languagePair.findFirst({
+      where: {
+        AND: [
+          { sourceLanguage: { code: sourceLanguageCode } },
+          { targetLanguage: { code: targetLanguageCode } },
+        ],
+      },
+      include: {
+        sourceLanguage: true,
+        targetLanguage: true,
+      },
+    });
+
+    return languagePair ? this.mapper.toDomain(languagePair) : null;
+  }
+
   async findAll(): Promise<LanguagePair[]> {
     const languagePairs = await this.prisma.languagePair.findMany({
       include: {

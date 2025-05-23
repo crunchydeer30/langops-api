@@ -11,5 +11,6 @@ import { LanguageModule } from '../language/language.module';
   imports: [CqrsModule, QueueModule, LanguageModule],
   controllers: [OrderController],
   providers: [OrderMapper, OrderRepository, ...OrderCommandHandlers],
+  exports: [OrderRepository],
 })
 export class OrderModule {}

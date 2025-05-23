@@ -300,6 +300,21 @@ export const ERRORS = {
       message: 'Invalid translation task status transition',
       httpStatus: 400,
     },
+    UNSUPPORTED_FORMAT: {
+      code: 'TRANSLATION_TASK_020',
+      message: 'Unsupported text format',
+      httpStatus: 400,
+    },
+    INVALID_LANGUAGE_CODES: {
+      code: 'TRANSLATION_TASK_021',
+      message: 'Invalid or unsupported language codes',
+      httpStatus: 400,
+    },
+    CALLBACK_URL_INVALID: {
+      code: 'TRANSLATION_TASK_022',
+      message: 'Provided callback URL is invalid',
+      httpStatus: 400,
+    },
   },
   COMMON: {
     INVALID_STATE: {
