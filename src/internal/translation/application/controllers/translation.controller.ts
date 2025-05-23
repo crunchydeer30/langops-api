@@ -5,6 +5,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -19,11 +20,13 @@ import {
   CreateTranslationResponseDto,
   GetTranslationByIdParamsDto,
   GetTranslationByIdResponseDto,
+  ListTranslationsQueryParamsDto,
+  ListTranslationsResponseDto,
 } from '../dto';
 import { JwtPayload, UserRole } from 'src/internal/auth/application/interfaces';
 import { GetJWTPayload, Roles } from 'src/internal/auth/application/decorators';
 import { JwtAuthGuard, RolesGuard } from 'src/internal/auth/application/guards';
-import { GetTranslationByIdQuery } from '../queries';
+import { GetTranslationByIdQuery, ListTranslationsQuery } from '../queries';
 
 @ApiTags('translation')
 @Controller(TRANSLATION_HTTP_CONTROLLER.ROOT)
@@ -71,6 +74,28 @@ export class TranslationController {
       new GetTranslationByIdQuery({
         id: params.id,
         customerId: jwtPayload.id,
+      }),
+    );
+
+    return result;
+  }
+
+  @Get(TRANSLATION_HTTP_ROUTES.LIST)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.CUSTOMER)
+  async listTranslations(
+    @Query() queryParams: ListTranslationsQueryParamsDto,
+    @GetJWTPayload() jwtPayload: JwtPayload,
+  ): Promise<ListTranslationsResponseDto> {
+    const result = await this.queryBus.execute<
+      ListTranslationsQuery,
+      ListTranslationsResponseDto
+    >(
+      new ListTranslationsQuery({
+        customerId: jwtPayload.id,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+        status: queryParams.status,
       }),
     );
 

@@ -85,4 +85,54 @@ export class TranslationReadRepository {
       customerId: translation.order.customerId,
     };
   }
+
+  async findByCustomerId(
+    customerId: string,
+    limit = 20,
+    offset = 0,
+  ): Promise<TranslationReadModel[]> {
+    const translations = await this.prisma.translationTask.findMany({
+      where: {
+        order: {
+          customerId,
+        },
+      },
+      skip: offset,
+      take: limit,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        order: {
+          include: {
+            customer: true,
+            languagePair: {
+              include: {
+                sourceLanguage: true,
+                targetLanguage: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return translations.map((translation) => {
+      const { order } = translation;
+      return {
+        id: translation.id,
+        orderId: translation.orderId,
+        formatType: translation.formatType,
+        status: translation.status,
+        currentStage: translation.currentStage,
+        wordCount: translation.wordCount,
+        createdAt: translation.createdAt,
+        originalContent: translation.originalContent,
+        translatedContent: null, // TODO: Decide what to do with it
+        sourceLanguage: order.languagePair.sourceLanguage.code,
+        targetLanguage: order.languagePair.targetLanguage.code,
+        customerId: order.customerId,
+      };
+    });
+  }
 }

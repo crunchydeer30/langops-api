@@ -1,5 +1,6 @@
 import { TRANSLATION_HTTP_ROUTES } from '../controllers';
 import { z } from 'zod';
+import { TranslationSchema } from '../models';
 
 export namespace ListTranslationsQuery {
   export const ENDPOINT = TRANSLATION_HTTP_ROUTES.LIST;
@@ -12,25 +13,6 @@ export namespace ListTranslationsQuery {
   });
   export type QueryParams = z.infer<typeof QueryParamsSchema>;
 
-  export const ResponseSchema = z.object({
-    meta: z.object({
-      limit: z.number(),
-      offset: z.number(),
-      total_count: z.number(),
-      next: z.string().nullable(),
-      previous: z.string().nullable(),
-    }),
-    objects: z.array(
-      z.object({
-        uid: z.string(),
-        order_number: z.number(),
-        price: z.number().default(0),
-        source_language: z.string(),
-        target_language: z.string(),
-        text_format: z.string(),
-        status: z.string(),
-      }),
-    ),
-  });
+  export const ResponseSchema = z.array(TranslationSchema);
   export type Response = z.infer<typeof ResponseSchema>;
 }
