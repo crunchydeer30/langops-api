@@ -1,1 +1,1 @@
-export * from './html-translation-task.processor';
+export * from './translation-task-processing.processor';

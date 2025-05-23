@@ -1,14 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TranslationTaskModule } from '../translation-task/translation-task.module';
-import { HTMLProcessingService } from './application/services/html-processing.service';
 import { TranslationTaskProcessingBullMQModule } from './infrastructure/bullmq/translation-task-processing-bullmq.module';
-import { TranslationTaskProcessingController } from './application/controllers/translation-task-processing.controller';
-import { TranslationTaskValidationService } from './application/services/translation-task-validation.service';
-import { HTMLProcessingFlowStrategy } from './application/flows';
-import { HTMLTranslationTaskProcessor } from './application/processors';
-import { TranslationTaskProcessingOrchestrator } from './application/flows/translation-task-processing.orchestrator';
-import { TranslationTaskProcessingOrchestratorProcessor } from './application/processors/translation-task-orchestrator.processor';
 import { TranslationTaskSegmentMapper } from './infrastructure/mappers/translation-task-segment.mapper';
 import { TranslationTaskSegmentRepository } from './infrastructure/repositories/translation-task-segment.repository';
 import { SensitiveDataMappingMapper } from './infrastructure/mappers/sensitive-data-mapping.mapper';
@@ -16,6 +9,12 @@ import { SensitiveDataMappingRepository } from './infrastructure/repositories/se
 import { AnonymizerModule } from 'src/integration/anonymizer/anonymizer.module';
 import { LanguageModule } from '../language/language.module';
 import { TranslationTaskProcessingEventHandlers } from './application/event-handlers';
+import {
+  HTMLParsingService,
+  HTMLValidatorService,
+} from './application/services';
+import { TranslationTaskProcessingProcessor } from './application/processors';
+import { TranslationTaskProcessingCommandHandlers } from './application/commands';
 
 @Module({
   imports: [
@@ -25,27 +24,20 @@ import { TranslationTaskProcessingEventHandlers } from './application/event-hand
     TranslationTaskModule,
     LanguageModule,
   ],
-  controllers: [TranslationTaskProcessingController],
   providers: [
     ...TranslationTaskProcessingEventHandlers,
+    ...TranslationTaskProcessingCommandHandlers,
 
-    HTMLProcessingService,
-    TranslationTaskValidationService,
+    TranslationTaskProcessingProcessor,
 
-    HTMLProcessingFlowStrategy,
-    HTMLTranslationTaskProcessor,
-    TranslationTaskProcessingOrchestrator,
-    TranslationTaskProcessingOrchestratorProcessor,
+    HTMLParsingService,
+    HTMLValidatorService,
 
     TranslationTaskSegmentMapper,
     TranslationTaskSegmentRepository,
     SensitiveDataMappingMapper,
     SensitiveDataMappingRepository,
   ],
-  exports: [
-    HTMLProcessingService,
-    TranslationTaskSegmentRepository,
-    TranslationTaskProcessingOrchestrator,
-  ],
+  exports: [HTMLParsingService, TranslationTaskSegmentRepository],
 })
 export class TranslationTaskProcessingModule {}

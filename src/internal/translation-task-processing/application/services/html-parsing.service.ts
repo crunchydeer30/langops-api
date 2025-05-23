@@ -25,12 +25,12 @@ import { AnonymizeBatchItem } from '../../domain/ports/anonymizer.client';
 import { AnonymizerHttpAdapter } from 'src/integration/anonymizer/anonymizer.http.adapter';
 
 @Injectable()
-export class HTMLProcessingService {
-  private readonly logger = new Logger(HTMLProcessingService.name);
+export class HTMLParsingService {
+  private readonly logger = new Logger(HTMLParsingService.name);
 
   constructor(private readonly anonymizerClient: AnonymizerHttpAdapter) {}
 
-  async parseHTMLTask(
+  async parse(
     taskId: string,
     originalContent: string,
     sourceLanguageCode: string,

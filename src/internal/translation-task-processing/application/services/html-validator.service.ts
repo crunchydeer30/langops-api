@@ -1,61 +1,34 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { TranslationTaskType } from '@prisma/client';
-import { JSDOM } from 'jsdom';
 import { DomainException } from '@common/exceptions';
-import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
-import { ERRORS } from 'libs/contracts/common/errors/errors';
-import { TranslationTask } from 'src/internal/translation-task/domain';
+import { ERRORS } from '@libs/contracts/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { JSDOM } from 'jsdom';
 
 @Injectable()
-export class TranslationTaskValidationService {
-  private readonly logger = new Logger(TranslationTaskValidationService.name);
+export class HTMLValidatorService {
+  private readonly logger = new Logger(HTMLValidatorService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
-
-  validateTask(task: TranslationTask): void {
-    switch (task.type) {
-      case TranslationTaskType.HTML:
-        this.validateHTMLTask(task);
-        break;
-      default:
-        this.logger.error(`Unsupported task type: ${task.type}`);
-        throw new DomainException(ERRORS.TRANSLATION_TASK.UNSUPPORTED_TYPE);
-    }
-  }
-
-  private validateHTMLTask(task: TranslationTask): void {
-    const content = task.originalContent;
+  public validate(content: string): void {
     try {
-      const isFullHTML = this.isFullHTMLFormat(content);
-      const htmlContent = isFullHTML
-        ? this.extractHtmlFromFullHTML(content)
+      const htmlContent = this.isEmail(content)
+        ? this.extractHtmlFromEmail(content)
         : content;
+
       if (!this.isValidHtml(htmlContent)) {
-        throw new DomainException(
-          ERRORS.TRANSLATION_TASK.INVALID_HTML_STRUCTURE,
-        );
+        throw new Error(`Translation task contains invalid HTML`);
       }
+
       if (!this.hasTranslatableContent(htmlContent)) {
-        throw new DomainException(
-          ERRORS.TRANSLATION_TASK.NO_TRANSLATABLE_CONTENT,
-        );
-      }
-      if (htmlContent.length > 10 * 1024 * 1024) {
-        throw new DomainException(
-          ERRORS.TRANSLATION_TASK.CONTENT_SIZE_EXCEEDED,
-        );
+        throw new Error(`Translation task has no translatable content`);
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        `HTML validation failed for task ${task.id}: ${errorMessage}`,
-      );
-      throw new DomainException(ERRORS.TRANSLATION_TASK.HTML_VALIDATION_FAILED);
+      this.logger.error(`HTML validation failed for task: ${errorMessage}`);
+      throw error;
     }
   }
 
-  private isFullHTMLFormat(content: string): boolean {
+  private isEmail(content: string): boolean {
     const headerPatterns = [
       /^From:/im,
       /^To:/im,
@@ -71,7 +44,7 @@ export class TranslationTaskValidationService {
     return matchCount >= 3;
   }
 
-  private extractHtmlFromFullHTML(fullHTML: string): string {
+  private extractHtmlFromEmail(fullHTML: string): string {
     const htmlPartMatch = fullHTML.match(
       /Content-Type: text\/html;[\s\S]*?(?=--[^\r\n]*(?:\r?\n|$)--)/i,
     );
