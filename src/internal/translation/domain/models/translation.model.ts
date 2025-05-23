@@ -4,7 +4,7 @@ import {
   TranslationTaskType,
 } from '@prisma/client';
 
-export class TranslationTaskReadModel {
+export class TranslationReadModel {
   id: string;
   orderId: string;
   formatType: TranslationTaskType;
@@ -18,7 +18,7 @@ export class TranslationTaskReadModel {
   targetLanguage: string;
   customerId: string;
 
-  constructor(data: Partial<TranslationTaskReadModel>) {
+  constructor(data: Partial<TranslationReadModel>) {
     Object.assign(this, data);
   }
 }

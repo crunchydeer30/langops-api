@@ -10,7 +10,7 @@ import {
   TranslationStatus,
 } from '@libs/contracts/translation/enums';
 import { GetTranslationByIdQuery } from './get-translation-by-id.query';
-import { TranslationTaskReadRepository } from 'src/internal/translation-task/infrastructure';
+import { TranslationReadRepository } from 'src/internal/translation/infrastructure';
 
 @QueryHandler(GetTranslationByIdQuery)
 export class GetTranslationByIdHandler
@@ -19,9 +19,7 @@ export class GetTranslationByIdHandler
 {
   private readonly logger = new Logger(GetTranslationByIdHandler.name);
 
-  constructor(
-    private readonly taskReadRepository: TranslationTaskReadRepository,
-  ) {}
+  constructor(private readonly repository: TranslationReadRepository) {}
 
   async execute({
     params,
@@ -31,7 +29,7 @@ export class GetTranslationByIdHandler
     );
 
     try {
-      const task = await this.taskReadRepository.findByIdAndCustomerId(
+      const task = await this.repository.findByIdAndCustomerId(
         params.id,
         params.customerId,
       );

@@ -6,7 +6,7 @@ import { EditorModule } from './editor/editor.module';
 import { OrderModule } from './order/order.module';
 import { LanguageModule } from './language/language.module';
 import { StaffModule } from './staff/staff.module';
-import { TranslationTaskModule } from './translation-task/translation.module';
+import { TranslationTaskModule } from './translation-task/translation-task.module';
 import { TranslationTaskProcessingModule } from './translation-task-processing/translation-task-processing.module';
 import { MachineTranslationModule } from './machine-translation/machine-translation.module';
 import { TranslationModule } from './translation/translation.module';

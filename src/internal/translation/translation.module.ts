@@ -5,8 +5,9 @@ import { TranslationCommandHandlers } from './application/commands';
 import { TranslationQueryHandlers } from './application/queries';
 import { LanguageModule } from '../language/language.module';
 import { OrderModule } from '../order/order.module';
-import { TranslationTaskModule } from '../translation-task/translation.module';
+import { TranslationTaskModule } from '../translation-task/translation-task.module';
 import { TranslationTaskProcessingModule } from '../translation-task-processing/translation-task-processing.module';
+import { TranslationReadRepository } from './infrastructure';
 
 @Module({
   imports: [
@@ -17,6 +18,10 @@ import { TranslationTaskProcessingModule } from '../translation-task-processing/
     TranslationTaskProcessingModule,
   ],
   controllers: [TranslationController],
-  providers: [...TranslationCommandHandlers, ...TranslationQueryHandlers],
+  providers: [
+    ...TranslationCommandHandlers,
+    ...TranslationQueryHandlers,
+    TranslationReadRepository,
+  ],
 })
 export class TranslationModule {}

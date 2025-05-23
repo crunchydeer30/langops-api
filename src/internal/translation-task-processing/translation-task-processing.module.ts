@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { TranslationTaskModule } from '../translation-task/translation.module';
+import { TranslationTaskModule } from '../translation-task/translation-task.module';
 import { EmailProcessingService } from './application/services/email-processing.service';
 import { TranslationTaskProcessingBullMQModule } from './infrastructure/bullmq/translation-task-processing-bullmq.module';
 import { TranslationTaskProcessingController } from './application/controllers/translation-task-processing.controller';
