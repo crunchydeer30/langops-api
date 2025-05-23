@@ -15,6 +15,7 @@ import {
   TaskProcessingStartedEvent,
   TaskQueuedForEditingEvent,
   TaskRejectedEvent,
+  TaskCreatedEvent,
 } from '../events';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
@@ -134,6 +135,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
         previousStage: TranslationStage.QUEUED_FOR_PROCESSING,
       }),
     );
+    task.apply(new TaskCreatedEvent({ taskId: id, taskType: args.taskType }));
     return task;
   }
 

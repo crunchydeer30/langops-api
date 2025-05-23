@@ -15,6 +15,7 @@ import { SensitiveDataMappingMapper } from './infrastructure/mappers/sensitive-d
 import { SensitiveDataMappingRepository } from './infrastructure/repositories/sensitive-data-mapping.repository';
 import { AnonymizerModule } from 'src/integration/anonymizer/anonymizer.module';
 import { LanguageModule } from '../language/language.module';
+import { TranslationTaskProcessingEventHandlers } from './application/event-handlers';
 
 @Module({
   imports: [
@@ -26,6 +27,8 @@ import { LanguageModule } from '../language/language.module';
   ],
   controllers: [TranslationTaskProcessingController],
   providers: [
+    ...TranslationTaskProcessingEventHandlers,
+
     EmailProcessingService,
     TranslationTaskValidationService,
 

@@ -1,5 +1,6 @@
 export * from './task-canceled.event';
 export * from './task-completed.event';
+export * from './task-created.event';
 export * from './task-editing-started.event';
 export * from './task-mt-started.event';
 export * from './task-parsing-completed.event';

@@ -12,7 +12,6 @@ import { LanguagePairRepository } from 'src/internal/language/infrastructure/rep
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
 import { TranslationStatus } from '@libs/contracts/translation/enums';
 import { CreateTranslationResponseDto } from '../../dto';
-import { TranslationTaskProcessingOrchestrator } from 'src/internal/translation-task-processing/application/flows/translation-task-processing.orchestrator';
 
 @CommandHandler(CreateTranslationCommand)
 export class CreateTranslationHandler
@@ -25,7 +24,6 @@ export class CreateTranslationHandler
     private readonly orderRepository: OrderRepository,
     private readonly translationTaskRepository: TranslationTaskRepository,
     private readonly publisher: EventPublisher,
-    private readonly taskProcessingOrchestrator: TranslationTaskProcessingOrchestrator,
   ) {}
 
   async execute(
@@ -69,11 +67,7 @@ export class CreateTranslationHandler
 
       const taskWithEvents = this.publisher.mergeObjectContext(task);
       await this.translationTaskRepository.save(taskWithEvents);
-
-      await this.taskProcessingOrchestrator.startParsingFlow(
-        task.id,
-        task.type,
-      );
+      taskWithEvents.commit();
 
       const response: CreateTranslationResponseDto = {
         uuid: task.id,
