@@ -4,8 +4,6 @@ export const TRANSLATION_HTTP_CONTROLLER = {
 
 export const TRANSLATION_HTTP_ROUTES = {
   CREATE: '',
-  GET_BY_ID: ':uuid',
+  GET_BY_ID: ':id',
   LIST: '',
-  CREATE_MT: '/mt_translation',
-  GET_MT_BY_ID: '/mt_translation/:uuid',
 } as const;

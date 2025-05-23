@@ -3,6 +3,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import {
   TranslationTaskMapper,
   TranslationTaskRepository,
+  TranslationTaskReadRepository,
 } from './infrastructure';
 import { CommandHandlers } from './application/commands';
 
@@ -12,7 +13,8 @@ import { CommandHandlers } from './application/commands';
     ...CommandHandlers,
     TranslationTaskMapper,
     TranslationTaskRepository,
+    TranslationTaskReadRepository,
   ],
-  exports: [TranslationTaskRepository],
+  exports: [TranslationTaskRepository, TranslationTaskReadRepository],
 })
 export class TranslationTaskModule {}

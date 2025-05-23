@@ -29,7 +29,7 @@ export class CreateTranslationHandler
   async execute(
     command: CreateTranslationCommand,
   ): Promise<CreateTranslationContract.Response> {
-    const { customerId, sourceLanguage, targetLanguage, text, textFormat } =
+    const { customerId, sourceLanguage, targetLanguage, text, format } =
       command.payload;
 
     this.logger.log(`Creating translation for customer ${customerId}`);
@@ -57,7 +57,7 @@ export class CreateTranslationHandler
 
       const task = TranslationTask.create({
         originalContent: text,
-        taskType: textFormat,
+        taskType: format,
         originalStructure: null,
         orderId: order.id,
         languagePairId: languagePair.id,
@@ -70,15 +70,14 @@ export class CreateTranslationHandler
       taskWithEvents.commit();
 
       const response: CreateTranslationResponseDto = {
-        uuid: task.id,
+        id: task.id,
         orderId: order.id,
         price: 0,
-        source_language: sourceLanguage,
-        target_language: targetLanguage,
+        sourceLanguage: sourceLanguage,
+        targetLanguage: targetLanguage,
         text: text,
-        text_format: textFormat,
+        format,
         status: task.status as TranslationStatus,
-        result: null,
       };
 
       this.logger.log(

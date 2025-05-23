@@ -8,9 +8,7 @@ export class CreateTranslationCommand implements ICommand {
       sourceLanguage: string;
       targetLanguage: string;
       text: string;
-      textFormat: TranslationFormat;
-      callbackUrl?: string;
-      orderNumber?: number;
+      format: TranslationFormat;
     },
   ) {}
 }

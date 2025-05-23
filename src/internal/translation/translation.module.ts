@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TranslationController } from './application/controllers';
 import { TranslationCommandHandlers } from './application/commands';
+import { TranslationQueryHandlers } from './application/queries';
 import { LanguageModule } from '../language/language.module';
 import { OrderModule } from '../order/order.module';
 import { TranslationTaskModule } from '../translation-task/translation.module';
@@ -16,6 +17,6 @@ import { TranslationTaskProcessingModule } from '../translation-task-processing/
     TranslationTaskProcessingModule,
   ],
   controllers: [TranslationController],
-  providers: [...TranslationCommandHandlers],
+  providers: [...TranslationCommandHandlers, ...TranslationQueryHandlers],
 })
 export class TranslationModule {}

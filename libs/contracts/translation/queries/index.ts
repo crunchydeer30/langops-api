@@ -1,2 +1,2 @@
-export * from './get-translation.query';
 export * from './list-translations.query';
+export * from './get-translation-by-id.query';

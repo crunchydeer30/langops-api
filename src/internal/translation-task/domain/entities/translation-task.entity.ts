@@ -283,7 +283,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.ensureStatus(TranslationTaskStatus.IN_PROGRESS, 'reject task');
 
     this.status = TranslationTaskStatus.REJECTED;
-    this.currentStage = TranslationStage.CANCELLED;
+    this.currentStage = TranslationStage.CANCELED;
     this.rejectionReason = reason;
 
     this.apply(
@@ -315,7 +315,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     }
 
     this.status = TranslationTaskStatus.CANCELED;
-    this.currentStage = TranslationStage.CANCELLED;
+    this.currentStage = TranslationStage.CANCELED;
 
     this.apply(
       new TaskCanceledEvent({
