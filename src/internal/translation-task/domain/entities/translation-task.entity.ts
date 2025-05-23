@@ -6,6 +6,7 @@ import {
   TranslationTaskType,
 } from '@prisma/client';
 import {
+  TaskCanceledEvent,
   TaskCompletedEvent,
   TaskEditingStartedEvent,
   TaskMachineTranslationStartedEvent,
@@ -110,7 +111,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       type: args.taskType,
       originalStructure: args.originalStructure ?? null,
       currentStage: args.currentStage ?? TranslationStage.QUEUED_FOR_PROCESSING,
-      status: args.status ?? TranslationTaskStatus.PENDING,
+      status: args.status ?? TranslationTaskStatus.NEW,
       orderId: args.orderId,
       languagePairId: args.languagePairId,
       editorId: args.editorId ?? null,
@@ -129,7 +130,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     task.apply(
       new TaskQueuedForEditingEvent({
         taskId: id,
-        previousStatus: TranslationTaskStatus.PENDING,
+        previousStatus: TranslationTaskStatus.NEW,
         previousStage: TranslationStage.QUEUED_FOR_PROCESSING,
       }),
     );
@@ -163,7 +164,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       TranslationStage.QUEUED_FOR_PROCESSING,
       'start processing',
     );
-    this.ensureStatus(TranslationTaskStatus.PENDING, 'start processing');
+    this.ensureStatus(TranslationTaskStatus.NEW, 'start processing');
 
     this.status = TranslationTaskStatus.IN_PROGRESS;
     this.currentStage = TranslationStage.PROCESSING;
@@ -171,7 +172,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.apply(
       new TaskProcessingStartedEvent({
         taskId: this.id,
-        previousStatus: TranslationTaskStatus.PENDING,
+        previousStatus: TranslationTaskStatus.NEW,
         previousStage: TranslationStage.QUEUED_FOR_PROCESSING,
       }),
     );
@@ -185,7 +186,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     );
 
     this.currentStage = TranslationStage.QUEUED_FOR_MT;
-    this.status = TranslationTaskStatus.PENDING;
+    this.status = TranslationTaskStatus.IN_PROGRESS;
 
     this.apply(
       new TaskProcessingCompletedEvent({
@@ -202,10 +203,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       TranslationStage.QUEUED_FOR_MT,
       'start machine translation',
     );
-    this.ensureStatus(
-      TranslationTaskStatus.PENDING,
-      'start machine translation',
-    );
+    this.ensureStatus(TranslationTaskStatus.NEW, 'start machine translation');
 
     this.status = TranslationTaskStatus.IN_PROGRESS;
     this.currentStage = TranslationStage.MACHINE_TRANSLATING;
@@ -213,7 +211,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.apply(
       new TaskMachineTranslationStartedEvent({
         taskId: this.id,
-        previousStatus: TranslationTaskStatus.PENDING,
+        previousStatus: TranslationTaskStatus.NEW,
         previousStage: TranslationStage.QUEUED_FOR_MT,
       }),
     );
@@ -226,7 +224,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     );
 
     this.currentStage = TranslationStage.QUEUED_FOR_EDITING;
-    this.status = TranslationTaskStatus.PENDING;
+    this.status = TranslationTaskStatus.IN_PROGRESS;
 
     this.apply(
       new TaskQueuedForEditingEvent({
@@ -239,7 +237,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
 
   public startEditing(editorId: string): void {
     this.ensureStage(TranslationStage.QUEUED_FOR_EDITING, 'start editing');
-    this.ensureStatus(TranslationTaskStatus.PENDING, 'start editing');
+    this.ensureStatus(TranslationTaskStatus.NEW, 'start editing');
 
     this.editorId = editorId;
     this.assignedAt = new Date();
@@ -251,7 +249,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       new TaskEditingStartedEvent({
         taskId: this.id,
         editorId,
-        previousStatus: TranslationTaskStatus.PENDING,
+        previousStatus: TranslationTaskStatus.NEW,
         previousStage: TranslationStage.QUEUED_FOR_EDITING,
       }),
     );
@@ -280,7 +278,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.ensureStatus(TranslationTaskStatus.IN_PROGRESS, 'reject task');
 
     this.status = TranslationTaskStatus.REJECTED;
-    this.currentStage = TranslationStage.COMPLETED;
+    this.currentStage = TranslationStage.CANCELLED;
     this.rejectionReason = reason;
 
     this.apply(
@@ -300,7 +298,24 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       new TaskParsingErrorEvent({
         taskId: this.id,
         errorMessage,
-        previousStatus: TranslationTaskStatus.IN_PROGRESS,
+      }),
+    );
+  }
+
+  public cancelTask(reason?: string): void {
+    if (this.status !== TranslationTaskStatus.IN_PROGRESS) {
+      throw new DomainException(
+        ERRORS.TRANSLATION_TASK.INVALID_STATUS_TRANSITION,
+      );
+    }
+
+    this.status = TranslationTaskStatus.CANCELED;
+    this.currentStage = TranslationStage.CANCELLED;
+
+    this.apply(
+      new TaskCanceledEvent({
+        taskId: this.id,
+        cancellationReason: reason,
       }),
     );
   }

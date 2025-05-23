@@ -1,6 +1,6 @@
 import { CommandBus, CommandHandler } from '@nestjs/cqrs';
 import { ConfigService } from '@nestjs/config';
-import { Translator } from 'deepl-node';
+import { SourceLanguageCode, TargetLanguageCode, Translator } from 'deepl-node';
 import { Injectable, Logger } from '@nestjs/common';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure/repositories/translation-task.repository';
 import { BaseTranslateHandler } from 'src/internal/machine-translation/application/commands/base-translate/base-translate.handler';
@@ -10,13 +10,6 @@ import {
   IBaseTranslationResult,
   TranslationSegment,
 } from 'src/internal/machine-translation/application/commands/base-translate/base-translate.command';
-
-interface PreparedSegment {
-  id: string;
-  originalText: string;
-  preparedText: string;
-  tokenMap: Record<string, string>;
-}
 
 @Injectable()
 @CommandHandler(DeeplTranslateCommand)
@@ -43,21 +36,20 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
     try {
       this.logger.log(`Translating ${segments.length} segments`);
 
-      const preparedSegments = this.parseSegments(segments);
-      if (preparedSegments.length === 0) {
+      if (segments.length === 0) {
         this.logger.warn(`No segments to translate`);
         return { results: [] };
       }
 
-      const batchSize = 25;
+      const batchSize = 50;
       const translationResults: {
         segmentId: string;
         translatedText: string;
       }[] = [];
 
-      for (let i = 0; i < preparedSegments.length; i += batchSize) {
-        const batch = preparedSegments.slice(i, i + batchSize);
-        const textsToTranslate = batch.map((segment) => segment.preparedText);
+      for (let i = 0; i < segments.length; i += batchSize) {
+        const batch = segments.slice(i, i + batchSize);
+        const textsToTranslate = batch.map((segment) => segment.content);
 
         this.logger.debug(
           `Translating batch ${Math.floor(i / batchSize) + 1} with ${textsToTranslate.length} segments`,
@@ -65,21 +57,16 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
 
         const translationResponse = await this.translator.translateText(
           textsToTranslate,
-          sourceLanguage as any,
-          targetLanguage as any,
+          sourceLanguage as SourceLanguageCode,
+          targetLanguage as TargetLanguageCode,
           {
             tagHandling: 'xml',
-            ignoreTags: ['x'],
-            preserveFormatting: true,
+            ignoreTags: ['ph'],
           },
         );
 
-        const translations = Array.isArray(translationResponse)
-          ? translationResponse
-          : [translationResponse];
-
         batch.forEach((segment, index) => {
-          const translation = translations[index];
+          const translation = translationResponse[index];
           if (!translation) {
             this.logger.warn(
               `No translation returned for segment ${segment.id}`,
@@ -87,14 +74,9 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
             return;
           }
 
-          const translatedText = this.restoreTokens(
-            translation.text,
-            segment.tokenMap,
-          );
-
           translationResults.push({
             segmentId: segment.id,
-            translatedText,
+            translatedText: translation.text,
           });
         });
       }
@@ -111,53 +93,5 @@ export class DeeplTranslateHandler extends BaseTranslateHandler {
       );
       throw error;
     }
-  }
-
-  private parseSegments(segments: TranslationSegment[]): PreparedSegment[] {
-    this.logger.debug(
-      `Parsing ${segments.length} segments for DeepL translation`,
-    );
-
-    return segments.map((segment) => {
-      const tokenMap: Record<string, string> = {};
-
-      // Use the content from the segment
-      const contentToTranslate = segment.content;
-
-      this.logger.debug(`Preparing segment ${segment.id} for translation`);
-
-      const preparedText = contentToTranslate.replace(
-        /\[\[TKN::([A-Z0-9-]+)\]\]/g,
-        (match, tokenId) => {
-          const placeholder = `<x id="${tokenId}"></x>`;
-          tokenMap[placeholder] = match;
-          return placeholder;
-        },
-      );
-
-      return {
-        id: segment.id,
-        originalText: contentToTranslate,
-        preparedText,
-        tokenMap,
-      };
-    });
-  }
-
-  private restoreTokens(
-    translatedText: string,
-    tokenMap: Record<string, string>,
-  ): string {
-    let result = translatedText;
-
-    Object.entries(tokenMap).forEach(([placeholder, originalToken]) => {
-      result = result.replace(placeholder, originalToken);
-    });
-
-    result = result.replace(/<x id="([A-Z0-9-]+)"\s*><\/x>/g, (_, tokenId) => {
-      return `[[TKN::${tokenId}]]`;
-    });
-
-    return result;
   }
 }

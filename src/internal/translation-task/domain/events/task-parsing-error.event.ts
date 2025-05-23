@@ -1,8 +1,5 @@
-import { TranslationTaskStatus } from '@prisma/client';
-
 export interface TaskParsingErrorPayload {
   taskId: string;
-  previousStatus: TranslationTaskStatus;
   errorMessage: string;
 }
 

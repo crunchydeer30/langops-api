@@ -83,16 +83,18 @@ enum TranslationStage {
   DEANONYMIZATION_PROCESSING
   DEANONYMIZATION_COMPLETED
   COMPLETED
+  CANCELLED
 
   @@map("translation_stages")
 }
 
 enum TranslationTaskStatus {
-  PENDING
+  NEW
   IN_PROGRESS
   COMPLETED
   ERROR
   REJECTED
+  CANCELED
 
   @@map("translation_task_statuses")
 }
@@ -271,8 +273,8 @@ model TranslationTask {
   /// [OriginalStructure]
   originalStructure Json?               @map("original_structure") @db.JsonB
 
-  status       TranslationTaskStatus @default(PENDING) @map("status")
-  currentStage TranslationStage      @default(QUEUED_FOR_PROCESSING) @map("current_stage")
+  status       TranslationTaskStatus
+  currentStage TranslationStage      @map("current_stage")
   errorMessage String?               @map("error_message")
 
   segments              TranslationTaskSegment[]

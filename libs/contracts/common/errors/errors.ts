@@ -295,6 +295,11 @@ export const ERRORS = {
       message: 'Could not extract HTML content from email',
       httpStatus: 400,
     },
+    INVALID_STATUS_TRANSITION: {
+      code: 'TRANSLATION_TASK_019',
+      message: 'Invalid translation task status transition',
+      httpStatus: 400,
+    },
   },
   COMMON: {
     INVALID_STATE: {
