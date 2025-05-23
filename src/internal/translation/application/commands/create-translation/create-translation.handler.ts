@@ -1,4 +1,4 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { CreateTranslationCommand } from './create-translation.command';
 import { DomainException } from '@common/exceptions';
@@ -12,6 +12,7 @@ import { LanguagePairRepository } from 'src/internal/language/infrastructure/rep
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
 import { TranslationStatus } from '@libs/contracts/translation/enums';
 import { CreateTranslationResponseDto } from '../../dto';
+import { TranslationTaskProcessingOrchestrator } from 'src/internal/translation-task-processing/application/flows/translation-task-processing.orchestrator';
 
 @CommandHandler(CreateTranslationCommand)
 export class CreateTranslationHandler
@@ -23,7 +24,8 @@ export class CreateTranslationHandler
     private readonly languagePairRepository: LanguagePairRepository,
     private readonly orderRepository: OrderRepository,
     private readonly translationTaskRepository: TranslationTaskRepository,
-    private readonly eventBus: EventBus,
+    private readonly publisher: EventPublisher,
+    private readonly taskProcessingOrchestrator: TranslationTaskProcessingOrchestrator,
   ) {}
 
   async execute(
@@ -65,7 +67,13 @@ export class CreateTranslationHandler
         currentStage: TranslationStage.QUEUED_FOR_PROCESSING,
       });
 
-      await this.translationTaskRepository.save(task);
+      const taskWithEvents = this.publisher.mergeObjectContext(task);
+      await this.translationTaskRepository.save(taskWithEvents);
+
+      await this.taskProcessingOrchestrator.startParsingFlow(
+        task.id,
+        task.type,
+      );
 
       const response: CreateTranslationResponseDto = {
         uuid: task.id,

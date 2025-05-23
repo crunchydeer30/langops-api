@@ -2,6 +2,4 @@ export const ORDER_HTTP_CONTROLLER = {
   ROOT: 'orders',
 };
 
-export const ORDER_HTTP_ROUTES = {
-  CREATE: '',
-} as const;
+export const ORDER_HTTP_ROUTES = {} as const;

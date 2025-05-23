@@ -203,7 +203,10 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       TranslationStage.QUEUED_FOR_MT,
       'start machine translation',
     );
-    this.ensureStatus(TranslationTaskStatus.NEW, 'start machine translation');
+    this.ensureStatus(
+      TranslationTaskStatus.IN_PROGRESS,
+      'start machine translation',
+    );
 
     this.status = TranslationTaskStatus.IN_PROGRESS;
     this.currentStage = TranslationStage.MACHINE_TRANSLATING;
