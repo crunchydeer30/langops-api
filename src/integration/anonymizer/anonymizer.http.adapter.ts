@@ -7,6 +7,7 @@ import {
   AnonymizeResult,
   AnonymizeBatchItem,
 } from 'src/internal/translation-task-processing/domain/ports/anonymizer.client';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class AnonymizerHttpAdapter implements IAnonymizerClient {
@@ -32,6 +33,11 @@ export class AnonymizerHttpAdapter implements IAnonymizerClient {
         mappings: rawMappings,
       };
     } catch (error) {
+      if (error instanceof AxiosError) {
+        this.logger.error(
+          `Axios Error during anonymization: ${error.response?.data}`,
+        );
+      }
       this.logger.error(`Anonymizer request failed: ${JSON.stringify(error)}`);
       throw error;
     }
@@ -49,6 +55,11 @@ export class AnonymizerHttpAdapter implements IAnonymizerClient {
 
       return response.data;
     } catch (error) {
+      if (error instanceof AxiosError) {
+        this.logger.error(
+          `Axios Error during anonymization: ${JSON.stringify(error.response?.data)}`,
+        );
+      }
       this.logger.error(
         `Anonymizer batch request failed: ${JSON.stringify(error)}`,
       );

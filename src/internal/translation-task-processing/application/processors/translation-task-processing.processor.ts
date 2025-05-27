@@ -14,6 +14,10 @@ import { SensitiveDataMappingRepository } from 'src/internal/translation-task-pr
 import { EventPublisher } from '@nestjs/cqrs';
 import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
 import { SensitiveDataMapping } from '../../domain/entities/sensitive-data-mapping.entity';
+import {
+  ProcessXliffTaskCommand,
+  ProcessXliffTaskResponse,
+} from '../commands/process-xliff-task';
 
 @Processor(TRANSLATION_TASK_PROCESSING_QUEUE, {})
 export class TranslationTaskProcessingProcessor extends WorkerHost {
@@ -47,9 +51,9 @@ export class TranslationTaskProcessingProcessor extends WorkerHost {
 
     try {
       const result = await this.commandBus.execute<
-        ProcessHtmlTaskCommand,
-        ProcessHtmlTaskResponse
-      >(new ProcessHtmlTaskCommand({ taskId }));
+        ProcessXliffTaskCommand,
+        ProcessXliffTaskResponse
+      >(new ProcessXliffTaskCommand({ taskId }));
 
       const segments = result.segmentArgs.map((args) => {
         return TranslationTaskSegment.create({

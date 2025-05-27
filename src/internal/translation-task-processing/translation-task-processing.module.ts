@@ -13,6 +13,7 @@ import {
   ContentAnonymizationService,
   HTMLParsingService,
   HTMLValidatorService,
+  XliffParsingService,
 } from './application/services';
 import { TranslationTaskProcessingProcessor } from './application/processors';
 import { TranslationTaskProcessingCommandHandlers } from './application/commands';
@@ -34,6 +35,7 @@ import { TranslationTaskProcessingCommandHandlers } from './application/commands
     HTMLParsingService,
     HTMLValidatorService,
     ContentAnonymizationService,
+    XliffParsingService,
 
     TranslationTaskSegmentMapper,
     TranslationTaskSegmentRepository,
