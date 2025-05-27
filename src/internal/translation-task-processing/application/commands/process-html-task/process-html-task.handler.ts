@@ -26,10 +26,8 @@ export class ProcessHtmlTaskHandler extends BaseProcessTaskHandler {
   protected async process(
     task: TranslationTask,
   ): Promise<ProcessHtmlTaskResponse> {
-    // 1. Validate HTML
     this.validate(task.originalContent);
 
-    // 2. Get language pair
     const languagePair = await this.languagePairRepository.findById(
       task.languagePairId,
     );
@@ -40,20 +38,37 @@ export class ProcessHtmlTaskHandler extends BaseProcessTaskHandler {
       );
     }
 
-    // 3. Parse HTML and extract segments
-    const { segments, originalStructure, sensitiveDataMappings } =
-      await this.htmlParsingService.parse(
-        task.id,
-        task.originalContent,
-        languagePair.sourceLanguage.code,
-      );
+    const parseResult = await this.htmlParsingService.parse(
+      task.originalContent,
+      languagePair.sourceLanguage.code,
+    );
 
-    // 4. Return results (no persistence here)
+    const segmentArgs = parseResult.segments.map((segmentDto) => ({
+      id: segmentDto.id,
+      translationTaskId: task.id,
+      segmentOrder: segmentDto.segmentOrder,
+      segmentType: segmentDto.segmentType,
+      sourceContent: segmentDto.sourceContent,
+      anonymizedContent: segmentDto.anonymizedContent,
+      specialTokensMap: segmentDto.specialTokensMap || undefined,
+      formatMetadata: segmentDto.formatMetadata || undefined,
+    }));
+
+    const sensitiveDataMappingArgs = parseResult.sensitiveDataMappings.map(
+      (mappingDto) => ({
+        id: mappingDto.id,
+        translationTaskId: task.id,
+        tokenIdentifier: mappingDto.tokenIdentifier,
+        sensitiveType: mappingDto.sensitiveType,
+        originalValue: mappingDto.originalValue,
+      }),
+    );
+
     return {
       taskId: task.id,
-      segments,
-      sensitiveDataMappings,
-      originalStructure,
+      segmentArgs,
+      sensitiveDataMappingArgs,
+      originalStructure: parseResult.originalStructure,
     };
   }
 

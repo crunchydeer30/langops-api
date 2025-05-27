@@ -1,15 +1,39 @@
+import { ContentSegmentType } from '@prisma/client';
+import { TranslationSpecialTokenMap } from 'src/internal/translation-task-processing/domain/interfaces/translation-segment-token-map.interface';
+import { HtmlFormatMetadata } from 'src/internal/translation-task-processing/domain/interfaces/format-metadata.interface';
+import { OriginalStructure } from 'src/internal/translation-task-processing/domain/interfaces/original-structure.interface';
+
 export interface BaseProcessTaskCommandParams {
   taskId: string;
 }
 
-import { TranslationTaskSegment } from 'src/internal/translation-task-processing/domain/entities/translation-task-segment.entity';
-import { SensitiveDataMapping } from 'src/internal/translation-task-processing/domain/entities/sensitive-data-mapping.entity';
-import { OriginalStructure } from 'src/internal/translation-task-processing/domain/interfaces/original-structure.interface';
+// DTOs for creating domain entities later
+export interface SegmentArgs {
+  id: string;
+  translationTaskId: string;
+  segmentOrder: number;
+  segmentType: ContentSegmentType;
+  sourceContent: string;
+  anonymizedContent?: string | null;
+  machineTranslatedContent?: string | null;
+  editedContent?: string | null;
+  deanonymizedContent?: string | null;
+  specialTokensMap?: TranslationSpecialTokenMap | null;
+  formatMetadata?: HtmlFormatMetadata | null;
+}
+
+export interface SensitiveDataMappingArgs {
+  id: string;
+  translationTaskId: string;
+  tokenIdentifier: string;
+  sensitiveType: string;
+  originalValue: string;
+}
 
 export interface BaseProcessTaskResponse {
   taskId: string;
-  segments: TranslationTaskSegment[];
-  sensitiveDataMappings: SensitiveDataMapping[];
+  segmentArgs: SegmentArgs[];
+  sensitiveDataMappingArgs: SensitiveDataMappingArgs[];
   originalStructure: OriginalStructure | null;
 }
 

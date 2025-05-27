@@ -12,6 +12,8 @@ import { TranslationTaskRepository } from 'src/internal/translation-task/infrast
 import { TranslationTaskSegmentRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/translation-task-segment.repository';
 import { SensitiveDataMappingRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/sensitive-data-mapping.repository';
 import { EventPublisher } from '@nestjs/cqrs';
+import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
+import { SensitiveDataMapping } from '../../domain/entities/sensitive-data-mapping.entity';
 
 @Processor(TRANSLATION_TASK_PROCESSING_QUEUE, {})
 export class TranslationTaskProcessingProcessor extends WorkerHost {
@@ -49,10 +51,20 @@ export class TranslationTaskProcessingProcessor extends WorkerHost {
         ProcessHtmlTaskResponse
       >(new ProcessHtmlTaskCommand({ taskId }));
 
-      await this.translationSegmentRepository.saveMany(result.segments);
-      await this.sensitiveDataMappingRepository.saveMany(
-        result.sensitiveDataMappings,
+      const segments = result.segmentArgs.map((args) => {
+        return TranslationTaskSegment.create({
+          ...args,
+          specialTokensMap: args.specialTokensMap || undefined,
+          formatMetadata: args.formatMetadata || undefined,
+        });
+      });
+
+      const sensitiveDataMappings = result.sensitiveDataMappingArgs.map(
+        (args) => SensitiveDataMapping.create(args),
       );
+
+      await this.translationSegmentRepository.saveMany(segments);
+      await this.sensitiveDataMappingRepository.saveMany(sensitiveDataMappings);
 
       task.originalStructure = result.originalStructure;
       task.completeProcessing();

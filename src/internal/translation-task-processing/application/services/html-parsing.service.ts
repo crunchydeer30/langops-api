@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SensitiveDataMapping } from '../../domain/entities/sensitive-data-mapping.entity';
 import { ContentSegmentType } from '@prisma/client';
-import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
 import * as cheerio from 'cheerio';
 import { v4 as uuidv4 } from 'uuid';
 import type {
@@ -24,6 +22,30 @@ import { URL } from 'url';
 import { AnonymizeBatchItem } from '../../domain/ports/anonymizer.client';
 import { AnonymizerHttpAdapter } from 'src/integration/anonymizer/anonymizer.http.adapter';
 
+export interface SegmentDto {
+  id: string;
+  segmentOrder: number;
+  segmentType: ContentSegmentType;
+  sourceContent: string;
+  anonymizedContent?: string | null;
+  specialTokensMap?: TranslationSpecialTokenMap | null;
+  formatMetadata?: HtmlFormatMetadata | null;
+}
+
+export interface SensitiveDataMappingDto {
+  id: string;
+  tokenIdentifier: string;
+  sensitiveType: string;
+  originalValue: string;
+}
+
+export interface HtmlParsingResult {
+  segments: SegmentDto[];
+  sensitiveDataMappings: SensitiveDataMappingDto[];
+  wordCount: number;
+  originalStructure: OriginalStructure;
+}
+
 @Injectable()
 export class HTMLParsingService {
   private readonly logger = new Logger(HTMLParsingService.name);
@@ -31,25 +53,17 @@ export class HTMLParsingService {
   constructor(private readonly anonymizerClient: AnonymizerHttpAdapter) {}
 
   async parse(
-    taskId: string,
     originalContent: string,
     sourceLanguageCode: string,
-  ): Promise<{
-    segments: TranslationTaskSegment[];
-    sensitiveDataMappings: SensitiveDataMapping[];
-    wordCount: number;
-    originalStructure: OriginalStructure;
-  }> {
-    this.logger.debug(`Parsing html content for task ${taskId}`);
-    this.logger.debug(`Content length: ${originalContent.length} characters`);
-
-    const { originalStructure, segments } = this.parseHTMLContent(
-      taskId,
-      originalContent,
+  ): Promise<HtmlParsingResult> {
+    this.logger.debug(
+      `Parsing HTML content of length ${originalContent.length} characters`,
     );
 
+    const { originalStructure, segments } =
+      this.parseHTMLContent(originalContent);
+
     const sensitiveDataMappings = await this.anonymizeSegments(
-      taskId,
       segments,
       sourceLanguageCode,
     );
@@ -69,28 +83,23 @@ export class HTMLParsingService {
     };
   }
 
-  private parseHTMLContent(
-    taskId: string,
-    htmlContent: string,
-  ): {
+  private parseHTMLContent(htmlContent: string): {
     originalStructure: OriginalStructure;
-    segments: TranslationTaskSegment[];
+    segments: SegmentDto[];
   } {
     const originalStructure: OriginalStructure = {
       children: [],
     };
-    const segments: TranslationTaskSegment[] = [];
+    const segments: SegmentDto[] = [];
 
     const $ = cheerio.load(htmlContent);
 
     const bodyElement = $('body')[0];
 
     if (bodyElement) {
-      this.processNode(bodyElement, $, originalStructure, segments, taskId);
+      this.processNode(bodyElement, $, originalStructure, segments);
     } else {
-      this.logger.warn(
-        `No body element found in html content for task ${taskId}`,
-      );
+      this.logger.warn('No body element found in html content');
     }
 
     return {
@@ -103,8 +112,7 @@ export class HTMLParsingService {
     node: DomNode,
     $: cheerio.CheerioAPI,
     parentStructure: OriginalStructure | ElementNodeStruct,
-    segments: TranslationTaskSegment[],
-    taskId: string,
+    segments: SegmentDto[],
   ) {
     if (!node) return;
 
@@ -119,7 +127,7 @@ export class HTMLParsingService {
         return;
       }
 
-      this.processElementNode(element, $, parentStructure, segments, taskId);
+      this.processElementNode(element, $, parentStructure, segments);
     } else if (node.type === ElementType.Text) {
       const textNode = node as DomText;
 
@@ -140,8 +148,7 @@ export class HTMLParsingService {
     element: DomElement,
     $: cheerio.CheerioAPI,
     parentStructure: OriginalStructure | ElementNodeStruct,
-    segments: TranslationTaskSegment[],
-    taskId: string,
+    segments: SegmentDto[],
   ) {
     const nodeStructure: ElementNodeStruct = {
       type: 'element',
@@ -161,18 +168,13 @@ export class HTMLParsingService {
         id: segmentId,
       });
 
-      const segment = this.processBlockForTranslation(
-        element,
-        $,
-        segmentId,
-        taskId,
-      );
+      const segment = this.processBlockForTranslation(element, $, segmentId);
       segments.push(segment);
     } else {
       $(element)
         .children()
         .each((_, child) => {
-          this.processNode(child, $, nodeStructure, segments, taskId);
+          this.processNode(child, $, nodeStructure, segments);
         });
     }
   }
@@ -181,8 +183,7 @@ export class HTMLParsingService {
     node: DomElement,
     $: cheerio.CheerioAPI,
     segmentOrder: number,
-    taskId: string,
-  ): TranslationTaskSegment {
+  ): SegmentDto {
     const $clone = $(node).clone();
 
     const specialTokensMap: TranslationSpecialTokenMap = {};
@@ -302,17 +303,14 @@ export class HTMLParsingService {
 
     const htmlWithTokens = $clone.html() ?? '';
 
-    const segment = TranslationTaskSegment.create({
+    return {
       id: uuidv4(),
-      translationTaskId: taskId,
       segmentOrder,
       segmentType: ContentSegmentType.HTML_BLOCK,
       sourceContent: htmlWithTokens,
       specialTokensMap,
       formatMetadata: this.extractFormatMetadata(node, $),
-    });
-
-    return segment;
+    };
   }
 
   private extractFormatMetadata(
@@ -370,7 +368,7 @@ export class HTMLParsingService {
     return hasBlocks;
   }
 
-  private countWords(segments: TranslationTaskSegment[]): number {
+  private countWords(segments: SegmentDto[]): number {
     return segments.reduce((total, segment) => {
       const words = segment.sourceContent.split(/\s+/).filter(Boolean).length;
       return total + words;
@@ -378,13 +376,12 @@ export class HTMLParsingService {
   }
 
   private async anonymizeSegments(
-    taskId: string,
-    segments: TranslationTaskSegment[],
+    segments: SegmentDto[],
     sourceLanguageCode: string,
-  ): Promise<SensitiveDataMapping[]> {
-    this.logger.debug(`Anonymizing segments for task ${taskId}`);
+  ): Promise<SensitiveDataMappingDto[]> {
+    this.logger.debug(`Anonymizing ${segments.length} segments`);
 
-    const sensitiveDataMappings: SensitiveDataMapping[] = [];
+    const sensitiveDataMappings: SensitiveDataMappingDto[] = [];
 
     const batchItems: AnonymizeBatchItem[] = segments.map((segment) => ({
       text: segment.sourceContent,
@@ -399,40 +396,37 @@ export class HTMLParsingService {
         const result = anonymizationResults[i];
         const segment = segments[i];
 
+        // Update the segment with anonymized content
         segment.anonymizedContent = result.anonymized_text;
 
         if (result.mappings && result.mappings.length > 0) {
           for (const mapping of result.mappings) {
-            const sensitiveDataMapping = SensitiveDataMapping.create({
+            sensitiveDataMappings.push({
               id: uuidv4(),
-              translationTaskId: taskId,
               tokenIdentifier: mapping.placeholder,
               sensitiveType: mapping.entity_type,
               originalValue: mapping.original,
             });
-
-            sensitiveDataMappings.push(sensitiveDataMapping);
           }
         }
       }
 
       this.logger.debug(
-        `Anonymization completed for task ${taskId}: ` +
-          `${sensitiveDataMappings.length} sensitive entities identified`,
+        `Anonymization completed: ${sensitiveDataMappings.length} sensitive entities identified`,
       );
 
       return sensitiveDataMappings;
     } catch (error: unknown) {
       this.logger.error(
-        `Anonymization service error for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
+        `Anonymization service error: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
   }
 
-  private reconstructHTMLContent(
+  public reconstructHTMLContent(
     originalStructure: OriginalStructure,
-    segments: TranslationTaskSegment[],
+    segments: SegmentDto[],
   ): string {
     const buildNode = (node: NodeStructure): string => {
       if (node.type === 'text') {
