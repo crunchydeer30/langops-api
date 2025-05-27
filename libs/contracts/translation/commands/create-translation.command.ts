@@ -17,7 +17,6 @@ export namespace CreateTranslationCommand {
 
   export const ResponseSchema = z.object({
     id: z.string().uuid(),
-    orderId: z.string().uuid(),
     price: z.number().default(0),
     sourceLanguage: z.string(),
     targetLanguage: z.string(),

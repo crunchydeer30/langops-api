@@ -207,6 +207,11 @@ export const ERRORS = {
       message: 'Cannot cancel a completed translation',
       httpStatus: 400,
     },
+    CREATION_FAILED: {
+      code: 'TRANSLATION_005',
+      message: 'Failed to create translation',
+      httpStatus: 500,
+    },
   },
   TRANSLATION_TASK: {
     NOT_FOUND: {

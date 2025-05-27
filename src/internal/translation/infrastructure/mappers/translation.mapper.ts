@@ -9,19 +9,21 @@ import { Translation } from '../../domain/entities/translation.entity';
 @Injectable()
 export class TranslationMapper {
   toDomain(prismaTranslation: PrismaTranslation): Translation {
-    return Translation.reconstitute({
+    const safeTranslation = {
       id: prismaTranslation.id,
       customerId: prismaTranslation.customerId,
       sourceLanguageCode: prismaTranslation.sourceLanguageCode,
       targetLanguageCode: prismaTranslation.targetLanguageCode,
       originalContent: prismaTranslation.originalContent,
-      translatedContent: prismaTranslation.translatedContent,
+      translatedContent: prismaTranslation.translatedContent || null,
       format: prismaTranslation.format,
       status: prismaTranslation.status,
-      translationTaskId: prismaTranslation.translationTaskId,
+      translationTaskId: prismaTranslation.translationTaskId || null,
       createdAt: prismaTranslation.createdAt,
       updatedAt: prismaTranslation.updatedAt,
-    });
+    };
+
+    return Translation.reconstitute(safeTranslation);
   }
 
   toPersistence(translation: Translation): {

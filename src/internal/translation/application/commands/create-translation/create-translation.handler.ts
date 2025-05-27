@@ -3,15 +3,12 @@ import { Logger } from '@nestjs/common';
 import { CreateTranslationCommand } from './create-translation.command';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common';
-import { Order } from 'src/internal/order/domain/entities/order.entity';
-import { TranslationTask } from 'src/internal/translation-task/domain/entities/translation-task.entity';
-import { TranslationStage, TranslationTaskStatus } from '@prisma/client';
 import { CreateTranslationCommand as CreateTranslationContract } from 'libs/contracts/translation';
-import { OrderRepository } from 'src/internal/order/infrastructure';
 import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories';
-import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
-import { TranslationStatus } from '@libs/contracts/translation/enums';
+import { TranslationStatus as TranslationStatusEnum } from '@libs/contracts/translation/enums';
 import { CreateTranslationResponseDto } from '../../dto';
+import { Translation } from 'src/internal/translation/domain/entities';
+import { TranslationRepository } from 'src/internal/translation/infrastructure/repositories';
 
 @CommandHandler(CreateTranslationCommand)
 export class CreateTranslationHandler
@@ -21,8 +18,7 @@ export class CreateTranslationHandler
 
   constructor(
     private readonly languagePairRepository: LanguagePairRepository,
-    private readonly orderRepository: OrderRepository,
-    private readonly translationTaskRepository: TranslationTaskRepository,
+    private readonly translationRepository: TranslationRepository,
     private readonly publisher: EventPublisher,
   ) {}
 
@@ -48,40 +44,31 @@ export class CreateTranslationHandler
         );
       }
 
-      const order = Order.create({
+      const translation = Translation.create({
         customerId,
-        languagePairId: languagePair.id,
-      });
-
-      await this.orderRepository.save(order);
-
-      const task = TranslationTask.create({
+        sourceLanguageCode: sourceLanguage,
+        targetLanguageCode: targetLanguage,
         originalContent: text,
-        taskType: format,
-        originalStructure: null,
-        orderId: order.id,
-        languagePairId: languagePair.id,
-        status: TranslationTaskStatus.NEW,
-        currentStage: TranslationStage.QUEUED_FOR_PROCESSING,
+        format,
       });
 
-      const taskWithEvents = this.publisher.mergeObjectContext(task);
-      await this.translationTaskRepository.save(taskWithEvents);
-      taskWithEvents.commit();
+      const translationWithEvents =
+        this.publisher.mergeObjectContext(translation);
+      await this.translationRepository.save(translationWithEvents);
+      translationWithEvents.commit();
 
       const response: CreateTranslationResponseDto = {
-        id: task.id,
-        orderId: order.id,
+        id: translation.id,
         price: 0,
         sourceLanguage: sourceLanguage,
         targetLanguage: targetLanguage,
         text: text,
         format,
-        status: task.status as TranslationStatus,
+        status: TranslationStatusEnum.NEW,
       };
 
       this.logger.log(
-        `Created translation task ${task.id} for order ${order.id}`,
+        `Created translation ${translation.id} for customer ${customerId}`,
       );
 
       return response;
@@ -91,9 +78,9 @@ export class CreateTranslationHandler
       }
 
       this.logger.error(
-        `Failed to create translation: ${JSON.stringify(error)}`,
+        `Failed to create translation: ${error instanceof Error ? error.message : String(error)}`,
       );
-      throw new DomainException(ERRORS.TRANSLATION_TASK.CREATION_FAILED);
+      throw new DomainException(ERRORS.TRANSLATION.CREATION_FAILED);
     }
   }
 }
