@@ -9,7 +9,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { SegmentDto } from './html-parsing.service';
 import { ContentSegmentType } from '@prisma/client';
 import { XliffDocumentMetadata } from 'src/internal/translation-task-processing/domain/interfaces/xliff-structure.interface';
-import { FormatMetadata } from 'src/internal/translation-task-processing/domain/interfaces/format-metadata.interface';
+import {
+  FormatMetadata,
+  XliffFormatMetadata,
+} from 'src/internal/translation-task-processing/domain/interfaces/format-metadata.interface';
 
 export interface XliffParsingResult {
   segments: SegmentDto[];
@@ -68,14 +71,10 @@ export class XliffParsingService {
         segmentOrder++;
         const unitId = u['@_id'];
 
-        // Debug the complete unit object to see its structure
         this.logger.debug(`Unit ${unitId} raw structure: ${JSON.stringify(u)}`);
 
-        // Handle different possible source formats in XLIFF
         let sourceContent = 'Placeholder text';
 
-        // Try different ways to extract the source content based on XLIFF version/format
-        // First check XLIFF 2.0 format (unit → segment → source)
         if (u.segment && typeof u.segment === 'object') {
           this.logger.debug('Found XLIFF 2.0 structure with segment container');
 
@@ -83,7 +82,6 @@ export class XliffParsingService {
             sourceContent = u.segment.source;
             this.logger.debug('XLIFF 2.0: Source found as string in segment');
           } else if (u.segment.source && typeof u.segment.source === 'object') {
-            // Try different object structures for the source
             if (u.segment.source['#text'] !== undefined) {
               sourceContent = u.segment.source['#text'];
             } else if (u.segment.source._ !== undefined) {
@@ -95,14 +93,11 @@ export class XliffParsingService {
               `XLIFF 2.0: Source found as object in segment: ${sourceContent}`,
             );
           }
-        }
-        // Then check XLIFF 1.x format (direct source element)
-        else if (u.source !== undefined) {
+        } else if (u.source !== undefined) {
           if (typeof u.source === 'string') {
             sourceContent = u.source;
             this.logger.debug('XLIFF 1.x: Source found as string');
           } else if (u.source && typeof u.source === 'object') {
-            // Try different object structures
             if (u.source['#text'] !== undefined) {
               sourceContent = u.source['#text'];
               this.logger.debug('XLIFF 1.x: Source found as object with #text');
@@ -113,31 +108,25 @@ export class XliffParsingService {
               sourceContent = u.source.text;
               this.logger.debug('XLIFF 1.x: Source found as object with text');
             } else {
-              // Last resort - stringify the object to not lose data
               sourceContent = `Unparsed source: ${JSON.stringify(u.source)}`;
               this.logger.debug(
                 'XLIFF 1.x: Source found as complex object, using stringified version',
               );
             }
           }
-        }
-        // Then check other variations
-        else if (u.seg !== undefined) {
-          // Some XLIFF formats use seg instead of source
+        } else if (u.seg !== undefined) {
           sourceContent =
             typeof u.seg === 'string'
               ? u.seg
               : `Unparsed seg: ${JSON.stringify(u.seg)}`;
           this.logger.debug('Source found as seg element');
         } else if (u.target !== undefined) {
-          // Sometimes we need to fall back to target
           sourceContent =
             typeof u.target === 'string'
               ? u.target
               : `Unparsed target: ${JSON.stringify(u.target)}`;
           this.logger.debug('Falling back to target element');
         } else {
-          // If we couldn't find content anywhere else, use the whole unit
           sourceContent = `No source found. Unit data: ${JSON.stringify(u).substring(0, 100)}`;
           this.logger.warn(`No source content found in unit ${unitId}`);
         }
@@ -176,5 +165,64 @@ export class XliffParsingService {
     };
 
     return { segments, metadata };
+  }
+
+  private escapeXml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  public reconstructXliffContent(
+    segments: SegmentDto[],
+    metadata: XliffDocumentMetadata,
+  ): string {
+    let xliff = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xliff += `<xliff version="${metadata.version || '2.0'}" xmlns="${metadata.xmlns || 'urn:oasis:names:tc:xliff:document:2.0'}">\n`;
+
+    const byFile = segments.reduce(
+      (acc, seg) => {
+        const meta = seg.formatMetadata as XliffFormatMetadata | undefined;
+        const fileId = meta?.fileId || '';
+        if (!acc[fileId]) acc[fileId] = [];
+        acc[fileId].push(seg);
+        return acc;
+      },
+      {} as Record<string, SegmentDto[]>,
+    );
+
+    for (const fileId in byFile) {
+      xliff += `  <file id="${fileId}" source-language="${metadata.sourceLanguage}" target-language="${metadata.targetLanguage}"`;
+      if (metadata.originalFile)
+        xliff += ` original="${metadata.originalFile}"`;
+      if (metadata.datatype) xliff += ` datatype="${metadata.datatype}"`;
+      if (metadata.toolId) xliff += ` tool-id="${metadata.toolId}"`;
+      if (metadata.toolName) xliff += ` tool-name="${metadata.toolName}"`;
+      if (metadata.toolVersion)
+        xliff += ` tool-version="${metadata.toolVersion}"`;
+      xliff += `>\n`;
+
+      byFile[fileId].forEach((seg) => {
+        const meta = seg.formatMetadata as XliffFormatMetadata | undefined;
+        const unitId = meta?.unitId || '';
+        const target = (seg as any).targetContent as string | undefined;
+        xliff += `    <unit id="${unitId}">\n`;
+        xliff += `      <segment>\n`;
+        xliff += `        <source>${this.escapeXml(seg.sourceContent)}</source>\n`;
+        if (target !== undefined) {
+          xliff += `        <target>${this.escapeXml(target)}</target>\n`;
+        }
+        xliff += `      </segment>\n`;
+        xliff += `    </unit>\n`;
+      });
+
+      xliff += `  </file>\n`;
+    }
+
+    xliff += `</xliff>`;
+    return xliff;
   }
 }

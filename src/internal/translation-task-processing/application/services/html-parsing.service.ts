@@ -25,6 +25,7 @@ export interface SegmentDto {
   segmentOrder: number;
   segmentType: ContentSegmentType;
   sourceContent: string;
+  targetContent?: string;
   specialTokensMap?: TranslationSpecialTokenMap | null;
   formatMetadata?: FormatMetadata | null;
 }
