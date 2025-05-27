@@ -19,15 +19,6 @@ enum EditorRole {
   @@map("editor_roles")
 }
 
-enum OrderStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-
-  @@map("order_statuses")
-}
-
 enum EditorLanguagePairQualificationStatus {
   INITIAL_EVALUATION_REQUIRED
   INITIAL_EVALUATION_IN_PROGRESS
@@ -140,7 +131,6 @@ model Customer {
   passwordResetTokenHash     String? @map("password_reset_token_hash")
 
   translations Translation[]
-  orders       Order[]       @relation("CustomerOrders")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -209,7 +199,6 @@ model LanguagePair {
   targetLanguage     Language @relation("TargetLanguage", fields: [targetLanguageCode], references: [code])
   targetLanguageCode String   @map("target_language_code")
 
-  orders                         Order[]
   editors                        EditorLanguagePair[]
   editorApplicationLanguagePairs EditorApplicationLanguagePair[]
   evaluationSets                 EvaluationSet[]
@@ -243,23 +232,6 @@ model EditorLanguagePair {
   @@map("editor_language_pairs")
 }
 
-model Order {
-  id     String      @id @default(uuid()) @db.Uuid
-  status OrderStatus @default(PENDING) @map("status")
-
-  customerId     String       @map("customer_id") @db.Uuid
-  customer       Customer     @relation("CustomerOrders", fields: [customerId], references: [id])
-  languagePairId String       @map("language_pair_id") @db.Uuid
-  languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])
-
-  translationTasks TranslationTask[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("orders")
-}
-
 model Translation {
   id     String            @id @default(uuid()) @db.Uuid
   status TranslationStatus @default(PENDING)
@@ -285,9 +257,7 @@ model Translation {
 }
 
 model TranslationTask {
-  id      String @id @default(uuid()) @db.Uuid
-  orderId String @map("order_id") @db.Uuid
-  order   Order  @relation(fields: [orderId], references: [id])
+  id String @id @default(uuid()) @db.Uuid
 
   languagePairId String       @map("language_pair_id") @db.Uuid
   languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])

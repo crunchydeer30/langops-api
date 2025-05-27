@@ -19,13 +19,6 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
     return this.mapper.toDomain(model);
   }
 
-  async findByOrderId(orderId: string): Promise<TranslationTask[]> {
-    const models = await this.prisma.translationTask.findMany({
-      where: { orderId },
-    });
-    return models.map((model) => this.mapper.toDomain(model));
-  }
-
   async save(task: TranslationTask): Promise<void> {
     await this.prisma.translationTask.upsert({
       where: { id: task.id },

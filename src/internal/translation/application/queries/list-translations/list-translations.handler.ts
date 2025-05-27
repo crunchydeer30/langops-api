@@ -3,11 +3,10 @@ import { Logger } from '@nestjs/common';
 import { ERRORS } from '@libs/contracts/common/errors/errors';
 import { DomainException } from '@common/exceptions';
 import { ListTranslationsQuery } from './list-translations.query';
-import { TranslationReadRepository } from 'src/internal/translation/infrastructure';
+import { TranslationRepository } from 'src/internal/translation/infrastructure';
 import { ListTranslationsQuery as ListTranslationsQueryContract } from '@libs/contracts/translation/queries';
 import {
   TranslationFormat,
-  TranslationStage,
   TranslationStatus,
 } from '@libs/contracts/translation/enums';
 import { z } from 'zod';
@@ -19,7 +18,7 @@ export class ListTranslationsHandler
 {
   private readonly logger = new Logger(ListTranslationsHandler.name);
 
-  constructor(private readonly repository: TranslationReadRepository) {}
+  constructor(private readonly repository: TranslationRepository) {}
 
   async execute({
     params,
@@ -29,25 +28,22 @@ export class ListTranslationsHandler
     );
 
     try {
-      const translations = await this.repository.findByCustomerId(
-        params.customerId,
+      const translations = await this.repository.findManyWithCriteria(
+        { customerId: params.customerId },
         params.limit,
         params.offset,
       );
 
-      return translations.map((task) => ({
-        id: task.id,
-        orderId: task.orderId,
-        format: z.nativeEnum(TranslationFormat).parse(task.formatType),
-        status: z.nativeEnum(TranslationStatus).parse(task.status),
-        currentStage: z.nativeEnum(TranslationStage).parse(task.currentStage),
-        wordCount: task.wordCount,
-        createdAt: task.createdAt,
-        originalContent: task.originalContent,
-        translatedContent: task.translatedContent,
-        sourceLanguage: task.sourceLanguage,
-        targetLanguage: task.targetLanguage,
-        customerId: task.customerId,
+      return translations.map((translation) => ({
+        id: translation.id,
+        format: z.nativeEnum(TranslationFormat).parse(translation.format),
+        status: z.nativeEnum(TranslationStatus).parse(translation.status),
+        createdAt: translation.createdAt,
+        originalContent: translation.originalContent,
+        translatedContent: translation.translatedContent,
+        sourceLanguage: translation.sourceLanguageCode,
+        targetLanguage: translation.targetLanguageCode,
+        customerId: translation.customerId,
       }));
     } catch (error) {
       if (error instanceof DomainException) {

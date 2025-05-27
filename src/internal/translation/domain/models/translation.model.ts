@@ -1,15 +1,14 @@
 import {
   TranslationStage,
-  TranslationTaskStatus,
   TranslationTaskType,
+  TranslationStatus,
 } from '@prisma/client';
 
 export class TranslationReadModel {
   id: string;
-  orderId: string;
   formatType: TranslationTaskType;
-  status: TranslationTaskStatus;
-  currentStage: TranslationStage;
+  status: TranslationStatus;
+  currentStage: TranslationStage | null;
   wordCount: number;
   createdAt: Date;
   originalContent: string;

@@ -29,7 +29,6 @@ export interface ITranslationTask {
   originalStructure?: OriginalStructure | null;
   currentStage: TranslationStage;
   status: TranslationTaskStatus;
-  orderId: string;
   languagePairId: string;
   editorId?: string | null;
   wordCount: number;
@@ -52,7 +51,6 @@ export interface ITranslationTaskCreateArgs {
   originalContent: string;
   taskType: TranslationTaskType;
   originalStructure: OriginalStructure | null;
-  orderId: string;
   languagePairId: string;
   currentStage?: TranslationStage;
   status?: TranslationTaskStatus;
@@ -113,7 +111,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       originalStructure: args.originalStructure ?? null,
       currentStage: args.currentStage ?? TranslationStage.QUEUED_FOR_PROCESSING,
       status: args.status ?? TranslationTaskStatus.NEW,
-      orderId: args.orderId,
       languagePairId: args.languagePairId,
       editorId: args.editorId ?? null,
       wordCount: args.wordCount ?? 0,

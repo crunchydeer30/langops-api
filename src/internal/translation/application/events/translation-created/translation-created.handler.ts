@@ -5,8 +5,6 @@ import { TranslationTask } from 'src/internal/translation-task/domain/entities/t
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
 import { TranslationRepository } from 'src/internal/translation/infrastructure/repositories';
 import { TranslationStage, TranslationTaskStatus } from '@prisma/client';
-import { Order } from 'src/internal/order/domain/entities/order.entity';
-import { OrderRepository } from 'src/internal/order/infrastructure';
 import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common';
@@ -20,7 +18,6 @@ export class TranslationCreatedHandler
   constructor(
     private readonly translationRepository: TranslationRepository,
     private readonly translationTaskRepository: TranslationTaskRepository,
-    private readonly orderRepository: OrderRepository,
     private readonly languagePairRepository: LanguagePairRepository,
   ) {}
 
@@ -31,7 +28,6 @@ export class TranslationCreatedHandler
     );
 
     try {
-      // Find the language pair
       const languagePair =
         await this.languagePairRepository.findByLanguageCodes(
           translation.sourceLanguageCode,
@@ -45,20 +41,10 @@ export class TranslationCreatedHandler
         );
       }
 
-      // Create an order for this translation
-      const order = Order.create({
-        customerId: translation.customerId,
-        languagePairId: languagePair.id,
-      });
-
-      await this.orderRepository.save(order);
-
-      // Create a translation task
       const task = TranslationTask.create({
         originalContent: translation.originalContent,
         taskType: translation.format,
         originalStructure: null,
-        orderId: order.id,
         languagePairId: languagePair.id,
         status: TranslationTaskStatus.NEW,
         currentStage: TranslationStage.QUEUED_FOR_PROCESSING,

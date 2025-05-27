@@ -26,12 +26,9 @@ export class CreateTranslationTaskHandler
   async execute({
     props,
   }: CreateTranslationTaskCommand): Promise<ICreateTranslationTaskCommandResult> {
-    this.logger.log(
-      `Creating translation task for order: ${props.orderId}, type: ${props.formatType}`,
-    );
+    this.logger.log(`Creating translation task for type: ${props.formatType}`);
 
     const translationTask = TranslationTask.create({
-      orderId: props.orderId,
       languagePairId: props.languagePairId,
       originalContent: props.originalContent,
       originalStructure: props.originalStructure ?? null,

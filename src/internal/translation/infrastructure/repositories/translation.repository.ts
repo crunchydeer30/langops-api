@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
-import { ITranslationRepository } from '../../domain/ports/translation.repository';
+import {
+  ITranslationRepository,
+  TranslationCriteria,
+} from '../../domain/ports/translation.repository';
 import { Translation } from '../../domain/entities/translation.entity';
 import { TranslationMapper } from '../mappers/translation.mapper';
 
@@ -35,6 +38,39 @@ export class TranslationRepository implements ITranslationRepository {
     });
 
     return translation ? this.mapper.toDomain(translation) : null;
+  }
+
+  async findOneWithCriteria(
+    criteria: TranslationCriteria,
+  ): Promise<Translation | null> {
+    const translation = await this.prisma.translation.findFirst({
+      where: criteria,
+      include: {
+        translationTask: true,
+      },
+    });
+
+    return translation ? this.mapper.toDomain(translation) : null;
+  }
+
+  async findManyWithCriteria(
+    criteria: TranslationCriteria,
+    limit = 20,
+    offset = 0,
+  ): Promise<Translation[]> {
+    const translations = await this.prisma.translation.findMany({
+      where: criteria,
+      take: limit,
+      skip: offset,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        translationTask: true,
+      },
+    });
+
+    return translations.map((translation) => this.mapper.toDomain(translation));
   }
 
   async findAll(): Promise<Translation[]> {
