@@ -10,6 +10,7 @@ import { AnonymizerModule } from 'src/integration/anonymizer/anonymizer.module';
 import { LanguageModule } from '../language/language.module';
 import { TranslationTaskProcessingEventHandlers } from './application/event-handlers';
 import {
+  ContentAnonymizationService,
   HTMLParsingService,
   HTMLValidatorService,
 } from './application/services';
@@ -32,6 +33,7 @@ import { TranslationTaskProcessingCommandHandlers } from './application/commands
 
     HTMLParsingService,
     HTMLValidatorService,
+    ContentAnonymizationService,
 
     TranslationTaskSegmentMapper,
     TranslationTaskSegmentRepository,

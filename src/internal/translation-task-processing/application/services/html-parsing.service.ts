@@ -19,29 +19,18 @@ import {
   ElementNodeStruct,
 } from '../../domain/interfaces/original-structure.interface';
 import { URL } from 'url';
-import { AnonymizeBatchItem } from '../../domain/ports/anonymizer.client';
-import { AnonymizerHttpAdapter } from 'src/integration/anonymizer/anonymizer.http.adapter';
 
 export interface SegmentDto {
   id: string;
   segmentOrder: number;
   segmentType: ContentSegmentType;
   sourceContent: string;
-  anonymizedContent?: string | null;
   specialTokensMap?: TranslationSpecialTokenMap | null;
   formatMetadata?: HtmlFormatMetadata | null;
 }
 
-export interface SensitiveDataMappingDto {
-  id: string;
-  tokenIdentifier: string;
-  sensitiveType: string;
-  originalValue: string;
-}
-
 export interface HtmlParsingResult {
   segments: SegmentDto[];
-  sensitiveDataMappings: SensitiveDataMappingDto[];
   wordCount: number;
   originalStructure: OriginalStructure;
 }
@@ -50,12 +39,7 @@ export interface HtmlParsingResult {
 export class HTMLParsingService {
   private readonly logger = new Logger(HTMLParsingService.name);
 
-  constructor(private readonly anonymizerClient: AnonymizerHttpAdapter) {}
-
-  async parse(
-    originalContent: string,
-    sourceLanguageCode: string,
-  ): Promise<HtmlParsingResult> {
+  parse(originalContent: string): HtmlParsingResult {
     this.logger.debug(
       `Parsing HTML content of length ${originalContent.length} characters`,
     );
@@ -63,21 +47,14 @@ export class HTMLParsingService {
     const { originalStructure, segments } =
       this.parseHTMLContent(originalContent);
 
-    const sensitiveDataMappings = await this.anonymizeSegments(
-      segments,
-      sourceLanguageCode,
-    );
-
     const wordCount = this.countWords(segments);
 
     this.logger.debug(
-      `Parsed ${segments.length} segments with ${wordCount} words and ` +
-        `${sensitiveDataMappings.length} sensitive data mappings`,
+      `Parsed ${segments.length} segments with ${wordCount} words`,
     );
 
     return {
       segments,
-      sensitiveDataMappings,
       wordCount,
       originalStructure,
     };
@@ -373,55 +350,6 @@ export class HTMLParsingService {
       const words = segment.sourceContent.split(/\s+/).filter(Boolean).length;
       return total + words;
     }, 0);
-  }
-
-  private async anonymizeSegments(
-    segments: SegmentDto[],
-    sourceLanguageCode: string,
-  ): Promise<SensitiveDataMappingDto[]> {
-    this.logger.debug(`Anonymizing ${segments.length} segments`);
-
-    const sensitiveDataMappings: SensitiveDataMappingDto[] = [];
-
-    const batchItems: AnonymizeBatchItem[] = segments.map((segment) => ({
-      text: segment.sourceContent,
-      language: sourceLanguageCode,
-    }));
-
-    try {
-      const anonymizationResults =
-        await this.anonymizerClient.anonymizeBatch(batchItems);
-
-      for (let i = 0; i < anonymizationResults.length; i++) {
-        const result = anonymizationResults[i];
-        const segment = segments[i];
-
-        // Update the segment with anonymized content
-        segment.anonymizedContent = result.anonymized_text;
-
-        if (result.mappings && result.mappings.length > 0) {
-          for (const mapping of result.mappings) {
-            sensitiveDataMappings.push({
-              id: uuidv4(),
-              tokenIdentifier: mapping.placeholder,
-              sensitiveType: mapping.entity_type,
-              originalValue: mapping.original,
-            });
-          }
-        }
-      }
-
-      this.logger.debug(
-        `Anonymization completed: ${sensitiveDataMappings.length} sensitive entities identified`,
-      );
-
-      return sensitiveDataMappings;
-    } catch (error: unknown) {
-      this.logger.error(
-        `Anonymization service error: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      throw error;
-    }
   }
 
   public reconstructHTMLContent(

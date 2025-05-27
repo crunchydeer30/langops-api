@@ -1,2 +1,3 @@
 export * from './html-parsing.service';
 export * from './html-validator.service';
+export * from './content-anonymization.service';
