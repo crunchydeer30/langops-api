@@ -1,6 +1,6 @@
 import { ContentSegmentType } from '@prisma/client';
 import { TranslationSpecialTokenMap } from 'src/internal/translation-task-processing/domain/interfaces/translation-segment-token-map.interface';
-import { HtmlFormatMetadata } from 'src/internal/translation-task-processing/domain/interfaces/format-metadata.interface';
+import { FormatMetadata } from 'src/internal/translation-task-processing/domain/interfaces/format-metadata.interface';
 import { OriginalStructure } from 'src/internal/translation-task-processing/domain/interfaces/original-structure.interface';
 
 export interface BaseProcessTaskCommandParams {
@@ -19,7 +19,7 @@ export interface SegmentArgs {
   editedContent?: string | null;
   deanonymizedContent?: string | null;
   specialTokensMap?: TranslationSpecialTokenMap | null;
-  formatMetadata?: HtmlFormatMetadata | null;
+  formatMetadata?: FormatMetadata | null;
 }
 
 export interface SensitiveDataMappingArgs {

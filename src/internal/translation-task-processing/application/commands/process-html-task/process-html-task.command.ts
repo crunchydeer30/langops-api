@@ -8,8 +8,4 @@ export type ProcessHtmlTaskCommandParams = BaseProcessTaskCommandParams;
 
 export type ProcessHtmlTaskResponse = BaseProcessTaskResponse;
 
-export class ProcessHtmlTaskCommand extends BaseProcessTaskCommand {
-  constructor(params: ProcessHtmlTaskCommandParams) {
-    super(params);
-  }
-}
+export class ProcessHtmlTaskCommand extends BaseProcessTaskCommand {}

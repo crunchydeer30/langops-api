@@ -5,7 +5,9 @@ export interface HtmlFormatMetadata {
 }
 
 export interface XliffFormatMetadata {
+  fileId?: string;
   unitId: string;
+  groupId?: string;
 }
 
 export interface CsvFormatMetadata {

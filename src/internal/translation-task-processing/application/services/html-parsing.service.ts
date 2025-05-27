@@ -12,7 +12,7 @@ import {
   TranslationSpecialTokenType,
   TranslationSpecialTokenMap,
 } from '../../domain/interfaces/translation-segment-token-map.interface';
-import { HtmlFormatMetadata } from '../../domain/interfaces/format-metadata.interface';
+import { FormatMetadata } from '../../domain/interfaces/format-metadata.interface';
 import {
   OriginalStructure,
   NodeStructure,
@@ -26,7 +26,7 @@ export interface SegmentDto {
   segmentType: ContentSegmentType;
   sourceContent: string;
   specialTokensMap?: TranslationSpecialTokenMap | null;
-  formatMetadata?: HtmlFormatMetadata | null;
+  formatMetadata?: FormatMetadata | null;
 }
 
 export interface HtmlParsingResult {
@@ -293,8 +293,8 @@ export class HTMLParsingService {
   private extractFormatMetadata(
     node: DomElement,
     $: cheerio.CheerioAPI,
-  ): HtmlFormatMetadata {
-    const metadata: HtmlFormatMetadata = {
+  ): FormatMetadata {
+    const metadata: FormatMetadata = {
       container: node.name?.toLowerCase() || 'div',
       row: 0,
       col: 0,
