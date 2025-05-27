@@ -186,6 +186,28 @@ export const ERRORS = {
       httpStatus: 404,
     },
   },
+  TRANSLATION: {
+    NOT_FOUND: {
+      code: 'TRANSLATION_001',
+      message: 'Translation not found',
+      httpStatus: 404,
+    },
+    TASK_ALREADY_ASSIGNED: {
+      code: 'TRANSLATION_002',
+      message: 'Translation task is already assigned to this translation',
+      httpStatus: 400,
+    },
+    NO_TASK_ASSIGNED: {
+      code: 'TRANSLATION_003',
+      message: 'No translation task is assigned to this translation',
+      httpStatus: 400,
+    },
+    CANNOT_CANCEL_COMPLETED: {
+      code: 'TRANSLATION_004',
+      message: 'Cannot cancel a completed translation',
+      httpStatus: 400,
+    },
+  },
   TRANSLATION_TASK: {
     NOT_FOUND: {
       code: 'TRANSLATION_TASK_001',

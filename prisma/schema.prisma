@@ -107,6 +107,16 @@ enum TranslationTaskType {
   @@map("translation_task_type")
 }
 
+enum TranslationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ERROR
+  CANCELED
+
+  @@map("translation_statuses")
+}
+
 enum ContentSegmentType {
   TEXT
   HTML_BLOCK
@@ -129,7 +139,8 @@ model Customer {
   emailVerificationTokenHash String? @map("email_verification_token_hash")
   passwordResetTokenHash     String? @map("password_reset_token_hash")
 
-  orders Order[] @relation("CustomerOrders")
+  translations Translation[]
+  orders       Order[]       @relation("CustomerOrders")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -181,6 +192,9 @@ model Language {
 
   sourceFor LanguagePair[] @relation("SourceLanguage")
   targetFor LanguagePair[] @relation("TargetLanguage")
+
+  translationSourceLanguages Translation[] @relation("TranslationSourceLanguage")
+  translationTargetLanguages Translation[] @relation("TranslationTargetLanguage")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -246,6 +260,30 @@ model Order {
   @@map("orders")
 }
 
+model Translation {
+  id     String            @id @default(uuid()) @db.Uuid
+  status TranslationStatus @default(PENDING)
+
+  customerId String   @map("customer_id") @db.Uuid
+  customer   Customer @relation(fields: [customerId], references: [id])
+  sourceLanguageCode String   @map("source_language_code")
+  sourceLanguage     Language @relation("TranslationSourceLanguage", fields: [sourceLanguageCode], references: [code])
+  targetLanguageCode String   @map("target_language_code")
+  targetLanguage     Language @relation("TranslationTargetLanguage", fields: [targetLanguageCode], references: [code])
+
+  originalContent String              @map("original_content")
+  translatedContent String?             @map("translated_content")
+  format          TranslationTaskType
+
+  translationTaskId String?          @unique @map("translation_task_id") @db.Uuid
+  translationTask   TranslationTask? @relation(fields: [translationTaskId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("translations")
+}
+
 model TranslationTask {
   id      String @id @default(uuid()) @db.Uuid
   orderId String @map("order_id") @db.Uuid
@@ -266,6 +304,7 @@ model TranslationTask {
   currentStage TranslationStage      @map("current_stage")
   errorMessage String?               @map("error_message")
 
+  translation           Translation?
   segments              TranslationTaskSegment[]
   sensitiveDataMappings SensitiveDataMapping[]
 
