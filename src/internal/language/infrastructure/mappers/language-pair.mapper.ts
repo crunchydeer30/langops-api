@@ -14,8 +14,8 @@ export class LanguagePairMapper {
   ): LanguagePair {
     return LanguagePair.reconstitute({
       id: prismaLanguagePair.id,
-      sourceLanguageId: prismaLanguagePair.sourceLanguageId,
-      targetLanguageId: prismaLanguagePair.targetLanguageId,
+      sourceLanguageCode: prismaLanguagePair.sourceLanguageCode,
+      targetLanguageCode: prismaLanguagePair.targetLanguageCode,
       sourceLanguage: {
         code: prismaLanguagePair.sourceLanguage.code,
         name: prismaLanguagePair.sourceLanguage.name,
@@ -31,13 +31,13 @@ export class LanguagePairMapper {
 
   toPersistence(languagePair: LanguagePair): {
     id: string;
-    sourceLanguageId: string;
-    targetLanguageId: string;
+    sourceLanguageCode: string;
+    targetLanguageCode: string;
   } {
     return {
       id: languagePair.id,
-      sourceLanguageId: languagePair.sourceLanguageId,
-      targetLanguageId: languagePair.targetLanguageId,
+      sourceLanguageCode: languagePair.sourceLanguageCode,
+      targetLanguageCode: languagePair.targetLanguageCode,
     };
   }
 }

@@ -4,8 +4,8 @@ export interface ILanguagePairRepository {
   findById(id: string): Promise<LanguagePair | null>;
   findManyById(ids: string[]): Promise<LanguagePair[]>;
   findByLanguages(
-    sourceLanguageId: string,
-    targetLanguageId: string,
+    sourceLanguageCode: string,
+    targetLanguageCode: string,
   ): Promise<LanguagePair | null>;
   findByLanguageCodes(
     sourceLanguageCode: string,

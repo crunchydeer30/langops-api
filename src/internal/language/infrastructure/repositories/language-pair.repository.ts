@@ -42,14 +42,14 @@ export class LanguagePairRepository implements ILanguagePairRepository {
   }
 
   async findByLanguages(
-    sourceLanguageId: string,
-    targetLanguageId: string,
+    sourceLanguageCode: string,
+    targetLanguageCode: string,
   ): Promise<LanguagePair | null> {
     const languagePair = await this.prisma.languagePair.findUnique({
       where: {
-        sourceLanguageId_targetLanguageId: {
-          sourceLanguageId,
-          targetLanguageId,
+        sourceLanguageCode_targetLanguageCode: {
+          sourceLanguageCode,
+          targetLanguageCode,
         },
       },
       include: {
@@ -103,7 +103,11 @@ export class LanguagePairRepository implements ILanguagePairRepository {
         targetLanguage: true,
       },
       update: data,
-      create: data,
+      create: {
+        id: languagePair.id,
+        sourceLanguage: { connect: { code: languagePair.sourceLanguageCode } },
+        targetLanguage: { connect: { code: languagePair.targetLanguageCode } },
+      },
     });
 
     return this.mapper.toDomain(savedLanguagePair);

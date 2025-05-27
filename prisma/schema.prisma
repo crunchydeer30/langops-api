@@ -176,8 +176,7 @@ model StaffMember {
 }
 
 model Language {
-  id   String @id @default(uuid()) @db.Uuid
-  code String @unique
+  code String @id
   name String
 
   sourceFor LanguagePair[] @relation("SourceLanguage")
@@ -190,11 +189,11 @@ model Language {
 }
 
 model LanguagePair {
-  id               String   @id @default(uuid()) @db.Uuid
-  sourceLanguage   Language @relation("SourceLanguage", fields: [sourceLanguageId], references: [id])
-  sourceLanguageId String   @db.Uuid
-  targetLanguage   Language @relation("TargetLanguage", fields: [targetLanguageId], references: [id])
-  targetLanguageId String   @db.Uuid
+  id                 String   @id @default(uuid()) @db.Uuid
+  sourceLanguage     Language @relation("SourceLanguage", fields: [sourceLanguageCode], references: [code])
+  sourceLanguageCode String   @map("source_language_code")
+  targetLanguage     Language @relation("TargetLanguage", fields: [targetLanguageCode], references: [code])
+  targetLanguageCode String   @map("target_language_code")
 
   orders                         Order[]
   editors                        EditorLanguagePair[]
@@ -205,7 +204,7 @@ model LanguagePair {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([sourceLanguageId, targetLanguageId])
+  @@unique([sourceLanguageCode, targetLanguageCode])
   @@map("language_pairs")
 }
 

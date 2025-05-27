@@ -11,14 +11,6 @@ export class LanguageRepository implements ILanguageRepository {
     private readonly mapper: LanguageMapper,
   ) {}
 
-  async findById(id: string): Promise<Language | null> {
-    const language = await this.prisma.language.findUnique({
-      where: { id },
-    });
-
-    return language ? this.mapper.toDomain(language) : null;
-  }
-
   async findByCode(code: string): Promise<Language | null> {
     const language = await this.prisma.language.findUnique({
       where: { code },
@@ -36,7 +28,7 @@ export class LanguageRepository implements ILanguageRepository {
     const data = this.mapper.toPersistence(language);
 
     const savedLanguage = await this.prisma.language.upsert({
-      where: { id: language.id },
+      where: { code: language.code },
       update: data,
       create: data,
     });
@@ -44,9 +36,9 @@ export class LanguageRepository implements ILanguageRepository {
     return this.mapper.toDomain(savedLanguage);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(code: string): Promise<void> {
     await this.prisma.language.delete({
-      where: { id },
+      where: { code },
     });
   }
 }

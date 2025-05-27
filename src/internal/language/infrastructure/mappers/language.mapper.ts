@@ -6,7 +6,6 @@ import { Language as PrismaLanguage } from '@prisma/client';
 export class LanguageMapper {
   toDomain(prismaLanguage: PrismaLanguage): Language {
     return Language.reconstitute({
-      id: prismaLanguage.id,
       code: prismaLanguage.code,
       name: prismaLanguage.name,
       createdAt: prismaLanguage.createdAt,
@@ -15,12 +14,10 @@ export class LanguageMapper {
   }
 
   toPersistence(language: Language): {
-    id: string;
     code: string;
     name: string;
   } {
     return {
-      id: language.id,
       code: language.code,
       name: language.name,
     };

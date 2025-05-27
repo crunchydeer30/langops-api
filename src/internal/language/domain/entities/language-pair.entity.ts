@@ -3,8 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface ILanguagePair {
   id: string;
-  sourceLanguageId: string;
-  targetLanguageId: string;
+  sourceLanguageCode: string;
+  targetLanguageCode: string;
   sourceLanguage: {
     code: string;
     name: string;
@@ -19,14 +19,14 @@ export interface ILanguagePair {
 
 export interface ILanguagePairCreateArgs {
   id?: string;
-  sourceLanguageId: string;
-  targetLanguageId: string;
+  sourceLanguageCode: string;
+  targetLanguageCode: string;
 }
 
 export class LanguagePair extends AggregateRoot implements ILanguagePair {
   public id: string;
-  public sourceLanguageId: string;
-  public targetLanguageId: string;
+  public sourceLanguageCode: string;
+  public targetLanguageCode: string;
   public sourceLanguage: {
     code: string;
     name: string;
@@ -53,14 +53,14 @@ export class LanguagePair extends AggregateRoot implements ILanguagePair {
 
     const languagePairProps: ILanguagePair = {
       id,
-      sourceLanguageId: args.sourceLanguageId,
-      targetLanguageId: args.targetLanguageId,
+      sourceLanguageCode: args.sourceLanguageCode,
+      targetLanguageCode: args.targetLanguageCode,
       sourceLanguage: {
-        code: '',
+        code: args.sourceLanguageCode,
         name: '',
       },
       targetLanguage: {
-        code: '',
+        code: args.targetLanguageCode,
         name: '',
       },
       createdAt: now,
