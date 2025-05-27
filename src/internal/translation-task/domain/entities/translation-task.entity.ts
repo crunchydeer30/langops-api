@@ -125,13 +125,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       errorMessage: null,
     });
 
-    task.apply(
-      new TaskQueuedForEditingEvent({
-        taskId: id,
-        previousStatus: TranslationTaskStatus.NEW,
-        previousStage: TranslationStage.QUEUED_FOR_PROCESSING,
-      }),
-    );
     task.apply(new TaskCreatedEvent({ taskId: id, taskType: args.taskType }));
     return task;
   }

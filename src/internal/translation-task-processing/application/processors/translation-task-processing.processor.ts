@@ -4,36 +4,72 @@ import { Job } from 'bullmq';
 import { TranslationTaskType } from '@prisma/client';
 import { Logger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { ProcessHTMLTaskCommand } from '../commands/process-html-task/process-html-task.command';
+import {
+  ProcessHtmlTaskCommand,
+  ProcessHtmlTaskResponse,
+} from '../commands/process-html-task/process-html-task.command';
+import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure/repositories/translation-task.repository';
+import { TranslationTaskSegmentRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/translation-task-segment.repository';
+import { SensitiveDataMappingRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/sensitive-data-mapping.repository';
+import { EventPublisher } from '@nestjs/cqrs';
 
-// TODO: set up backoff strategy
 @Processor(TRANSLATION_TASK_PROCESSING_QUEUE, {})
 export class TranslationTaskProcessingProcessor extends WorkerHost {
   private readonly logger = new Logger(TranslationTaskProcessingProcessor.name);
 
-  constructor(private readonly commandBus: CommandBus) {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly translationTaskRepository: TranslationTaskRepository,
+    private readonly translationSegmentRepository: TranslationTaskSegmentRepository,
+    private readonly sensitiveDataMappingRepository: SensitiveDataMappingRepository,
+    private readonly eventPublisher: EventPublisher,
+  ) {
     super();
   }
 
   async process(
     job: Job<{ taskId: string; taskType: TranslationTaskType }, any, string>,
-  ): Promise<any> {
+  ): Promise<void> {
     await this.handleProcessing(job.data.taskId);
   }
 
   private async handleProcessing(taskId: string) {
+    const task = await this.translationTaskRepository.findById(taskId);
+    if (!task) throw new Error(`Task ${taskId} not found`);
+
+    this.eventPublisher.mergeObjectContext(task);
+    this.logger.debug(`Start processing translation task ${taskId}`);
+    task.startProcessing();
+    await this.translationTaskRepository.save(task);
+    task.commit();
+
     try {
-      // TODO: Add support for other content types
-      this.logger.debug(`Start processing translation task ${taskId}`);
-      await this.commandBus.execute<ProcessHTMLTaskCommand>(
-        new ProcessHTMLTaskCommand({ taskId }),
+      const result = await this.commandBus.execute<
+        ProcessHtmlTaskCommand,
+        ProcessHtmlTaskResponse
+      >(new ProcessHtmlTaskCommand({ taskId }));
+
+      await this.translationSegmentRepository.saveMany(result.segments);
+      await this.sensitiveDataMappingRepository.saveMany(
+        result.sensitiveDataMappings,
       );
-    } catch (e) {
-      console.log(e);
+
+      task.originalStructure = result.originalStructure;
+      task.completeProcessing();
+      await this.translationTaskRepository.save(task);
+      task.commit();
+    } catch (error) {
       this.logger.error(
-        `Error during translation task ${taskId} processing: ${JSON.stringify(e)}`,
+        `Error during translation task ${taskId} processing: ${
+          error instanceof Error ? error.message : JSON.stringify(error)
+        }`,
       );
-      throw e;
+      task.handleProcessingError(
+        error instanceof Error ? error.message : String(error),
+      );
+      await this.translationTaskRepository.save(task);
+      task.commit();
+      throw error;
     }
   }
 }

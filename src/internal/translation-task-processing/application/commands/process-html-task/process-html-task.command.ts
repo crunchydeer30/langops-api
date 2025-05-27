@@ -1,11 +1,15 @@
-import { ICommand } from '@nestjs/cqrs';
+import {
+  BaseProcessTaskCommand,
+  BaseProcessTaskCommandParams,
+  BaseProcessTaskResponse,
+} from '../base-process-task';
 
-export interface IProcessHTMLTaskCommandProps {
-  taskId: string;
-}
+export type ProcessHtmlTaskCommandParams = BaseProcessTaskCommandParams;
 
-export type IProcessHTMLTaskCommandResult = object;
+export type ProcessHtmlTaskResponse = BaseProcessTaskResponse;
 
-export class ProcessHTMLTaskCommand implements ICommand {
-  constructor(public readonly props: IProcessHTMLTaskCommandProps) {}
+export class ProcessHtmlTaskCommand extends BaseProcessTaskCommand {
+  constructor(params: ProcessHtmlTaskCommandParams) {
+    super(params);
+  }
 }

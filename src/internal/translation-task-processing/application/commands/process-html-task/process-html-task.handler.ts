@@ -1,106 +1,69 @@
-import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { CommandBus, CommandHandler } from '@nestjs/cqrs';
 import {
-  IProcessHTMLTaskCommandResult,
-  ProcessHTMLTaskCommand,
+  ProcessHtmlTaskCommand,
+  ProcessHtmlTaskResponse,
 } from './process-html-task.command';
-import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure';
+import { BaseProcessTaskHandler } from '../base-process-task';
+import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure/repositories/translation-task.repository';
 import { HTMLParsingService, HTMLValidatorService } from '../../services';
 import { TranslationTask } from 'src/internal/translation-task/domain';
 import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories';
-import { LanguagePair } from 'src/internal/language/domain';
-import { TranslationTaskSegmentRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/translation-task-segment.repository';
-import { SensitiveDataMappingRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/sensitive-data-mapping.repository';
 
-// TODO: FULL REFACTOR
-@CommandHandler(ProcessHTMLTaskCommand)
-export class ProcessHTMLTaskHandler
-  implements
-    ICommandHandler<ProcessHTMLTaskCommand, IProcessHTMLTaskCommandResult>
-{
-  private readonly logger = new Logger(ProcessHTMLTaskHandler.name);
-
+@Injectable()
+@CommandHandler(ProcessHtmlTaskCommand)
+export class ProcessHtmlTaskHandler extends BaseProcessTaskHandler {
   constructor(
-    private readonly translationTaskRepository: TranslationTaskRepository,
-    private readonly eventPublisher: EventPublisher,
+    protected readonly translationTaskRepository: TranslationTaskRepository,
+    protected readonly commandBus: CommandBus,
     private readonly htmlParsingService: HTMLParsingService,
     private readonly htmlValidatorService: HTMLValidatorService,
     private readonly languagePairRepository: LanguagePairRepository,
-    private readonly translationSegmentRepository: TranslationTaskSegmentRepository,
-    private readonly sensitiveDataMappingsRepository: SensitiveDataMappingRepository,
-  ) {}
-
-  async execute({
-    props,
-  }: ProcessHTMLTaskCommand): Promise<IProcessHTMLTaskCommandResult> {
-    const { taskId } = props;
-    const task = await this.translationTaskRepository.findById(taskId);
-
-    try {
-      this.logger.log(`Processing html task ${taskId}`);
-
-      if (!task) {
-        throw new Error(`Failed to process task "${taskId}". Task not found`);
-      }
-      this.eventPublisher.mergeObjectContext(task);
-
-      const languagePair = await this.languagePairRepository.findById(
-        task.languagePairId,
-      );
-      if (!languagePair) {
-        throw new Error(
-          `Failed to process task "${taskId}". Language pair "${task.languagePairId}" not found`,
-        );
-      }
-
-      task.startProcessing();
-      await this.translationTaskRepository.save(task);
-
-      this.validate(task);
-
-      const { segments, originalStructure, sensitiveDataMappings } =
-        await this.parse(task, languagePair);
-      await this.translationSegmentRepository.saveMany(segments);
-      await this.sensitiveDataMappingsRepository.saveMany(
-        sensitiveDataMappings,
-      );
-
-      task.originalStructure = originalStructure;
-      task.completeProcessing();
-      await this.translationTaskRepository.save(task);
-      task.commit();
-
-      return {};
-    } catch (e) {
-      this.logger.error(
-        `Failed to process html task ${taskId}: ${JSON.stringify(e)}`,
-      );
-      if (task) {
-        task.handleProcessingError(JSON.stringify(e));
-        await this.translationTaskRepository.save(task);
-        task.commit();
-      }
-      throw e;
-    }
+  ) {
+    super(translationTaskRepository, commandBus);
   }
 
-  private validate(task: TranslationTask) {
-    try {
-      this.htmlValidatorService.validate(task.originalContent);
-    } catch {
-      throw new Error(`Task ${task.id} failed HTML validation`);
-    }
-  }
+  protected async process(
+    task: TranslationTask,
+  ): Promise<ProcessHtmlTaskResponse> {
+    // 1. Validate HTML
+    this.validate(task.originalContent);
 
-  private async parse(task: TranslationTask, languagePair: LanguagePair) {
-    try {
-      return await this.htmlParsingService.parse(
+    // 2. Get language pair
+    const languagePair = await this.languagePairRepository.findById(
+      task.languagePairId,
+    );
+
+    if (!languagePair) {
+      throw new Error(
+        `Failed to process task "${task.id}". Language pair "${task.languagePairId}" not found`,
+      );
+    }
+
+    // 3. Parse HTML and extract segments
+    const { segments, originalStructure, sensitiveDataMappings } =
+      await this.htmlParsingService.parse(
         task.id,
         task.originalContent,
         languagePair.sourceLanguage.code,
       );
-    } catch {
-      throw new Error(`Failed to parse HTML ${task.id}`);
+
+    // 4. Return results (no persistence here)
+    return {
+      taskId: task.id,
+      segments,
+      sensitiveDataMappings,
+      originalStructure,
+    };
+  }
+
+  private validate(content: string): void {
+    try {
+      this.htmlValidatorService.validate(content);
+    } catch (error) {
+      throw new Error(
+        `HTML validation failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

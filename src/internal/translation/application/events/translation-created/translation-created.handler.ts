@@ -1,4 +1,4 @@
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { EventPublisher, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { TranslationCreatedEvent } from 'src/internal/translation/domain/entities';
 import { TranslationTask } from 'src/internal/translation-task/domain/entities/translation-task.entity';
@@ -19,6 +19,7 @@ export class TranslationCreatedHandler
     private readonly translationRepository: TranslationRepository,
     private readonly translationTaskRepository: TranslationTaskRepository,
     private readonly languagePairRepository: LanguagePairRepository,
+    private readonly eventPublisher: EventPublisher,
   ) {}
 
   async handle(event: TranslationCreatedEvent): Promise<void> {
@@ -28,6 +29,7 @@ export class TranslationCreatedHandler
     );
 
     try {
+      this.logger.debug(`TRNALTION CREATED HANDER`);
       const languagePair =
         await this.languagePairRepository.findByLanguageCodes(
           translation.sourceLanguageCode,
@@ -50,10 +52,13 @@ export class TranslationCreatedHandler
         currentStage: TranslationStage.QUEUED_FOR_PROCESSING,
       });
 
+      this.eventPublisher.mergeObjectContext(task);
+
       await this.translationTaskRepository.save(task);
 
       translation.assignTranslationTask(task.id);
       await this.translationRepository.save(translation);
+      task.commit();
 
       this.logger.log(
         `Created TranslationTask ${task.id} for Translation ${translation.id}`,
