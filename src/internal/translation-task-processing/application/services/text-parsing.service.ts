@@ -12,6 +12,15 @@ export interface TextParsingResult {
 
 @Injectable()
 export class TextParsingService {
+  reconstructPlainTextContent(segments: SegmentDto[]): string {
+    const sorted = segments
+      .slice()
+      .sort((a, b) => a.segmentOrder - b.segmentOrder);
+    return sorted
+      .map((seg) => seg.targetContent ?? seg.sourceContent)
+      .join('\n\n');
+  }
+
   parse(text: string): TextParsingResult {
     const paragraphs = text
       .split(/\r?\n\s*\r?\n/)
