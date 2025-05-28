@@ -343,6 +343,23 @@ export const ERRORS = {
       httpStatus: 400,
     },
   },
+  EVALUATION: {
+    INVALID_STATE: {
+      code: 'EVALUATION_001',
+      message: 'Invalid state transition',
+      httpStatus: 400,
+    },
+    INVALID_GRADE: {
+      code: 'EVALUATION_002',
+      message: 'Invalid grade',
+      httpStatus: 400,
+    },
+    TASK_MUST_BE_SUBMITTED: {
+      code: 'EVALUATION_003',
+      message: 'Task must be submitted before grading',
+      httpStatus: 400,
+    },
+  },
   COMMON: {
     INVALID_STATE: {
       code: 'COMMON_001',

@@ -42,11 +42,19 @@ enum EditorApplicationStatus {
 
 enum EvaluationSetStatus {
   PENDING_TASKS_GENERATION
-  PENDING_EDITOR_SUBMISSION
-  PENDING_REVIEW
-  REVIEWED
+  READY
+  IN_PROGRESS
+  COMPLETED
 
   @@map("evaluation_set_statuses")
+}
+
+enum EvaluationDifficulty {
+  EASY
+  MEDIUM
+  HARD
+
+  @@map("evaluation_difficulties")
 }
 
 enum EvaluationType {
@@ -203,6 +211,7 @@ model LanguagePair {
   editorApplicationLanguagePairs EditorApplicationLanguagePair[]
   evaluationSets                 EvaluationSet[]
   translationTasks               TranslationTask[]
+  sampleEvaluationContents       SampleEvaluationContent[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -284,10 +293,11 @@ model TranslationTask {
   editorAssignedAt  DateTime? @map("editor_assigned_at")
   editorCompletedAt DateTime? @map("editor_completed_at")
 
-  assignedAt  DateTime? @map("assigned_at")
-  completedAt DateTime? @map("completed_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  assignedAt      DateTime?        @map("assigned_at")
+  completedAt     DateTime?        @map("completed_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  evaluationTasks EvaluationTask[]
 
   @@map("translation_tasks")
 }
@@ -386,6 +396,10 @@ model EvaluationTask {
   order                Int
   rating               Int?
   seniorEditorFeedback String? @map("senior_editor_feedback")
+  editedContent        String? @map("edited_content")
+
+  translationTaskId String?          @map("translation_task_id") @db.Uuid
+  translationTask   TranslationTask? @relation(fields: [translationTaskId], references: [id], onDelete: Cascade)
 
   evaluationSetId String        @map("evaluation_set_id") @db.Uuid
   evaluationSet   EvaluationSet @relation(fields: [evaluationSetId], references: [id], onDelete: Cascade)
@@ -411,4 +425,19 @@ model SensitiveDataMapping {
 
   @@unique([translationTaskId, tokenIdentifier])
   @@map("sensitive_data_mappings")
+}
+
+model SampleEvaluationContent {
+  id         String              @id @default(uuid()) @db.Uuid
+  content    String              @map("content") @db.Text
+  formatType TranslationTaskType @map("format_type")
+
+  languagePairId String       @map("language_pair_id") @db.Uuid
+  languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([languagePairId])
+  @@map("sample_evaluation_contents")
 }
