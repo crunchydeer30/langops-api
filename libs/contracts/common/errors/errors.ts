@@ -359,6 +359,11 @@ export const ERRORS = {
       message: 'Task must be submitted before grading',
       httpStatus: 400,
     },
+    INVALID_RATING: {
+      code: 'EVALUATION_004',
+      message: 'Average rating must be between 1 and 5',
+      httpStatus: 400,
+    },
   },
   COMMON: {
     INVALID_STATE: {

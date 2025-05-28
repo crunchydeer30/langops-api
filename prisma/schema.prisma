@@ -45,6 +45,7 @@ enum EvaluationSetStatus {
   READY
   IN_PROGRESS
   COMPLETED
+  ERROR
 
   @@map("evaluation_set_statuses")
 }

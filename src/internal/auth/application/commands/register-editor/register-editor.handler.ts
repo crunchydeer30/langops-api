@@ -69,7 +69,6 @@ export class RegisterEditorHandler
 
     application.markRegistrationTokenAsUsed(editor.id);
 
-    // Fetch all language pairs requested in the application
     const languagePairs = await this.languagePairRepository.findManyById(
       application.languagePairIds,
     );
@@ -78,7 +77,6 @@ export class RegisterEditorHandler
       `Creating editor language pairs for ${languagePairs.length} language pairs`,
     );
 
-    // Create editor language pairs for each language pair
     const editorLanguagePairs = languagePairs.map((languagePair) => {
       return EditorLanguagePair.create({
         editorId: editor.id,
