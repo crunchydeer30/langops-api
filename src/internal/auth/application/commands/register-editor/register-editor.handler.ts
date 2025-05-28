@@ -9,6 +9,9 @@ import { DomainException } from '@common/exceptions';
 import { ERRORS } from '@libs/contracts/common';
 import { Editor } from 'src/internal/editor/domain/entities/editor.entity';
 import { EditorRepository } from 'src/internal/editor/infrastructure';
+import { EditorLanguagePairRepository } from 'src/internal/editor/infrastructure/repositories/editor-language-pair.repository';
+import { EditorLanguagePair } from 'src/internal/editor/domain/entities/editor-language-pair.entity';
+import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories/language-pair.repository';
 import { JwtService } from '@nestjs/jwt';
 import {
   JwtPayload,
@@ -24,6 +27,8 @@ export class RegisterEditorHandler
   constructor(
     private readonly editorApplicationRepository: EditorApplicationRepository,
     private readonly editorRepository: EditorRepository,
+    private readonly editorLanguagePairRepository: EditorLanguagePairRepository,
+    private readonly languagePairRepository: LanguagePairRepository,
     private readonly jwtService: JwtService,
     private readonly publisher: EventPublisher,
   ) {}
@@ -64,7 +69,25 @@ export class RegisterEditorHandler
 
     application.markRegistrationTokenAsUsed(editor.id);
 
+    // Fetch all language pairs requested in the application
+    const languagePairs = await this.languagePairRepository.findManyById(
+      application.languagePairIds,
+    );
+
+    this.logger.log(
+      `Creating editor language pairs for ${languagePairs.length} language pairs`,
+    );
+
+    // Create editor language pairs for each language pair
+    const editorLanguagePairs = languagePairs.map((languagePair) => {
+      return EditorLanguagePair.create({
+        editorId: editor.id,
+        languagePairId: languagePair.id,
+      });
+    });
+
     await this.editorRepository.save(editor);
+    await this.editorLanguagePairRepository.saveMany(editorLanguagePairs);
     await this.editorApplicationRepository.save(application);
 
     this.logger.log(`Publishing events for new editor with ID: ${editor.id}`);

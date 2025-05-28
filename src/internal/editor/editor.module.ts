@@ -14,6 +14,6 @@ import { EditorLanguagePairRepository } from './infrastructure/repositories/edit
     EditorLanguagePairMapper,
     EditorLanguagePairRepository,
   ],
-  exports: [EditorRepository],
+  exports: [EditorRepository, EditorLanguagePairRepository],
 })
 export class EditorModule {}

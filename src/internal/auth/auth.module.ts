@@ -12,6 +12,7 @@ import { AuthControllers } from './application/controllers';
 import { StaffModule } from '../staff/staff.module';
 import { EditorModule } from '../editor/editor.module';
 import { EditorApplicationModule } from '../editor-application/editor-application.module';
+import { LanguageModule } from '../language/language.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { EditorApplicationModule } from '../editor-application/editor-applicatio
     EditorModule,
     EditorApplicationModule,
     StaffModule,
+    LanguageModule,
   ],
   controllers: [...AuthControllers],
   providers: [AuthService, JwtStrategy, ...AuthCommandHandlers],
