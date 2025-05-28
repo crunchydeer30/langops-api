@@ -93,6 +93,21 @@ export class LanguagePairRepository implements ILanguagePairRepository {
     );
   }
 
+  async findAcceptingEditors(): Promise<LanguagePair[]> {
+    const languagePairs = await this.prisma.languagePair.findMany({
+      where: {
+        isAcceptingEditors: true,
+      },
+      include: {
+        sourceLanguage: true,
+        targetLanguage: true,
+      },
+    });
+    return languagePairs.map((languagePair) =>
+      this.mapper.toDomain(languagePair),
+    );
+  }
+
   async save(languagePair: LanguagePair): Promise<LanguagePair> {
     const data = this.mapper.toPersistence(languagePair);
 

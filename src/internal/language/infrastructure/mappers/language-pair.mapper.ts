@@ -24,6 +24,7 @@ export class LanguagePairMapper {
         code: prismaLanguagePair.targetLanguage.code,
         name: prismaLanguagePair.targetLanguage.name,
       },
+      isAcceptingEditors: prismaLanguagePair.isAcceptingEditors,
       createdAt: prismaLanguagePair.createdAt,
       updatedAt: prismaLanguagePair.updatedAt,
     });
@@ -33,11 +34,13 @@ export class LanguagePairMapper {
     id: string;
     sourceLanguageCode: string;
     targetLanguageCode: string;
+    isAcceptingEditors: boolean;
   } {
     return {
       id: languagePair.id,
       sourceLanguageCode: languagePair.sourceLanguageCode,
       targetLanguageCode: languagePair.targetLanguageCode,
+      isAcceptingEditors: languagePair.isAcceptingEditors,
     };
   }
 }

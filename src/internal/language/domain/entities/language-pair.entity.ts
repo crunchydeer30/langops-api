@@ -1,5 +1,6 @@
 import { AggregateRoot } from '@nestjs/cqrs';
 import { v4 as uuidv4 } from 'uuid';
+import { Logger } from '@nestjs/common';
 
 export interface ILanguagePair {
   id: string;
@@ -13,6 +14,7 @@ export interface ILanguagePair {
     code: string;
     name: string;
   };
+  isAcceptingEditors: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +26,8 @@ export interface ILanguagePairCreateArgs {
 }
 
 export class LanguagePair extends AggregateRoot implements ILanguagePair {
+  private readonly logger = new Logger(LanguagePair.name);
+
   public id: string;
   public sourceLanguageCode: string;
   public targetLanguageCode: string;
@@ -35,6 +39,7 @@ export class LanguagePair extends AggregateRoot implements ILanguagePair {
     code: string;
     name: string;
   };
+  public isAcceptingEditors: boolean;
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -63,10 +68,41 @@ export class LanguagePair extends AggregateRoot implements ILanguagePair {
         code: args.targetLanguageCode,
         name: '',
       },
+      isAcceptingEditors: false,
       createdAt: now,
       updatedAt: now,
     };
 
     return new LanguagePair(languagePairProps);
+  }
+
+  public startAcceptingEditors(): void {
+    if (this.isAcceptingEditors) {
+      this.logger.log(`Language pair ${this.id} is already accepting editors`);
+      return;
+    }
+
+    this.isAcceptingEditors = true;
+    this.updatedAt = new Date();
+
+    this.logger.log(
+      `Language pair ${this.id} (${this.sourceLanguageCode}-${this.targetLanguageCode}) is now accepting editors`,
+    );
+  }
+
+  public stopAcceptingEditors(): void {
+    if (!this.isAcceptingEditors) {
+      this.logger.log(
+        `Language pair ${this.id} is already not accepting editors`,
+      );
+      return;
+    }
+
+    this.isAcceptingEditors = false;
+    this.updatedAt = new Date();
+
+    this.logger.log(
+      `Language pair ${this.id} (${this.sourceLanguageCode}-${this.targetLanguageCode}) is no longer accepting editors`,
+    );
   }
 }
