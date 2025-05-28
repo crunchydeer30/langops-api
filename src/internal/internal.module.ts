@@ -10,7 +10,6 @@ import { TranslationTaskModule } from './translation-task/translation-task.modul
 import { TranslationTaskProcessingModule } from './translation-task-processing/translation-task-processing.module';
 import { MachineTranslationModule } from './machine-translation/machine-translation.module';
 import { TranslationModule } from './translation/translation.module';
-import { SampleEvaluationContentModule } from './sample-evaluation-content/sample-evaluation-content.module';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { SampleEvaluationContentModule } from './sample-evaluation-content/sampl
     EvaluationModule,
     LanguageModule,
     MachineTranslationModule,
-    SampleEvaluationContentModule,
     StaffModule,
     TranslationModule,
     TranslationTaskModule,

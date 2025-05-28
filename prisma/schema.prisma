@@ -213,7 +213,6 @@ model LanguagePair {
   editorApplicationLanguagePairs EditorApplicationLanguagePair[]
   evaluationSets                 EvaluationSet[]
   translationTasks               TranslationTask[]
-  sampleEvaluationContents       SampleEvaluationContent[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -427,19 +426,4 @@ model SensitiveDataMapping {
 
   @@unique([translationTaskId, tokenIdentifier])
   @@map("sensitive_data_mappings")
-}
-
-model SampleEvaluationContent {
-  id         String              @id @default(uuid()) @db.Uuid
-  content    String              @map("content") @db.Text
-  formatType TranslationTaskType @map("format_type")
-
-  languagePairId String       @map("language_pair_id") @db.Uuid
-  languagePair   LanguagePair @relation(fields: [languagePairId], references: [id])
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([languagePairId])
-  @@map("sample_evaluation_contents")
 }
