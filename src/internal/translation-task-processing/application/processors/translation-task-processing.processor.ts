@@ -8,16 +8,20 @@ import {
   ProcessHtmlTaskCommand,
   ProcessHtmlTaskResponse,
 } from '../commands/process-html-task/process-html-task.command';
+import {
+  ProcessTextTaskCommand,
+  ProcessTextTaskResponse,
+} from '../commands/process-text-task/process-text-task.command';
+import {
+  ProcessXliffTaskCommand,
+  ProcessXliffTaskResponse,
+} from '../commands/process-xliff-task';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure/repositories/translation-task.repository';
 import { TranslationTaskSegmentRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/translation-task-segment.repository';
 import { SensitiveDataMappingRepository } from 'src/internal/translation-task-processing/infrastructure/repositories/sensitive-data-mapping.repository';
 import { EventPublisher } from '@nestjs/cqrs';
 import { TranslationTaskSegment } from '../../domain/entities/translation-task-segment.entity';
 import { SensitiveDataMapping } from '../../domain/entities/sensitive-data-mapping.entity';
-import {
-  ProcessXliffTaskCommand,
-  ProcessXliffTaskResponse,
-} from '../commands/process-xliff-task';
 
 @Processor(TRANSLATION_TASK_PROCESSING_QUEUE, {})
 export class TranslationTaskProcessingProcessor extends WorkerHost {
@@ -36,10 +40,13 @@ export class TranslationTaskProcessingProcessor extends WorkerHost {
   async process(
     job: Job<{ taskId: string; taskType: TranslationTaskType }, any, string>,
   ): Promise<void> {
-    await this.handleProcessing(job.data.taskId);
+    await this.handleProcessing(job.data.taskId, job.data.taskType);
   }
 
-  private async handleProcessing(taskId: string) {
+  private async handleProcessing(
+    taskId: string,
+    taskType: TranslationTaskType,
+  ) {
     const task = await this.translationTaskRepository.findById(taskId);
     if (!task) throw new Error(`Task ${taskId} not found`);
 
@@ -50,10 +57,33 @@ export class TranslationTaskProcessingProcessor extends WorkerHost {
     task.commit();
 
     try {
-      const result = await this.commandBus.execute<
-        ProcessXliffTaskCommand,
-        ProcessXliffTaskResponse
-      >(new ProcessXliffTaskCommand({ taskId }));
+      // delegate processing based on task type
+      let result:
+        | ProcessHtmlTaskResponse
+        | ProcessTextTaskResponse
+        | ProcessXliffTaskResponse;
+      switch (taskType) {
+        case TranslationTaskType.PLAIN_TEXT:
+          result = await this.commandBus.execute<
+            ProcessTextTaskCommand,
+            ProcessTextTaskResponse
+          >(new ProcessTextTaskCommand({ taskId }));
+          break;
+        case TranslationTaskType.HTML:
+          result = await this.commandBus.execute<
+            ProcessHtmlTaskCommand,
+            ProcessHtmlTaskResponse
+          >(new ProcessHtmlTaskCommand({ taskId }));
+          break;
+        case TranslationTaskType.XLIFF:
+          result = await this.commandBus.execute<
+            ProcessXliffTaskCommand,
+            ProcessXliffTaskResponse
+          >(new ProcessXliffTaskCommand({ taskId }));
+          break;
+        default:
+          throw new Error(`Unsupported task type: ${taskType}`);
+      }
 
       const segments = result.segmentArgs.map((args) => {
         return TranslationTaskSegment.create({

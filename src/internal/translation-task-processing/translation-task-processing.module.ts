@@ -15,8 +15,10 @@ import {
   HTMLValidatorService,
   XliffParsingService,
 } from './application/services';
+import { TextParsingService } from './application/services/text-parsing.service';
 import { TranslationTaskProcessingProcessor } from './application/processors';
 import { TranslationTaskProcessingCommandHandlers } from './application/commands';
+import { TextParsingController } from './application/controllers/text-parsing.controller';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { TranslationTaskProcessingCommandHandlers } from './application/commands
     TranslationTaskModule,
     LanguageModule,
   ],
+  controllers: [TextParsingController],
   providers: [
     ...TranslationTaskProcessingEventHandlers,
     ...TranslationTaskProcessingCommandHandlers,
@@ -36,6 +39,7 @@ import { TranslationTaskProcessingCommandHandlers } from './application/commands
     HTMLValidatorService,
     ContentAnonymizationService,
     XliffParsingService,
+    TextParsingService,
 
     TranslationTaskSegmentMapper,
     TranslationTaskSegmentRepository,
