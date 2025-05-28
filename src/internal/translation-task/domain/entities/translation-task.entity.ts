@@ -33,6 +33,7 @@ export interface ITranslationTask {
   editorId?: string | null;
   wordCount: number;
   estimatedDurationSecs?: number | null;
+  evaluationSetId?: string | null;
 
   editorAssignedAt?: Date | null;
   editorCompletedAt?: Date | null;
@@ -55,6 +56,7 @@ export interface ITranslationTaskCreateArgs {
   currentStage?: TranslationStage;
   status?: TranslationTaskStatus;
   editorId?: string | null;
+  evaluationSetId?: string | null;
 
   wordCount?: number;
   estimatedDurationSecs?: number | null;
@@ -79,6 +81,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
   public editorId?: string | null;
   public wordCount: number;
   public estimatedDurationSecs?: number | null;
+  public evaluationSetId?: string | null;
 
   public editorAssignedAt?: Date | null;
   public editorCompletedAt?: Date | null;
@@ -115,6 +118,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       editorId: args.editorId ?? null,
       wordCount: args.wordCount ?? 0,
       estimatedDurationSecs: args.estimatedDurationSecs ?? null,
+      evaluationSetId: args.evaluationSetId ?? null,
       editorAssignedAt: args.editorAssignedAt ?? null,
       editorCompletedAt: args.editorCompletedAt ?? null,
       assignedAt: args.assignedAt ?? null,

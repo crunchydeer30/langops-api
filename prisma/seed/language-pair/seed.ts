@@ -14,11 +14,13 @@ export async function seedLanguagePairs(prisma: Prisma.TransactionClient) {
         update: {
           sourceLanguageCode: languagePair.source_language_code,
           targetLanguageCode: languagePair.target_language_code,
+          isAcceptingEditors: languagePair.is_accepting_new_editors,
         },
         create: {
           id: languagePair.id,
           sourceLanguageCode: languagePair.source_language_code,
           targetLanguageCode: languagePair.target_language_code,
+          isAcceptingEditors: languagePair.is_accepting_new_editors,
         },
       });
 

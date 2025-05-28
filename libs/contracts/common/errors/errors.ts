@@ -178,6 +178,11 @@ export const ERRORS = {
       message: 'One or more language pairs not found',
       httpStatus: 404,
     },
+    NOT_ACCEPTING_EDITORS: {
+      code: 'LANGUAGE_PAIR_003',
+      message: 'Language pair is not accepting new editors at this time',
+      httpStatus: 400,
+    },
   },
   LANGUAGE: {
     NOT_FOUND: {
@@ -362,6 +367,11 @@ export const ERRORS = {
     INVALID_RATING: {
       code: 'EVALUATION_004',
       message: 'Average rating must be between 1 and 5',
+      httpStatus: 400,
+    },
+    EDITOR_NOT_ELIGIBLE_FOR_EVALUATION: {
+      code: 'EVALUATION_005',
+      message: 'Editor is not eligible for evaluation in this language pair',
       httpStatus: 400,
     },
   },
