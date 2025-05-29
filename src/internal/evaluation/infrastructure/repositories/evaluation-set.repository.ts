@@ -262,7 +262,7 @@ export class EvaluationSetRepository implements IEvaluationSetRepository {
       languagePairId: specificLanguagePairId
         ? specificLanguagePairId
         : { in: languagePairIds },
-      evaluatorId: null, // Only get sets that haven't been claimed yet
+      evaluatorId: null,
     };
 
     const evaluationSets = await this.prisma.evaluationSet.findMany({

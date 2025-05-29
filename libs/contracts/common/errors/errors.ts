@@ -394,6 +394,21 @@ export const ERRORS = {
       message: 'Senior editor is not qualified for this language pair',
       httpStatus: 403,
     },
+    ALREADY_ASSIGNED: {
+      code: 'EVALUATION_007',
+      message: 'Evaluation set is already assigned to a reviewer',
+      httpStatus: 409,
+    },
+    NOT_FOUND: {
+      code: 'EVALUATION_008',
+      message: 'Evaluation set not found',
+      httpStatus: 404,
+    },
+    EVALUATION_ALREADY_STARTED: {
+      code: 'EVALUATION_009',
+      message: 'Evaluation set already started',
+      httpStatus: 409,
+    },
   },
   COMMON: {
     INVALID_STATE: {

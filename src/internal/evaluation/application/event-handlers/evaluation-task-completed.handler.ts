@@ -18,11 +18,6 @@ export class EvaluationTaskCompletedHandler
   async handle(event: EvaluationTaskCompletedEvent): Promise<void> {
     const { taskId } = event.payload;
 
-    this.logger.log(
-      `[EVENT HANDLER] Handling EvaluationTaskCompletedEvent for task ${taskId}`,
-    );
-
-    // Log the event payload for debugging
     this.logger.debug(`Event payload: ${JSON.stringify(event.payload)}`);
 
     const evaluationTask =

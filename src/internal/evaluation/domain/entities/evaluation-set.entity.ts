@@ -8,6 +8,7 @@ import {
   EvaluationSetCreatedEvent,
   EvaluationSetCompletedEvent,
   EvaluationSetStatusChangedEvent,
+  EvaluationSetReviewerAssignedEvent,
 } from '../events';
 
 export interface IEvaluationSet {
@@ -129,5 +130,37 @@ export class EvaluationSet extends AggregateRoot implements IEvaluationSet {
     );
 
     this.logger.log(`Evaluation set ${this.id} marked as ready for review`);
+  }
+
+  public assignReviewer(reviewerId: string): void {
+    if (this.status !== EvaluationSetStatus.READY_FOR_REVIEW) {
+      throw new DomainException(ERRORS.EVALUATION.INVALID_STATE);
+    }
+
+    if (this.evaluatorId) {
+      throw new DomainException(ERRORS.EVALUATION.ALREADY_ASSIGNED);
+    }
+
+    this.evaluatorId = reviewerId;
+    this.status = EvaluationSetStatus.REVIEWING;
+    this.updatedAt = new Date();
+
+    this.apply(
+      new EvaluationSetReviewerAssignedEvent({
+        evaluationSetId: this.id,
+        reviewerId: this.evaluatorId,
+      }),
+    );
+
+    this.apply(
+      new EvaluationSetStatusChangedEvent({
+        evaluationSetId: this.id,
+        status: this.status,
+      }),
+    );
+
+    this.logger.log(
+      `Reviewer ${reviewerId} assigned to evaluation set ${this.id}`,
+    );
   }
 }
