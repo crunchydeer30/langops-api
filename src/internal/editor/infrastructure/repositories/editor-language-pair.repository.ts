@@ -3,7 +3,10 @@ import { PrismaService } from '../../../../infrastructure/database/prisma/prisma
 import { IEditorLanguagePairRepository } from '../../domain/ports/editor-language-pair.repository.interface';
 import { EditorLanguagePair } from '../../domain/entities/editor-language-pair.entity';
 import { EditorLanguagePairMapper } from '../mappers/editor-language-pair.mapper';
-import { EditorLanguagePairQualificationStatus } from '@prisma/client';
+import {
+  EditorLanguagePairQualificationStatus,
+  EditorRole,
+} from '@prisma/client';
 
 @Injectable()
 export class EditorLanguagePairRepository
@@ -85,6 +88,26 @@ export class EditorLanguagePairRepository
         });
       }
     });
+  }
+
+  async findQualifiedByEditorAndRole(
+    editorId: string,
+    role: EditorRole,
+  ): Promise<EditorLanguagePair[]> {
+    const editorLanguagePairs = await this.prisma.editorLanguagePair.findMany({
+      where: {
+        editorId,
+        qualificationStatus: EditorLanguagePairQualificationStatus.QUALIFIED,
+        editor: {
+          role,
+        },
+      },
+      include: {
+        languagePair: true,
+      },
+    });
+
+    return editorLanguagePairs.map((pair) => this.mapper.toDomain(pair));
   }
 
   async updateQualificationStatus(

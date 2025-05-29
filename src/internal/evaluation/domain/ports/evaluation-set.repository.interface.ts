@@ -17,4 +17,8 @@ export interface IEvaluationSetRepository {
     evaluatorId?: string | null,
     limit?: number,
   ): Promise<EvaluationSet>;
+  findPendingReviewSets(
+    languagePairIds: string[],
+    specificLanguagePairId?: string,
+  ): Promise<EvaluationSet[]>;
 }

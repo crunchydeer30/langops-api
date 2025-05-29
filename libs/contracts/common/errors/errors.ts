@@ -389,6 +389,11 @@ export const ERRORS = {
       message: 'Editor is not eligible for evaluation in this language pair',
       httpStatus: 400,
     },
+    NOT_QUALIFIED_FOR_LANGUAGE_PAIR: {
+      code: 'EVALUATION_006',
+      message: 'Senior editor is not qualified for this language pair',
+      httpStatus: 403,
+    },
   },
   COMMON: {
     INVALID_STATE: {

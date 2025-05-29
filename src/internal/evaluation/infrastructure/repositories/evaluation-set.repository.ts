@@ -248,4 +248,31 @@ export class EvaluationSetRepository implements IEvaluationSetRepository {
 
     return allCompleted;
   }
+
+  async findPendingReviewSets(
+    languagePairIds: string[],
+    specificLanguagePairId?: string,
+  ): Promise<EvaluationSet[]> {
+    this.logger.debug(
+      `Finding pending review sets for language pairs: ${languagePairIds.join(', ')}`,
+    );
+
+    const where = {
+      status: EvaluationSetStatus.READY_FOR_REVIEW,
+      languagePairId: specificLanguagePairId
+        ? specificLanguagePairId
+        : { in: languagePairIds },
+      evaluatorId: null, // Only get sets that haven't been claimed yet
+    };
+
+    const evaluationSets = await this.prisma.evaluationSet.findMany({
+      where,
+      include: {
+        languagePair: true,
+        tasks: true,
+      },
+    });
+
+    return evaluationSets.map((set) => this.mapper.toDomain(set));
+  }
 }

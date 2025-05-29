@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Post,
+  Get,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   EVALUATION_HTTP_CONTROLLER,
@@ -20,6 +22,10 @@ import { GetJWTPayload, Roles } from 'src/internal/auth/application/decorators';
 import { JwtAuthGuard, RolesGuard } from 'src/internal/auth/application/guards';
 import { JwtPayload, UserRole } from 'src/internal/auth/application/interfaces';
 import { InitiateEditorEvaluationCommand } from '../commands/initiate-editor-evaluation';
+import {
+  GetPendingReviewSetsQuery,
+  IGetPendingReviewSetsQueryResponse,
+} from '../queries/get-pending-review-sets/get-pending-review-sets.query';
 import { Logger } from '@nestjs/common';
 
 @ApiTags('evaluation')
@@ -27,7 +33,10 @@ import { Logger } from '@nestjs/common';
 export class EvaluationController {
   private readonly logger = new Logger(EvaluationController.name);
 
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Post(EVALUATION_HTTP_ROUTES.INITIATE_EVALUATION)
   @HttpCode(HttpStatus.CREATED)
@@ -62,5 +71,28 @@ export class EvaluationController {
     );
 
     return result;
+  }
+
+  @Get(EVALUATION_HTTP_ROUTES.PENDING_REVIEW)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.EDITOR)
+  @ApiOperation({
+    summary: 'Get evaluation sets pending review for senior editor',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of evaluation sets pending review',
+  })
+  async getPendingReviewSets(
+    @Query('languagePairId') languagePairId: string,
+    @GetJWTPayload() jwtPayload: JwtPayload,
+  ): Promise<IGetPendingReviewSetsQueryResponse[]> {
+    const query = new GetPendingReviewSetsQuery({
+      editorId: jwtPayload.id,
+      languagePairId,
+    });
+
+    return this.queryBus.execute(query);
   }
 }

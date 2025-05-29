@@ -14,6 +14,7 @@ import { EditorModule } from '../editor/editor.module';
 import { LanguageModule } from '../language/language.module';
 import { TranslationTaskModule } from '../translation-task/translation-task.module';
 import { EvaluationEventHandlers } from './application/event-handlers';
+import { EvaluationQueryHandlers } from './application/queries';
 
 @Module({
   imports: [CqrsModule, EditorModule, LanguageModule, TranslationTaskModule],
@@ -24,6 +25,7 @@ import { EvaluationEventHandlers } from './application/event-handlers';
     EvaluationSetRepository,
     EvaluationSetMapper,
     ...EvaluationCommandHandlers,
+    ...EvaluationQueryHandlers,
     ...EvaluationEventHandlers,
   ],
   exports: [EvaluationTaskRepository, EvaluationSetRepository],

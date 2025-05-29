@@ -1,4 +1,5 @@
 import { EditorLanguagePair } from '../entities/editor-language-pair.entity';
+import { EditorRole } from '@prisma/client';
 
 export interface IEditorLanguagePairRepository {
   findById(id: string): Promise<EditorLanguagePair | null>;
@@ -8,6 +9,10 @@ export interface IEditorLanguagePairRepository {
   ): Promise<EditorLanguagePair | null>;
   findByEditor(editorId: string): Promise<EditorLanguagePair[]>;
   findByLanguagePair(languagePairId: string): Promise<EditorLanguagePair[]>;
+  findQualifiedByEditorAndRole(
+    editorId: string,
+    role: EditorRole,
+  ): Promise<EditorLanguagePair[]>;
   save(editorLanguagePair: EditorLanguagePair): Promise<void>;
   saveMany(editorLanguagePairs: EditorLanguagePair[]): Promise<void>;
 }
