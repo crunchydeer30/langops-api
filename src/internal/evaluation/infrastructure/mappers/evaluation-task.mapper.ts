@@ -15,7 +15,6 @@ export class EvaluationTaskMapper {
       seniorEditorFeedback: model.seniorEditorFeedback,
       evaluationSetId: model.evaluationSetId,
       translationTaskId: model.translationTaskId,
-      editedContent: model.editedContent,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
     };
@@ -32,14 +31,12 @@ export class EvaluationTaskMapper {
       seniorEditorFeedback,
       evaluationSetId,
       translationTaskId,
-      editedContent,
     } = task;
 
     return {
       order,
       rating,
       seniorEditorFeedback,
-      editedContent,
       evaluationSet: { connect: { id: evaluationSetId } },
       ...(translationTaskId && {
         translationTask: { connect: { id: translationTaskId } },
@@ -57,7 +54,6 @@ export class EvaluationTaskMapper {
       seniorEditorFeedback,
       evaluationSetId,
       translationTaskId,
-      editedContent,
     } = task;
 
     return {
@@ -65,7 +61,6 @@ export class EvaluationTaskMapper {
       order,
       rating,
       seniorEditorFeedback,
-      editedContent,
       evaluationSet: { connect: { id: evaluationSetId } },
       ...(translationTaskId && {
         translationTask: { connect: { id: translationTaskId } },

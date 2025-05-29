@@ -26,6 +26,7 @@ export class TranslationTaskMapper {
       completedAt: model.completedAt,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
+      isEvaluationTask: model.isEvaluationTask,
     };
 
     return TranslationTask.reconstitute(taskProps);
@@ -44,6 +45,7 @@ export class TranslationTaskMapper {
       editorId,
       assignedAt,
       completedAt,
+      isEvaluationTask,
     } = task;
 
     return {
@@ -56,6 +58,7 @@ export class TranslationTaskMapper {
       ...(editorId && { editor: { connect: { id: editorId } } }),
       assignedAt,
       completedAt,
+      isEvaluationTask,
     };
   }
 
@@ -73,6 +76,7 @@ export class TranslationTaskMapper {
       editorId,
       assignedAt,
       completedAt,
+      isEvaluationTask,
     } = task;
 
     return {
@@ -86,6 +90,7 @@ export class TranslationTaskMapper {
       ...(editorId && { editor: { connect: { id: editorId } } }),
       assignedAt,
       completedAt,
+      isEvaluationTask,
     };
   }
 }

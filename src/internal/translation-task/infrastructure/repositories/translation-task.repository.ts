@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ITranslationTaskRepository } from '../../domain/ports/translation-task.repository.interface';
 import { TranslationTask } from '../../domain/entities/translation-task.entity';
 import { TranslationTaskMapper } from '../mappers/translation-task.mapper';
@@ -6,6 +6,8 @@ import { PrismaService } from '../../../../infrastructure/database/prisma/prisma
 
 @Injectable()
 export class TranslationTaskRepository implements ITranslationTaskRepository {
+  private readonly logger = new Logger(TranslationTaskRepository.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly mapper: TranslationTaskMapper,

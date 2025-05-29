@@ -41,11 +41,8 @@ enum EditorApplicationStatus {
 }
 
 enum EvaluationSetStatus {
-  PENDING_TASKS_GENERATION
-  READY
   IN_PROGRESS
   COMPLETED
-  ERROR
 
   @@map("evaluation_set_statuses")
 }
@@ -294,6 +291,8 @@ model TranslationTask {
   editorAssignedAt  DateTime? @map("editor_assigned_at")
   editorCompletedAt DateTime? @map("editor_completed_at")
 
+  isEvaluationTask Boolean @default(false) @map("is_evaluation_task")
+
   assignedAt      DateTime?        @map("assigned_at")
   completedAt     DateTime?        @map("completed_at")
   createdAt       DateTime         @default(now()) @map("created_at")
@@ -369,7 +368,7 @@ model EditorApplicationLanguagePair {
 model EvaluationSet {
   id            String              @id @default(uuid()) @db.Uuid
   type          EvaluationType      @map("type")
-  status        EvaluationSetStatus @default(PENDING_TASKS_GENERATION) @map("status")
+  status        EvaluationSetStatus @map("status")
   averageRating Float?              @map("average_rating")
 
   editorId       String       @map("editor_id") @db.Uuid
@@ -397,7 +396,6 @@ model EvaluationTask {
   order                Int
   rating               Int?
   seniorEditorFeedback String? @map("senior_editor_feedback")
-  editedContent        String? @map("edited_content")
 
   translationTaskId String?          @map("translation_task_id") @db.Uuid
   translationTask   TranslationTask? @relation(fields: [translationTaskId], references: [id], onDelete: Cascade)

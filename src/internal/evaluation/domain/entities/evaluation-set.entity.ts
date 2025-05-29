@@ -62,7 +62,7 @@ export class EvaluationSet extends AggregateRoot implements IEvaluationSet {
     const evaluationSet = new EvaluationSet({
       id,
       type: args.type,
-      status: EvaluationSetStatus.PENDING_TASKS_GENERATION,
+      status: EvaluationSetStatus.IN_PROGRESS,
       editorId: args.editorId,
       languagePairId: args.languagePairId,
       evaluatorId: args.evaluatorId || null,
@@ -88,42 +88,6 @@ export class EvaluationSet extends AggregateRoot implements IEvaluationSet {
     return evaluationSet;
   }
 
-  public markAsReady(): void {
-    if (this.status !== EvaluationSetStatus.PENDING_TASKS_GENERATION) {
-      throw new DomainException(ERRORS.EVALUATION.INVALID_STATE);
-    }
-
-    this.status = EvaluationSetStatus.READY;
-    this.updatedAt = new Date();
-
-    this.apply(
-      new EvaluationSetStatusChangedEvent({
-        evaluationSetId: this.id,
-        status: this.status,
-      }),
-    );
-
-    this.logger.log(`Evaluation set ${this.id} marked as ready`);
-  }
-
-  public markAsInProgress(): void {
-    if (this.status !== EvaluationSetStatus.READY) {
-      throw new DomainException(ERRORS.EVALUATION.INVALID_STATE);
-    }
-
-    this.status = EvaluationSetStatus.IN_PROGRESS;
-    this.updatedAt = new Date();
-
-    this.apply(
-      new EvaluationSetStatusChangedEvent({
-        evaluationSetId: this.id,
-        status: this.status,
-      }),
-    );
-
-    this.logger.log(`Evaluation set ${this.id} marked as in progress`);
-  }
-
   public markAsCompleted(averageRating: number): void {
     if (this.status !== EvaluationSetStatus.IN_PROGRESS) {
       throw new DomainException(ERRORS.EVALUATION.INVALID_STATE);
@@ -147,19 +111,5 @@ export class EvaluationSet extends AggregateRoot implements IEvaluationSet {
     this.logger.log(
       `Evaluation set ${this.id} marked as completed with average rating ${this.averageRating}`,
     );
-  }
-
-  public markAsError(): void {
-    this.status = EvaluationSetStatus.ERROR;
-    this.updatedAt = new Date();
-
-    this.apply(
-      new EvaluationSetStatusChangedEvent({
-        evaluationSetId: this.id,
-        status: this.status,
-      }),
-    );
-
-    this.logger.log(`Evaluation set ${this.id} marked as error`);
   }
 }

@@ -3,10 +3,7 @@ import { Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
-import {
-  EvaluationTaskSubmittedEvent,
-  EvaluationTaskGradedEvent,
-} from '../events';
+import { EvaluationTaskGradedEvent } from '../events';
 
 export interface IEvaluationTask {
   id: string;
@@ -36,7 +33,6 @@ export class EvaluationTask extends AggregateRoot implements IEvaluationTask {
   public seniorEditorFeedback?: string | null;
   public evaluationSetId: string;
   public translationTaskId?: string | null;
-  public editedContent?: string | null;
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -68,36 +64,7 @@ export class EvaluationTask extends AggregateRoot implements IEvaluationTask {
     return task;
   }
 
-  public submitEdits(editedContent: string): void {
-    if (this.rating) {
-      throw new DomainException(
-        ERRORS.EVALUATION.INVALID_STATE,
-        'Cannot submit edits for a task that has already been graded',
-      );
-    }
-
-    this.editedContent = editedContent;
-    this.updatedAt = new Date();
-
-    this.apply(
-      new EvaluationTaskSubmittedEvent({
-        taskId: this.id,
-        evaluationSetId: this.evaluationSetId,
-        editedContent,
-      }),
-    );
-
-    this.logger.log(`Evaluation task ${this.id} edits submitted`);
-  }
-
   public grade(score: number, feedback?: string): void {
-    if (!this.editedContent) {
-      throw new DomainException(
-        ERRORS.EVALUATION.INVALID_STATE,
-        'Cannot grade a task that has not been submitted',
-      );
-    }
-
     if (score < 1 || score > 5) {
       throw new DomainException(
         ERRORS.EVALUATION.INVALID_GRADE,
