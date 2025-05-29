@@ -13,4 +13,8 @@ export interface ITranslationTaskRepository {
     editorId: string,
     languagePairId: string,
   ): Promise<boolean>;
+  findEvaluationTaskForEditor(
+    editorId: string,
+    languagePairId: string,
+  ): Promise<TranslationTask | null>;
 }

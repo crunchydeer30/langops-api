@@ -5,6 +5,7 @@ import { TranslationTaskMapper } from '../mappers/translation-task.mapper';
 import { PrismaService } from '../../../../infrastructure/database/prisma/prisma.service';
 import {
   EditorLanguagePairQualificationStatus,
+  EvaluationSetStatus,
   TranslationStage,
   TranslationTaskStatus,
 } from '@prisma/client';
@@ -114,5 +115,69 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
       `Found ${count} tasks queued for evaluation in language pair: ${languagePairId}`,
     );
     return count;
+  }
+
+  async findEvaluationTaskForEditor(
+    editorId: string,
+    languagePairId: string,
+  ): Promise<TranslationTask | null> {
+    this.logger.debug(
+      `Finding evaluation task for editor ${editorId} in language pair: ${languagePairId}`,
+    );
+
+    const editorLanguagePair = await this.prisma.editorLanguagePair.findFirst({
+      where: {
+        editorId,
+        languagePairId,
+        qualificationStatus:
+          EditorLanguagePairQualificationStatus.INITIAL_EVALUATION_IN_PROGRESS,
+      },
+      include: {
+        evaluationSet: {
+          where: {
+            status: EvaluationSetStatus.IN_PROGRESS,
+          },
+        },
+      },
+    });
+
+    if (!editorLanguagePair || !editorLanguagePair.evaluationSet) {
+      this.logger.debug(
+        `No active evaluation set found for editor ${editorId} in language pair ${languagePairId}`,
+      );
+      return null;
+    }
+
+    const evaluationSetId = editorLanguagePair.evaluationSet.id;
+
+    const evaluationTask = await this.prisma.evaluationTask.findFirst({
+      where: {
+        evaluationSetId,
+        translationTask: {
+          currentStage: TranslationStage.QUEUED_FOR_EDITING,
+          isEvaluationTask: true,
+        },
+      },
+      include: {
+        translationTask: true,
+      },
+      orderBy: {
+        translationTask: {
+          createdAt: 'asc',
+        },
+      },
+    });
+
+    if (!evaluationTask || !evaluationTask.translationTask) {
+      this.logger.debug(
+        `No available evaluation tasks found for editor ${editorId} in evaluation set ${evaluationSetId}`,
+      );
+      return null;
+    }
+
+    this.logger.debug(
+      `Found evaluation task ${evaluationTask.translationTask.id} for editor ${editorId} in language pair ${languagePairId}`,
+    );
+    return this.mapper.toDomain(evaluationTask.translationTask);
   }
 }

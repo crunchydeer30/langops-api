@@ -240,7 +240,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
 
   public startEditing(editorId: string): void {
     this.ensureStage(TranslationStage.QUEUED_FOR_EDITING, 'start editing');
-    this.ensureStatus(TranslationTaskStatus.NEW, 'start editing');
 
     this.editorId = editorId;
     this.assignedAt = new Date();

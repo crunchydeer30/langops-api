@@ -1,12 +1,14 @@
 import {
   Controller,
   Get,
+  Post,
+  Body,
   UseGuards,
   HttpCode,
   HttpStatus,
   Param,
 } from '@nestjs/common';
-import { QueryBus } from '@nestjs/cqrs';
+import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   TRANSLATION_TASK_HTTP_CONTROLLER,
@@ -19,18 +21,29 @@ import { Logger } from '@nestjs/common';
 import { GetAvailableTasksResponseDto } from '../dtos/get-available-tasks.dto';
 import { GetAvailableEvaluationTasksResponseDto } from '../dtos/get-available-evaluation-tasks.dto';
 import {
+  PickEvaluationTaskRequestDto,
+  PickEvaluationTaskResponseDto,
+} from '../dtos/pick-evaluation-task.dto';
+import {
   GetAvailableTasksQuery,
   IGetAvailableTasksQueryResponse,
 } from '../queries/get-available-tasks/get-available-tasks.query';
 import { GetAvailableEvaluationTasksQuery } from '../queries/get-available-evaluation-tasks/get-available-evaluation-tasks.query';
 import { IGetAvailableEvaluationTasksQueryResponse } from '../queries/get-available-evaluation-tasks/get-available-evaluation-tasks.query';
+import {
+  IPickEvaluationTaskResponse,
+  PickEvaluationTaskCommand,
+} from '../commands/pick-evaluation-task/pick-evaluation-task.command';
 
 @ApiTags('translation-tasks')
 @Controller(TRANSLATION_TASK_HTTP_CONTROLLER)
 export class TranslationTaskController {
   private readonly logger = new Logger(TranslationTaskController.name);
 
-  constructor(private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   @Get(`${TRANSLATION_TASK_HTTP_ROUTES.AVAILABLE}/:languagePairId`)
   @HttpCode(HttpStatus.OK)
@@ -103,6 +116,43 @@ export class TranslationTaskController {
 
     this.logger.log(
       `Successfully retrieved available evaluation tasks for editor ${jwtPayload.id} in language pair ${languagePairId}`,
+    );
+
+    return result;
+  }
+
+  @Post(TRANSLATION_TASK_HTTP_ROUTES.PICK_EVALUATION)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.EDITOR)
+  @ApiOperation({
+    summary: 'Pick an available evaluation task for an editor',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Evaluation task assigned successfully',
+    type: PickEvaluationTaskResponseDto,
+  })
+  async pickEvaluationTask(
+    @GetJWTPayload() jwtPayload: JwtPayload,
+    @Body() dto: PickEvaluationTaskRequestDto,
+  ): Promise<PickEvaluationTaskResponseDto> {
+    this.logger.log(
+      `Editor ${jwtPayload.id} requesting to pick an evaluation task for language pair ${dto.languagePairId}`,
+    );
+
+    const result = await this.commandBus.execute<
+      PickEvaluationTaskCommand,
+      IPickEvaluationTaskResponse
+    >(
+      new PickEvaluationTaskCommand({
+        editorId: jwtPayload.id,
+        languagePairId: dto.languagePairId,
+      }),
+    );
+
+    this.logger.log(
+      `Successfully assigned evaluation task ${result.id} to editor ${jwtPayload.id}`,
     );
 
     return result;
