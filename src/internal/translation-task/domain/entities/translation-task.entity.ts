@@ -17,13 +17,13 @@ import {
   TaskRejectedEvent,
   TaskCreatedEvent,
   EvaluationTaskCompletedEvent,
-  ProductionTaskCompletedEvent,
 } from '../events';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
 import { TaskContentEditedEvent } from '../events';
 import type { OriginalStructure } from 'src/internal/translation-task-processing/domain/interfaces/original-structure.interface';
+import { ProductionTaskCompletedEvent } from '../events/production-task-completed.event';
 
 export interface ITranslationTask {
   id: string;

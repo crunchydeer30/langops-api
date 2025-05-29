@@ -10,4 +10,3 @@ export * from './task-processing-started.event';
 export * from './task-queued-for-editing.event';
 export * from './task-rejected.event';
 export * from './evaluation-task-completed.event';
-export * from './production-task-completed.event';

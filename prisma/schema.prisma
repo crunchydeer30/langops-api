@@ -39,6 +39,7 @@ enum EditorApplicationStatus {
 
 enum EvaluationSetStatus {
   IN_PROGRESS
+  READY_FOR_REVIEW
   COMPLETED
 
   @@map("evaluation_set_statuses")

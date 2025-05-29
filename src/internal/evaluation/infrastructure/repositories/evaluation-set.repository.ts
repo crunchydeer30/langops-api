@@ -216,4 +216,36 @@ export class EvaluationSetRepository implements IEvaluationSetRepository {
       return this.mapper.toDomain(createdEvaluationSet);
     });
   }
+
+  async areAllTasksCompleted(evaluationSetId: string): Promise<boolean> {
+    this.logger.debug(
+      `Checking if all tasks in evaluation set ${evaluationSetId} are completed`,
+    );
+
+    const totalTaskCount = await this.prisma.evaluationTask.count({
+      where: { evaluationSetId },
+    });
+
+    if (totalTaskCount === 0) {
+      this.logger.debug(`No tasks found for evaluation set ${evaluationSetId}`);
+      return false;
+    }
+
+    const completedTaskCount = await this.prisma.evaluationTask.count({
+      where: {
+        evaluationSetId,
+        translationTask: {
+          status: TranslationTaskStatus.COMPLETED,
+        },
+      },
+    });
+
+    const allCompleted = completedTaskCount === totalTaskCount;
+
+    this.logger.debug(
+      `Evaluation set ${evaluationSetId} has ${completedTaskCount}/${totalTaskCount} tasks completed, all completed: ${allCompleted}`,
+    );
+
+    return allCompleted;
+  }
 }

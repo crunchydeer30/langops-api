@@ -35,4 +35,14 @@ export class EvaluationTaskRepository implements IEvaluationTaskRepository {
       update: this.mapper.toPersistenceForUpdate(task),
     });
   }
+
+  async findByTranslationTaskId(
+    translationTaskId: string,
+  ): Promise<EvaluationTask | null> {
+    const model = await this.prisma.evaluationTask.findUnique({
+      where: { translationTaskId: translationTaskId },
+    });
+    if (!model) return null;
+    return this.mapper.toDomain(model);
+  }
 }

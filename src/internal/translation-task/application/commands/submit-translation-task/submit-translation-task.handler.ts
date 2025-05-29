@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventPublisher, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import {
   ISubmitTranslationTaskResponse,
@@ -19,6 +19,7 @@ export class SubmitTranslationTaskHandler
   constructor(
     private readonly translationTaskRepository: TranslationTaskRepository,
     private readonly contentValidationService: ContentValidationService,
+    private readonly eventPublisher: EventPublisher,
   ) {}
 
   async execute({
@@ -47,6 +48,7 @@ export class SubmitTranslationTaskHandler
     }
 
     const { task } = taskWithSegments;
+    this.eventPublisher.mergeObjectContext(task);
 
     if (task.editorId !== editorId) {
       this.logger.error(
@@ -114,6 +116,7 @@ export class SubmitTranslationTaskHandler
     task.completeTask();
 
     await this.translationTaskRepository.save(task);
+    task.commit();
 
     this.logger.log(
       `Successfully completed translation task ${taskId} by editor ${editorId}`,
