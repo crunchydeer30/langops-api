@@ -45,6 +45,14 @@ export class ContentValidationService {
       return formatTagResult;
     }
 
+    const anonymizedEntitiesResult = this.validateAnonymizedEntities(
+      originalContent,
+      editedContent,
+    );
+    if (!anonymizedEntitiesResult.valid) {
+      return anonymizedEntitiesResult;
+    }
+
     return { valid: true };
   }
 
@@ -187,6 +195,55 @@ export class ContentValidationService {
         return {
           valid: false,
           error: `Format tag ${tag.id} type changed: expected "${tag.type}", got "${editedTag?.type || 'undefined'}"`,
+        };
+      }
+    }
+
+    return { valid: true };
+  }
+
+  private validateAnonymizedEntities(
+    originalContent: string,
+    editedContent: string,
+  ): ValidationResult {
+    const entityRegex = /<([A-Z_]+_\d+)>/g;
+
+    const originalEntities = Array.from(
+      originalContent.matchAll(entityRegex),
+    ).map((match) => match[0]);
+
+    const editedEntities = Array.from(editedContent.matchAll(entityRegex)).map(
+      (match) => match[0],
+    );
+
+    const originalEntityCount = new Map<string, number>();
+    for (const entity of originalEntities) {
+      const count = originalEntityCount.get(entity) || 0;
+      originalEntityCount.set(entity, count + 1);
+    }
+
+    const editedEntityCount = new Map<string, number>();
+    for (const entity of editedEntities) {
+      const count = editedEntityCount.get(entity) || 0;
+      editedEntityCount.set(entity, count + 1);
+    }
+
+    for (const [entity, count] of originalEntityCount.entries()) {
+      const editedCount = editedEntityCount.get(entity) || 0;
+      if (editedCount < count) {
+        return {
+          valid: false,
+          error: `Missing anonymized entity: ${entity} (found ${editedCount}, expected ${count})`,
+        };
+      }
+    }
+
+    for (const [entity, count] of editedEntityCount.entries()) {
+      const originalCount = originalEntityCount.get(entity) || 0;
+      if (count > originalCount) {
+        return {
+          valid: false,
+          error: `Unexpected anonymized entity: ${entity} (found ${count}, expected ${originalCount})`,
         };
       }
     }
