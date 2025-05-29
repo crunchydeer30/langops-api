@@ -5,65 +5,63 @@ import {
   IGetAvailableTasksQueryResponse,
 } from './get-available-tasks.query';
 import { LanguagePairRepository } from 'src/internal/language/infrastructure/repositories/language-pair.repository';
-import { EditorLanguagePairRepository } from 'src/internal/editor/infrastructure/repositories/editor-language-pair.repository';
 import { TranslationTaskRepository } from 'src/internal/translation-task/infrastructure/repositories/translation-task.repository';
+import { DomainException } from '@common/exceptions';
+import { ERRORS } from 'libs/contracts/common/errors/errors';
 
 @QueryHandler(GetAvailableTasksQuery)
 export class GetAvailableTasksHandler
-  implements
-    IQueryHandler<GetAvailableTasksQuery, IGetAvailableTasksQueryResponse>
+  implements IQueryHandler<GetAvailableTasksQuery>
 {
   private readonly logger = new Logger(GetAvailableTasksHandler.name);
 
   constructor(
-    private readonly editorLanguagePairRepository: EditorLanguagePairRepository,
     private readonly languagePairRepository: LanguagePairRepository,
     private readonly translationTaskRepository: TranslationTaskRepository,
   ) {}
 
-  async execute({ props }: GetAvailableTasksQuery): Promise<
-    Array<{
-      languagePairId: string;
-      sourceLanguage: string;
-      targetLanguage: string;
-      availableCount: number;
-    }>
-  > {
-    const { editorId } = props;
-    this.logger.debug(`Getting available tasks for editor: ${editorId}`);
+  async execute({
+    props,
+  }: GetAvailableTasksQuery): Promise<IGetAvailableTasksQueryResponse> {
+    const { editorId, languagePairId } = props;
 
-    const editorLanguagePairs =
-      await this.editorLanguagePairRepository.findByEditor(editorId);
-
-    const result = await Promise.all(
-      editorLanguagePairs.map(async (pair) => {
-        const languagePair = await this.languagePairRepository.findById(
-          pair.languagePairId,
-        );
-        if (!languagePair) {
-          return null;
-        }
-
-        const count =
-          await this.translationTaskRepository.countQueuedForEditing(
-            pair.languagePairId,
-          );
-
-        return {
-          languagePairId: pair.languagePairId,
-          sourceLanguage: languagePair.sourceLanguageCode,
-          targetLanguage: languagePair.targetLanguageCode,
-          availableCount: count,
-        };
-      }),
+    this.logger.log(
+      `Getting available tasks for editor ${editorId} in language pair ${languagePairId}`,
     );
 
-    const filteredResult = result.filter((item) => item !== null);
+    // Find language pair details
+    const languagePair =
+      await this.languagePairRepository.findById(languagePairId);
+    if (!languagePair) {
+      this.logger.error(`Language pair ${languagePairId} not found`);
+      throw new DomainException(ERRORS.LANGUAGE.NOT_FOUND);
+    }
 
-    this.logger.debug(
-      `Found ${filteredResult.length} language pairs with available tasks for editor: ${editorId}`,
-    );
+    // Check if editor is qualified for this language pair
+    const isQualified =
+      await this.translationTaskRepository.isEditorQualifiedForLanguagePair(
+        editorId,
+        languagePairId,
+      );
 
-    return filteredResult;
+    if (!isQualified) {
+      this.logger.warn(
+        `Editor ${editorId} is not qualified for language pair ${languagePairId}`,
+      );
+      throw new DomainException(ERRORS.EDITOR.NOT_QUALIFIED_FOR_LANGUAGE_PAIR);
+    }
+
+    // Get available task count for the language pair
+    const count =
+      await this.translationTaskRepository.countQueuedForEditing(
+        languagePairId,
+      );
+
+    return {
+      languagePairId,
+      sourceLanguage: languagePair.sourceLanguageCode,
+      targetLanguage: languagePair.targetLanguageCode,
+      availableCount: count,
+    };
   }
 }

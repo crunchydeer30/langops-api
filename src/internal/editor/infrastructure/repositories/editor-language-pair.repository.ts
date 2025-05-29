@@ -100,8 +100,7 @@ export class EditorLanguagePairRepository
       data: {
         qualificationStatus: status,
         lastEvaluationAt:
-          status === EditorLanguagePairQualificationStatus.QUALIFIED ||
-          status === EditorLanguagePairQualificationStatus.FAILED
+          status === EditorLanguagePairQualificationStatus.QUALIFIED
             ? new Date()
             : undefined,
       },

@@ -22,10 +22,7 @@ enum EditorRole {
 enum EditorLanguagePairQualificationStatus {
   INITIAL_EVALUATION_REQUIRED
   INITIAL_EVALUATION_IN_PROGRESS
-  REEVALUATION_REQUIRED
-  REEVALUATION_IN_PROGRESS
   QUALIFIED
-  FAILED
 
   @@map("editor_language_pair_qualification_statuses")
 }

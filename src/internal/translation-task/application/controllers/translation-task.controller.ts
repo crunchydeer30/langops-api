@@ -4,6 +4,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Param,
 } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -28,21 +29,25 @@ export class TranslationTaskController {
 
   constructor(private readonly queryBus: QueryBus) {}
 
-  @Get(TRANSLATION_TASK_HTTP_ROUTES.AVAILABLE)
+  @Get(`${TRANSLATION_TASK_HTTP_ROUTES.AVAILABLE}/:languagePairId`)
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.EDITOR)
-  @ApiOperation({ summary: 'Get available translation tasks for an editor' })
+  @ApiOperation({
+    summary:
+      'Get available translation tasks count for an editor in a specific language pair',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Available translation tasks retrieved successfully',
-    type: [GetAvailableTasksResponseDto],
+    description: 'Available translation tasks count retrieved successfully',
+    type: GetAvailableTasksResponseDto,
   })
   async getAvailableTasks(
     @GetJWTPayload() jwtPayload: JwtPayload,
-  ): Promise<GetAvailableTasksResponseDto> {
+    @Param('languagePairId') languagePairId: string,
+  ): Promise<IGetAvailableTasksQueryResponse> {
     this.logger.log(
-      `Editor ${jwtPayload.id} requesting available translation tasks`,
+      `Editor ${jwtPayload.id} requesting available tasks for language pair ${languagePairId}`,
     );
 
     const result = await this.queryBus.execute<
@@ -51,11 +56,12 @@ export class TranslationTaskController {
     >(
       new GetAvailableTasksQuery({
         editorId: jwtPayload.id,
+        languagePairId,
       }),
     );
 
     this.logger.log(
-      `Successfully retrieved available tasks for editor ${jwtPayload.id}`,
+      `Successfully retrieved available tasks for editor ${jwtPayload.id} in language pair ${languagePairId}`,
     );
 
     return result;

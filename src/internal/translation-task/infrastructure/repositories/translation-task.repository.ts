@@ -3,7 +3,11 @@ import { ITranslationTaskRepository } from '../../domain/ports/translation-task.
 import { TranslationTask } from '../../domain/entities/translation-task.entity';
 import { TranslationTaskMapper } from '../mappers/translation-task.mapper';
 import { PrismaService } from '../../../../infrastructure/database/prisma/prisma.service';
-import { TranslationStage, TranslationTaskStatus } from '@prisma/client';
+import {
+  EditorLanguagePairQualificationStatus,
+  TranslationStage,
+  TranslationTaskStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class TranslationTaskRepository implements ITranslationTaskRepository {
@@ -48,5 +52,29 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
       `Found ${count} tasks queued for editing in language pair: ${languagePairId}`,
     );
     return count;
+  }
+
+  async isEditorQualifiedForLanguagePair(
+    editorId: string,
+    languagePairId: string,
+  ): Promise<boolean> {
+    this.logger.debug(
+      `Checking if editor ${editorId} is qualified for language pair: ${languagePairId}`,
+    );
+
+    const editorLanguagePair = await this.prisma.editorLanguagePair.findFirst({
+      where: {
+        editorId,
+        languagePairId,
+        qualificationStatus: EditorLanguagePairQualificationStatus.QUALIFIED,
+      },
+    });
+
+    const isQualified = !!editorLanguagePair;
+    this.logger.debug(
+      `Editor ${editorId} ${isQualified ? 'is' : 'is not'} qualified for language pair ${languagePairId}`,
+    );
+
+    return isQualified;
   }
 }

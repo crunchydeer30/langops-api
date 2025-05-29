@@ -101,6 +101,11 @@ export const ERRORS = {
       message: 'Editor password reset token is either expired or invalid',
       httpStatus: 400,
     },
+    NOT_QUALIFIED_FOR_LANGUAGE_PAIR: {
+      code: 'EDITOR_007',
+      message: 'Editor is not qualified for this language pair',
+      httpStatus: 403,
+    },
   },
   EDITOR_APPLICATION: {
     INVALID_STATUS_TRANSITION: {
