@@ -71,10 +71,48 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
     });
 
     const isQualified = !!editorLanguagePair;
-    this.logger.debug(
-      `Editor ${editorId} ${isQualified ? 'is' : 'is not'} qualified for language pair ${languagePairId}`,
-    );
 
     return isQualified;
+  }
+
+  async isEditorEligibleForEvaluation(
+    editorId: string,
+    languagePairId: string,
+  ): Promise<boolean> {
+    this.logger.debug(
+      `Checking if editor ${editorId} is eligible for evaluation in language pair: ${languagePairId}`,
+    );
+
+    const editorLanguagePair = await this.prisma.editorLanguagePair.findFirst({
+      where: {
+        editorId,
+        languagePairId,
+        qualificationStatus:
+          EditorLanguagePairQualificationStatus.INITIAL_EVALUATION_IN_PROGRESS,
+      },
+    });
+
+    const isEligible = !!editorLanguagePair;
+    return isEligible;
+  }
+
+  async countQueuedForEvaluation(languagePairId: string): Promise<number> {
+    this.logger.debug(
+      `Counting tasks queued for evaluation in language pair: ${languagePairId}`,
+    );
+
+    const count = await this.prisma.translationTask.count({
+      where: {
+        languagePairId,
+        status: TranslationTaskStatus.IN_PROGRESS,
+        currentStage: TranslationStage.QUEUED_FOR_EDITING,
+        isEvaluationTask: true,
+      },
+    });
+
+    this.logger.debug(
+      `Found ${count} tasks queued for evaluation in language pair: ${languagePairId}`,
+    );
+    return count;
   }
 }
