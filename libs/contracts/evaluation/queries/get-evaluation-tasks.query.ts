@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { EVALUATION_HTTP_ROUTES } from '../controllers';
 
 export namespace GetEvaluationTasks {
-  export const ENDPOINT = '/:evaluationId/tasks';
+  export const ENDPOINT = EVALUATION_HTTP_ROUTES.GET_EVALUATION_TASKS;
   export const METHOD = 'GET';
 
   export const RequestSchema = z.object({});
@@ -9,8 +10,9 @@ export namespace GetEvaluationTasks {
 
   export const TaskSchema = z.object({
     id: z.string().uuid(),
-    status: z.enum(['PENDING', 'SUBMITTED', 'GRADED']),
-    submissionDate: z.date().nullable().optional(),
+    rating: z.number().min(1).max(5).nullable(),
+    feedback: z.string().nullable(),
+    submissionDate: z.date().nullable(),
   });
 
   export const ResponseSchema = z.array(TaskSchema);
