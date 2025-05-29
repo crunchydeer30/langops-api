@@ -35,6 +35,11 @@ import {
 import { Logger } from '@nestjs/common';
 import { StartReviewResponseDto } from '../dtos/start-review.dto';
 import { GetEvaluationTasksResponseDto } from '../dtos/ge-evaluation-tasks.dto';
+import { GetEvaluationTaskDetailsResponseDto } from '../dtos/get-evaluation-task-details.dto';
+import {
+  GetEvaluationTaskDetailsQuery,
+  IGetEvaluationTaskDetailsQueryResponse,
+} from '../queries/get-evaluation-task-details/get-evaluation-task-details.query';
 
 @ApiTags('evaluation')
 @Controller(EVALUATION_HTTP_CONTROLLER)
@@ -172,6 +177,45 @@ export class EvaluationController {
 
     this.logger.log(
       `Successfully fetched ${result.length} evaluation tasks for evaluation set ${evaluationId}`,
+    );
+
+    return result;
+  }
+
+  @Get(EVALUATION_HTTP_ROUTES.GET_EVALUATION_TASK_DETAILS)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.EDITOR)
+  @ApiOperation({
+    summary: 'Get evaluation task details for review by a senior editor',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: GetEvaluationTaskDetailsResponseDto,
+    description: 'Evaluation task details including segments',
+  })
+  async getEvaluationTaskDetails(
+    @Param('evaluationId') evaluationId: string,
+    @Param('taskId') taskId: string,
+    @GetJWTPayload() jwtPayload: JwtPayload,
+  ): Promise<GetEvaluationTaskDetailsResponseDto> {
+    this.logger.log(
+      `Fetching evaluation task details for task ${taskId} in evaluation set ${evaluationId} for reviewer ${jwtPayload.id}`,
+    );
+
+    const result = await this.queryBus.execute<
+      GetEvaluationTaskDetailsQuery,
+      IGetEvaluationTaskDetailsQueryResponse
+    >(
+      new GetEvaluationTaskDetailsQuery({
+        evaluationSetId: evaluationId,
+        taskId: taskId,
+        reviewerId: jwtPayload.id,
+      }),
+    );
+
+    this.logger.log(
+      `Successfully fetched details for evaluation task ${taskId} with ${result.segments.length} segments`,
     );
 
     return result;

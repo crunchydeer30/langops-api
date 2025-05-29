@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../infrastructure/database/prisma/prisma.service';
-import { IEvaluationTaskRepository } from '../../domain/ports/evaluation-task.repository.interface';
+import {
+  IEvaluationTaskRepository,
+  IEvaluationTaskWithSegments,
+} from '../../domain/ports/evaluation-task.repository';
 import { EvaluationTask } from '../../domain/entities/evaluation-task.entity';
 import { EvaluationTaskMapper } from '../mappers/evaluation-task.mapper';
+import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 
 @Injectable()
 export class EvaluationTaskRepository implements IEvaluationTaskRepository {
@@ -28,12 +31,13 @@ export class EvaluationTaskRepository implements IEvaluationTaskRepository {
     return models.map((model) => this.mapper.toDomain(model));
   }
 
-  async save(task: EvaluationTask): Promise<void> {
-    await this.prisma.evaluationTask.upsert({
+  async save(task: EvaluationTask): Promise<EvaluationTask> {
+    const model = await this.prisma.evaluationTask.upsert({
       where: { id: task.id },
       create: this.mapper.toPersistenceForCreate(task),
       update: this.mapper.toPersistenceForUpdate(task),
     });
+    return this.mapper.toDomain(model);
   }
 
   async findByTranslationTaskId(
@@ -44,5 +48,51 @@ export class EvaluationTaskRepository implements IEvaluationTaskRepository {
     });
     if (!model) return null;
     return this.mapper.toDomain(model);
+  }
+
+  async findTaskWithSegments(
+    taskId: string,
+    evaluationSetId?: string,
+  ): Promise<IEvaluationTaskWithSegments | null> {
+    const where: any = { id: taskId };
+    if (evaluationSetId) {
+      where.evaluationSetId = evaluationSetId;
+    }
+
+    const model = await this.prisma.evaluationTask.findFirst({
+      where,
+      include: {
+        translationTask: {
+          include: {
+            segments: {
+              orderBy: {
+                segmentOrder: 'asc', // Using segmentOrder from Prisma schema
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!model) return null;
+
+    return {
+      id: model.id,
+      rating: model.rating,
+      seniorEditorFeedback: model.seniorEditorFeedback,
+      evaluationSetId: model.evaluationSetId,
+      translationTaskId: model.translationTaskId,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
+
+      segments:
+        model.translationTask?.segments.map((segment) => ({
+          id: segment.id,
+          sourceSegmentText: segment.sourceContent,
+          machineTranslatedText: segment.machineTranslatedContent,
+          editedTranslatedText: segment.editedContent,
+          order: segment.segmentOrder,
+        })) || [],
+    } as IEvaluationTaskWithSegments;
   }
 }
