@@ -16,10 +16,13 @@ import {
   TaskQueuedForEditingEvent,
   TaskRejectedEvent,
   TaskCreatedEvent,
+  EvaluationTaskCompletedEvent,
+  ProductionTaskCompletedEvent,
 } from '../events';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
+import { TaskContentEditedEvent } from '../events';
 import type { OriginalStructure } from 'src/internal/translation-task-processing/domain/interfaces/original-structure.interface';
 
 export interface ITranslationTask {
@@ -33,7 +36,6 @@ export interface ITranslationTask {
   editorId?: string | null;
   wordCount: number;
   estimatedDurationSecs?: number | null;
-  evaluationSetId?: string | null;
   isEvaluationTask: boolean;
 
   editorAssignedAt?: Date | null;
@@ -57,7 +59,6 @@ export interface ITranslationTaskCreateArgs {
   currentStage?: TranslationStage;
   status?: TranslationTaskStatus;
   editorId?: string | null;
-  evaluationSetId?: string | null;
   isEvaluationTask?: boolean;
 
   wordCount?: number;
@@ -83,7 +84,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
   public editorId?: string | null;
   public wordCount: number;
   public estimatedDurationSecs?: number | null;
-  public evaluationSetId?: string | null;
   public isEvaluationTask: boolean;
 
   public editorAssignedAt?: Date | null;
@@ -121,7 +121,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       editorId: args.editorId ?? null,
       wordCount: args.wordCount ?? 0,
       estimatedDurationSecs: args.estimatedDurationSecs ?? null,
-      evaluationSetId: args.evaluationSetId ?? null,
       isEvaluationTask: args.isEvaluationTask ?? false,
       editorAssignedAt: args.editorAssignedAt ?? null,
       editorCompletedAt: args.editorCompletedAt ?? null,
@@ -274,6 +273,24 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
         previousStage: TranslationStage.EDITING,
       }),
     );
+
+    if (this.isEvaluationTask) {
+      this.apply(
+        new EvaluationTaskCompletedEvent({
+          taskId: this.id,
+          editorId: this.editorId!,
+        }),
+      );
+    } else if (this.orderId) {
+      this.apply(
+        new ProductionTaskCompletedEvent({
+          taskId: this.id,
+          orderId: this.orderId,
+          editorId: this.editorId!,
+          segmentCount: 0,
+        }),
+      );
+    }
   }
 
   public rejectTask(reason: string): void {
@@ -318,6 +335,29 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       new TaskCanceledEvent({
         taskId: this.id,
         cancellationReason: reason,
+      }),
+    );
+  }
+
+  /**
+   * Set edited content for segments in this task
+   * Used when editor submits their edits
+   */
+  public setEditedContent(
+    segmentEdits: Array<{ segmentId: string; editedContent: string }>,
+  ): void {
+    this.ensureStage(TranslationStage.EDITING, 'set edited content');
+    this.ensureStatus(TranslationTaskStatus.IN_PROGRESS, 'set edited content');
+
+    if (!this.editorId) {
+      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_ASSIGNED_TO_EDITOR);
+    }
+
+    this.apply(
+      new TaskContentEditedEvent({
+        taskId: this.id,
+        editorId: this.editorId,
+        segmentCount: segmentEdits.length,
       }),
     );
   }

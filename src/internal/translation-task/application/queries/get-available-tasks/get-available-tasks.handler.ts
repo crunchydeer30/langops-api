@@ -29,7 +29,6 @@ export class GetAvailableTasksHandler
       `Getting available tasks for editor ${editorId} in language pair ${languagePairId}`,
     );
 
-    // Find language pair details
     const languagePair =
       await this.languagePairRepository.findById(languagePairId);
     if (!languagePair) {
@@ -37,7 +36,6 @@ export class GetAvailableTasksHandler
       throw new DomainException(ERRORS.LANGUAGE.NOT_FOUND);
     }
 
-    // Check if editor is qualified for this language pair
     const isQualified =
       await this.translationTaskRepository.isEditorQualifiedForLanguagePair(
         editorId,
@@ -51,7 +49,6 @@ export class GetAvailableTasksHandler
       throw new DomainException(ERRORS.EDITOR.NOT_QUALIFIED_FOR_LANGUAGE_PAIR);
     }
 
-    // Get available task count for the language pair
     const count =
       await this.translationTaskRepository.countQueuedForEditing(
         languagePairId,

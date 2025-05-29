@@ -11,7 +11,6 @@ export interface SensitiveDataMappingDto {
   originalValue: string;
 }
 
-// Extended segment that includes anonymized content
 export interface AnonymizedSegmentDto extends SegmentDto {
   anonymizedContent: string;
 }

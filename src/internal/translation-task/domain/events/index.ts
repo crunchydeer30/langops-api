@@ -1,5 +1,6 @@
 export * from './task-canceled.event';
 export * from './task-completed.event';
+export * from './task-content-edited.event';
 export * from './task-created.event';
 export * from './task-editing-started.event';
 export * from './task-mt-started.event';
@@ -8,3 +9,5 @@ export * from './task-parsing-error.event';
 export * from './task-processing-started.event';
 export * from './task-queued-for-editing.event';
 export * from './task-rejected.event';
+export * from './evaluation-task-completed.event';
+export * from './production-task-completed.event';

@@ -21,9 +21,9 @@ export namespace PickEvaluationTaskCommand {
       z.object({
         segmentId: z.string().uuid(),
         segmentOrder: z.number().int().positive(),
-        segmentType: z.string(), // ContentSegmentType as string
-        anonymizedContent: z.string().nullable(), // With <ph/> and <g/> tags
-        machineTranslatedContent: z.string().nullable(), // With same placeholders
+        segmentType: z.string(),
+        anonymizedContent: z.string().nullable(),
+        machineTranslatedContent: z.string().nullable(),
       }),
     ),
   });

@@ -57,7 +57,6 @@ export class TranslationTaskProcessingProcessor extends WorkerHost {
     task.commit();
 
     try {
-      // delegate processing based on task type
       let result:
         | ProcessHtmlTaskResponse
         | ProcessTextTaskResponse

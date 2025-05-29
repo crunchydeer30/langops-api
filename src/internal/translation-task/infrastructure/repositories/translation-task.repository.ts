@@ -35,6 +35,26 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
     });
   }
 
+  async saveSegmentEdits(
+    taskId: string,
+    segmentEdits: Array<{ segmentId: string; editedContent: string }>,
+  ): Promise<void> {
+    this.logger.debug(
+      `Saving edited content for ${segmentEdits.length} segments in task ${taskId}`,
+    );
+
+    for (const edit of segmentEdits) {
+      await this.prisma.translationTaskSegment.update({
+        where: { id: edit.segmentId },
+        data: { editedContent: edit.editedContent },
+      });
+    }
+
+    this.logger.debug(
+      `Successfully saved edited content for ${segmentEdits.length} segments in task ${taskId}`,
+    );
+  }
+
   async countQueuedForEditing(languagePairId: string): Promise<number> {
     this.logger.debug(
       `Counting tasks queued for editing in language pair: ${languagePairId}`,

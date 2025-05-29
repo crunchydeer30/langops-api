@@ -213,7 +213,6 @@ export class EvaluationSetRepository implements IEvaluationSetRepository {
         `Successfully created evaluation set with ${existingTasks.length} tasks`,
       );
 
-      // Return the domain entity
       return this.mapper.toDomain(createdEvaluationSet);
     });
   }

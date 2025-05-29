@@ -29,7 +29,6 @@ export class ProcessXliffTaskHandler extends BaseProcessTaskHandler {
   protected async process(
     task: TranslationTask,
   ): Promise<ProcessXliffTaskResponse> {
-    // Validate and fetch language pair
     const languagePair = await this.languagePairRepository.findById(
       task.languagePairId,
     );

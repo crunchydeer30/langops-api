@@ -22,7 +22,6 @@ export abstract class BaseProcessTaskHandler
     const { taskId } = command.params;
 
     try {
-      // Fetch task - this is common for all processors
       const task = await this.translationTaskRepository.findById(taskId);
       if (!task) {
         throw new Error(`Failed to process task "${taskId}". Task not found`);
@@ -30,7 +29,6 @@ export abstract class BaseProcessTaskHandler
 
       this.logger.log(`Processing task ${taskId}`);
 
-      // Call the abstract method that concrete implementations will provide
       return await this.process(task);
     } catch (error) {
       this.logger.error(
@@ -40,6 +38,5 @@ export abstract class BaseProcessTaskHandler
     }
   }
 
-  // This is what concrete strategies will implement
   protected abstract process(task: any): Promise<BaseProcessTaskResponse>;
 }

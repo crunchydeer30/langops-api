@@ -4,21 +4,25 @@ import {
   Post,
   Body,
   UseGuards,
+  Param,
   HttpCode,
   HttpStatus,
-  Param,
 } from '@nestjs/common';
 import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-  TRANSLATION_TASK_HTTP_CONTROLLER,
   TRANSLATION_TASK_HTTP_ROUTES,
+  TRANSLATION_TASK_HTTP_CONTROLLER,
 } from 'libs/contracts/translation-task/controllers/translation-task.http.routes';
 import { GetJWTPayload, Roles } from 'src/internal/auth/application/decorators';
 import { JwtAuthGuard, RolesGuard } from 'src/internal/auth/application/guards';
 import { JwtPayload, UserRole } from 'src/internal/auth/application/interfaces';
 import { Logger } from '@nestjs/common';
 import { GetAvailableTasksResponseDto } from '../dtos/get-available-tasks.dto';
+import {
+  SubmitTranslationTaskRequestDto,
+  SubmitTranslationTaskResponseDto,
+} from '../dtos/submit-translation-task.dto';
 import { GetAvailableEvaluationTasksResponseDto } from '../dtos/get-available-evaluation-tasks.dto';
 import {
   PickEvaluationTaskRequestDto,
@@ -34,7 +38,10 @@ import {
   IPickEvaluationTaskResponse,
   PickEvaluationTaskCommand,
 } from '../commands/pick-evaluation-task/pick-evaluation-task.command';
-
+import {
+  SubmitTranslationTaskCommand,
+  ISubmitTranslationTaskResponse,
+} from '../commands/submit-translation-task/submit-translation-task.command';
 @ApiTags('translation-tasks')
 @Controller(TRANSLATION_TASK_HTTP_CONTROLLER)
 export class TranslationTaskController {
@@ -153,6 +160,45 @@ export class TranslationTaskController {
 
     this.logger.log(
       `Successfully assigned evaluation task ${result.translationTaskId} to editor ${jwtPayload.id}`,
+    );
+
+    return result;
+  }
+
+  @Post(TRANSLATION_TASK_HTTP_ROUTES.SUBMIT)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.EDITOR)
+  @ApiOperation({
+    summary: 'Submit edited content for a translation task',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Translation task submitted successfully',
+    type: SubmitTranslationTaskResponseDto,
+  })
+  async submitTranslationTask(
+    @GetJWTPayload() jwtPayload: JwtPayload,
+    @Param('taskId') taskId: string,
+    @Body() dto: SubmitTranslationTaskRequestDto,
+  ): Promise<SubmitTranslationTaskResponseDto> {
+    this.logger.log(
+      `Editor ${jwtPayload.id} submitting translation task ${taskId} with ${dto.segments.length} segments`,
+    );
+
+    const result = await this.commandBus.execute<
+      SubmitTranslationTaskCommand,
+      ISubmitTranslationTaskResponse
+    >(
+      new SubmitTranslationTaskCommand({
+        editorId: jwtPayload.id,
+        taskId,
+        segments: dto.segments,
+      }),
+    );
+
+    this.logger.log(
+      `Successfully submitted translation task ${result.translationTaskId}`,
     );
 
     return result;

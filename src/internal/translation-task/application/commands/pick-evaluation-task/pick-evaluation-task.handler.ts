@@ -62,11 +62,9 @@ export class PickEvaluationTaskHandler
       throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
     }
 
-    // Start editing the task
     task.startEditing(editorId);
     await this.translationTaskRepository.save(task);
 
-    // Fetch the task with its segments
     const taskWithSegments =
       await this.translationTaskRepository.findTaskWithSegments(task.id);
     if (!taskWithSegments) {
@@ -78,7 +76,6 @@ export class PickEvaluationTaskHandler
       `Evaluation task ${task.id} with ${taskWithSegments.segments.length} segments assigned to editor ${editorId} successfully`,
     );
 
-    // Map segments to the expected format
     const mappedSegments = taskWithSegments.segments.map((segment) => ({
       segmentId: segment.id,
       segmentOrder: segment.segmentOrder,

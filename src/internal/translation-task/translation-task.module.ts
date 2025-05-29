@@ -9,6 +9,7 @@ import { TranslationTaskController } from './application/controllers';
 import { EditorModule } from '../editor/editor.module';
 import { LanguageModule } from '../language/language.module';
 import { TranslationTasksQueryHandlers } from './application/queries';
+import { ContentValidationService } from './domain/services/content-validation.service';
 
 @Module({
   imports: [CqrsModule, EditorModule, LanguageModule],
@@ -18,6 +19,7 @@ import { TranslationTasksQueryHandlers } from './application/queries';
     ...TranslationTasksQueryHandlers,
     TranslationTaskMapper,
     TranslationTaskRepository,
+    ContentValidationService,
   ],
   exports: [TranslationTaskRepository],
 })

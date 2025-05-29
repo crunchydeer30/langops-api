@@ -29,7 +29,6 @@ export class GetAvailableEvaluationTasksHandler
       `Getting available evaluation tasks for editor ${editorId} in language pair ${languagePairId}`,
     );
 
-    // Find language pair details
     const languagePair =
       await this.languagePairRepository.findById(languagePairId);
     if (!languagePair) {

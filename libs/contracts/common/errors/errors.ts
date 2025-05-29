@@ -265,6 +265,16 @@ export const ERRORS = {
         'Translation task is not assigned to this editor or does not require editor completion',
       httpStatus: 403,
     },
+    NOT_ASSIGNED: {
+      code: 'TRANSLATION_TASK_011',
+      message: 'Translation task is not assigned to this editor',
+      httpStatus: 403,
+    },
+    VALIDATION_FAILED: {
+      code: 'TRANSLATION_TASK_012',
+      message: 'Validation of edited content failed',
+      httpStatus: 400,
+    },
     INVALID_STATUS_FOR_ASSIGNMENT: {
       code: 'TRANSLATION_TASK_009',
       message:

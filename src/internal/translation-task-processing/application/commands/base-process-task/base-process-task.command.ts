@@ -7,7 +7,6 @@ export interface BaseProcessTaskCommandParams {
   taskId: string;
 }
 
-// DTOs for creating domain entities later
 export interface SegmentArgs {
   id: string;
   translationTaskId: string;
