@@ -3,6 +3,7 @@ import { ITranslationTaskRepository } from '../../domain/ports/translation-task.
 import { TranslationTask } from '../../domain/entities/translation-task.entity';
 import { TranslationTaskMapper } from '../mappers/translation-task.mapper';
 import { PrismaService } from '../../../../infrastructure/database/prisma/prisma.service';
+import { TranslationStage, TranslationTaskStatus } from '@prisma/client';
 
 @Injectable()
 export class TranslationTaskRepository implements ITranslationTaskRepository {
@@ -27,5 +28,25 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
       create: this.mapper.toPersistenceForCreate(task),
       update: this.mapper.toPersistenceForUpdate(task),
     });
+  }
+
+  async countQueuedForEditing(languagePairId: string): Promise<number> {
+    this.logger.debug(
+      `Counting tasks queued for editing in language pair: ${languagePairId}`,
+    );
+
+    const count = await this.prisma.translationTask.count({
+      where: {
+        languagePairId,
+        status: TranslationTaskStatus.IN_PROGRESS,
+        currentStage: TranslationStage.QUEUED_FOR_EDITING,
+        isEvaluationTask: false,
+      },
+    });
+
+    this.logger.debug(
+      `Found ${count} tasks queued for editing in language pair: ${languagePairId}`,
+    );
+    return count;
   }
 }
