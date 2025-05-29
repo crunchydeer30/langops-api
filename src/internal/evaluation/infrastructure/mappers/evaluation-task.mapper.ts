@@ -10,7 +10,6 @@ export class EvaluationTaskMapper {
   toDomain(model: EvaluationTaskModel): EvaluationTask {
     const taskProps: IEvaluationTask = {
       id: model.id,
-      order: model.order,
       rating: model.rating,
       seniorEditorFeedback: model.seniorEditorFeedback,
       evaluationSetId: model.evaluationSetId,
@@ -25,16 +24,10 @@ export class EvaluationTaskMapper {
   toPersistenceForUpdate(
     task: EvaluationTask,
   ): Prisma.EvaluationTaskUpdateInput {
-    const {
-      order,
-      rating,
-      seniorEditorFeedback,
-      evaluationSetId,
-      translationTaskId,
-    } = task;
+    const { rating, seniorEditorFeedback, evaluationSetId, translationTaskId } =
+      task;
 
     return {
-      order,
       rating,
       seniorEditorFeedback,
       evaluationSet: { connect: { id: evaluationSetId } },
@@ -49,7 +42,6 @@ export class EvaluationTaskMapper {
   ): Prisma.EvaluationTaskCreateInput {
     const {
       id,
-      order,
       rating,
       seniorEditorFeedback,
       evaluationSetId,
@@ -58,7 +50,6 @@ export class EvaluationTaskMapper {
 
     return {
       id,
-      order,
       rating,
       seniorEditorFeedback,
       evaluationSet: { connect: { id: evaluationSetId } },

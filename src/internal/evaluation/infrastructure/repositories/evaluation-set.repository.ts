@@ -1,9 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EvaluationSet as PrismaEvaluationSet } from '@prisma/client';
+import {
+  EvaluationSet as PrismaEvaluationSet,
+  EvaluationType,
+  EvaluationSetStatus,
+  TranslationTaskStatus,
+  TranslationStage,
+} from '@prisma/client';
 import { EvaluationSet } from '../../domain/entities';
 import { IEvaluationSetRepository } from '../../domain/ports';
 import { EvaluationSetMapper } from '../mappers';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  FormatMetadata,
+  OriginalStructure,
+  TranslationSpecialTokenMap,
+} from 'src/internal/translation-task-processing/domain/interfaces';
 
 @Injectable()
 export class EvaluationSetRepository implements IEvaluationSetRepository {
@@ -91,5 +103,118 @@ export class EvaluationSetRepository implements IEvaluationSetRepository {
 
     this.logger.debug(`Evaluation set ${evaluationSet.id} saved successfully`);
     return this.mapper.toDomain(savedEvaluationSet);
+  }
+
+  async generateInitialEvaluation(
+    evaluationType: EvaluationType,
+    editorId: string,
+    languagePairId: string,
+    editorLanguagePairId?: string | null,
+    evaluatorId?: string | null,
+    limit = 5,
+  ): Promise<EvaluationSet> {
+    this.logger.log(
+      `Generating initial evaluation for editor ${editorId} with language pair ${languagePairId}`,
+    );
+
+    return await this.prisma.$transaction(async (tx) => {
+      const evaluationSetId = uuidv4();
+      const now = new Date();
+
+      const evaluationSetData = {
+        id: evaluationSetId,
+        type: evaluationType,
+        status: EvaluationSetStatus.IN_PROGRESS,
+        editorId,
+        languagePairId,
+        evaluatorId: evaluatorId || null,
+        editorLanguagePairId: editorLanguagePairId || null,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const createdEvaluationSet = await tx.evaluationSet.create({
+        data: evaluationSetData,
+      });
+
+      this.logger.log(`Created evaluation set with ID: ${evaluationSetId}`);
+
+      const existingTasks = await tx.translationTask.findMany({
+        where: {
+          languagePairId,
+          status: TranslationTaskStatus.COMPLETED,
+          isEvaluationTask: false,
+        },
+        orderBy: { completedAt: 'desc' },
+        take: limit,
+        include: {
+          segments: true,
+        },
+      });
+
+      this.logger.log(
+        `Found ${existingTasks.length} tasks to copy for evaluation`,
+      );
+
+      for (const existingTask of existingTasks) {
+        const newTaskId = uuidv4();
+
+        await tx.translationTask.create({
+          data: {
+            id: newTaskId,
+            languagePairId: existingTask.languagePairId,
+            editorId,
+            originalContent: existingTask.originalContent,
+            formatType: existingTask.formatType,
+            originalStructure:
+              existingTask.originalStructure as OriginalStructure,
+            status: TranslationTaskStatus.IN_PROGRESS,
+            currentStage: TranslationStage.QUEUED_FOR_EDITING,
+            wordCount: existingTask.wordCount,
+            editorAssignedAt: now,
+            isEvaluationTask: true,
+          },
+        });
+
+        await tx.evaluationTask.create({
+          data: {
+            id: uuidv4(),
+            evaluationSetId,
+            translationTaskId: newTaskId,
+          },
+        });
+
+        if (existingTask.segments?.length) {
+          for (const segment of existingTask.segments) {
+            await tx.translationTaskSegment.create({
+              data: {
+                id: uuidv4(),
+                translationTaskId: newTaskId,
+                segmentOrder: segment.segmentOrder,
+                segmentType: segment.segmentType,
+                sourceContent: segment.sourceContent,
+                anonymizedContent: segment.anonymizedContent,
+                machineTranslatedContent: segment.machineTranslatedContent,
+                deanonymizedContent: segment.deanonymizedContent,
+                specialTokensMap:
+                  segment.specialTokensMap as TranslationSpecialTokenMap,
+                formatMetadata: segment.formatMetadata as FormatMetadata,
+              },
+            });
+          }
+        }
+
+        this.logger.log(
+          `Created evaluation task for translation task ${newTaskId}`,
+        );
+      }
+
+      this.logger.log(
+        `Successfully created evaluation set with ${existingTasks.length} tasks`,
+      );
+
+      // Return the domain entity
+      return this.mapper.toDomain(createdEvaluationSet);
+    });
   }
 }

@@ -1,13 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database/prisma/prisma.service';
 import { IEditorLanguagePairRepository } from '../../domain/ports/editor-language-pair.repository.interface';
 import { EditorLanguagePair } from '../../domain/entities/editor-language-pair.entity';
 import { EditorLanguagePairMapper } from '../mappers/editor-language-pair.mapper';
+import { EditorLanguagePairQualificationStatus } from '@prisma/client';
 
 @Injectable()
 export class EditorLanguagePairRepository
   implements IEditorLanguagePairRepository
 {
+  private readonly logger = new Logger(EditorLanguagePairRepository.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly mapper: EditorLanguagePairMapper,
@@ -82,5 +85,30 @@ export class EditorLanguagePairRepository
         });
       }
     });
+  }
+
+  async updateQualificationStatus(
+    id: string,
+    status: EditorLanguagePairQualificationStatus,
+  ): Promise<void> {
+    this.logger.log(
+      `Updating qualification status for editor language pair ${id} to ${status}`,
+    );
+
+    await this.prisma.editorLanguagePair.update({
+      where: { id },
+      data: {
+        qualificationStatus: status,
+        lastEvaluationAt:
+          status === EditorLanguagePairQualificationStatus.QUALIFIED ||
+          status === EditorLanguagePairQualificationStatus.FAILED
+            ? new Date()
+            : undefined,
+      },
+    });
+
+    this.logger.log(
+      `Successfully updated qualification status for editor language pair ${id}`,
+    );
   }
 }

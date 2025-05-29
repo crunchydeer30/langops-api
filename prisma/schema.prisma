@@ -393,11 +393,10 @@ model EvaluationSet {
 
 model EvaluationTask {
   id                   String  @id @default(uuid()) @db.Uuid
-  order                Int
   rating               Int?
   seniorEditorFeedback String? @map("senior_editor_feedback")
 
-  translationTaskId String?          @map("translation_task_id") @db.Uuid
+  translationTaskId String           @unique @map("translation_task_id") @db.Uuid
   translationTask   TranslationTask? @relation(fields: [translationTaskId], references: [id], onDelete: Cascade)
 
   evaluationSetId String        @map("evaluation_set_id") @db.Uuid
@@ -406,7 +405,6 @@ model EvaluationTask {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([evaluationSetId, order], name: "uq_evaluation_tasks_set_order")
   @@map("evaluation_tasks")
 }
 

@@ -7,7 +7,6 @@ import { EvaluationTaskGradedEvent } from '../events';
 
 export interface IEvaluationTask {
   id: string;
-  order: number;
   rating?: number | null;
   seniorEditorFeedback?: string | null;
   evaluationSetId: string;
@@ -51,7 +50,6 @@ export class EvaluationTask extends AggregateRoot implements IEvaluationTask {
 
     const task = new EvaluationTask({
       id,
-      order: args.order,
       rating: null,
       seniorEditorFeedback: null,
       evaluationSetId: args.evaluationSetId,

@@ -1,3 +1,4 @@
+import { EvaluationType } from '@prisma/client';
 import { EvaluationSet } from '../entities';
 
 export interface IEvaluationSetRepository {
@@ -8,4 +9,12 @@ export interface IEvaluationSetRepository {
   ): Promise<EvaluationSet[]>;
   findByEditorId(editorId: string): Promise<EvaluationSet[]>;
   save(evaluationSet: EvaluationSet): Promise<EvaluationSet>;
+  generateInitialEvaluation(
+    evaluationType: EvaluationType,
+    editorId: string,
+    languagePairId: string,
+    editorLanguagePairId?: string | null,
+    evaluatorId?: string | null,
+    limit?: number,
+  ): Promise<EvaluationSet>;
 }

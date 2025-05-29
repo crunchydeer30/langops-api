@@ -24,7 +24,6 @@ export class EvaluationTaskRepository implements IEvaluationTaskRepository {
   ): Promise<EvaluationTask[]> {
     const models = await this.prisma.evaluationTask.findMany({
       where: { evaluationSetId },
-      orderBy: { order: 'asc' },
     });
     return models.map((model) => this.mapper.toDomain(model));
   }
