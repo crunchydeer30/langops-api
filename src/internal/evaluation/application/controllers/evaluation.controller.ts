@@ -28,8 +28,13 @@ import {
   GetPendingReviewSetsQuery,
   IGetPendingReviewSetsQueryResponse,
 } from '../queries/get-pending-review-sets/get-pending-review-sets.query';
+import {
+  GetEvaluationTasksQuery,
+  IGetEvaluationTasksQueryResponse,
+} from '../queries/get-evaluation-tasks/get-evaluation-tasks.query';
 import { Logger } from '@nestjs/common';
 import { StartReviewResponseDto } from '../dtos/start-review.dto';
+import { GetEvaluationTasksResponseDto } from '../dtos/evaluation-tasks.dto';
 
 @ApiTags('evaluation')
 @Controller(EVALUATION_HTTP_CONTROLLER)
@@ -131,6 +136,43 @@ export class EvaluationController {
 
     this.logger.log(
       `Successfully started review for evaluation set ${evaluationId} by senior editor ${jwtPayload.id}`,
+    );
+
+    return result;
+  }
+
+  @Get('/:evaluationId/tasks')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.EDITOR)
+  @ApiOperation({
+    summary: 'Get evaluation tasks for review by a senior editor',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: GetEvaluationTasksResponseDto,
+    description: 'List of evaluation tasks for review',
+  })
+  async getEvaluationTasks(
+    @Param('evaluationId') evaluationId: string,
+    @GetJWTPayload() jwtPayload: JwtPayload,
+  ): Promise<IGetEvaluationTasksQueryResponse> {
+    this.logger.log(
+      `Fetching evaluation tasks for evaluation set ${evaluationId} for reviewer ${jwtPayload.id}`,
+    );
+
+    const result = await this.queryBus.execute<
+      GetEvaluationTasksQuery,
+      IGetEvaluationTasksQueryResponse
+    >(
+      new GetEvaluationTasksQuery({
+        evaluationSetId: evaluationId,
+        reviewerId: jwtPayload.id,
+      }),
+    );
+
+    this.logger.log(
+      `Successfully fetched ${result.length} evaluation tasks for evaluation set ${evaluationId}`,
     );
 
     return result;

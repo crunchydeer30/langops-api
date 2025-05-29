@@ -404,6 +404,11 @@ export const ERRORS = {
       message: 'Evaluation set not found',
       httpStatus: 404,
     },
+    NOT_AUTHORIZED: {
+      code: 'EVALUATION_010',
+      message: 'Not authorized to access this evaluation',
+      httpStatus: 403,
+    },
     EVALUATION_ALREADY_STARTED: {
       code: 'EVALUATION_009',
       message: 'Evaluation set already started',
