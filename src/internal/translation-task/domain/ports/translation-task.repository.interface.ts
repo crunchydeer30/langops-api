@@ -17,4 +17,7 @@ export interface ITranslationTaskRepository {
     editorId: string,
     languagePairId: string,
   ): Promise<TranslationTask | null>;
+  findTaskWithSegments(
+    taskId: string,
+  ): Promise<{ task: TranslationTask; segments: any[] } | null>;
 }

@@ -11,15 +11,21 @@ export namespace PickEvaluationTaskCommand {
   export type Request = z.infer<typeof RequestSchema>;
 
   export const ResponseSchema = z.object({
-    id: z.string().uuid(),
+    translationTaskId: z.string().uuid(),
     languagePairId: z.string().uuid(),
     sourceLanguage: z.string(),
     targetLanguage: z.string(),
-    originalContent: z.string(),
-    status: z.string(),
-    currentStage: z.string(),
     isEvaluationTask: z.boolean(),
     wordCount: z.number().int().positive(),
+    segments: z.array(
+      z.object({
+        segmentId: z.string().uuid(),
+        segmentOrder: z.number().int().positive(),
+        segmentType: z.string(), // ContentSegmentType as string
+        anonymizedContent: z.string().nullable(), // With <ph/> and <g/> tags
+        machineTranslatedContent: z.string().nullable(), // With same placeholders
+      }),
+    ),
   });
 
   export type Response = z.infer<typeof ResponseSchema>;

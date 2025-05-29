@@ -152,7 +152,7 @@ export class TranslationTaskController {
     );
 
     this.logger.log(
-      `Successfully assigned evaluation task ${result.id} to editor ${jwtPayload.id}`,
+      `Successfully assigned evaluation task ${result.translationTaskId} to editor ${jwtPayload.id}`,
     );
 
     return result;

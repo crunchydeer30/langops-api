@@ -5,16 +5,22 @@ export interface IPickEvaluationTaskCommandProps {
   languagePairId: string;
 }
 
+export interface ISegmentResponse {
+  segmentId: string;
+  segmentOrder: number;
+  segmentType: string;
+  anonymizedContent: string | null;
+  machineTranslatedContent: string | null;
+}
+
 export interface IPickEvaluationTaskResponse {
-  id: string;
+  translationTaskId: string;
   languagePairId: string;
   sourceLanguage: string;
   targetLanguage: string;
-  originalContent: string;
-  status: string;
-  currentStage: string;
   isEvaluationTask: boolean;
   wordCount: number;
+  segments: ISegmentResponse[];
 }
 
 export class PickEvaluationTaskCommand implements ICommand {

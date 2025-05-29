@@ -62,23 +62,39 @@ export class PickEvaluationTaskHandler
       throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
     }
 
+    // Start editing the task
     task.startEditing(editorId);
     await this.translationTaskRepository.save(task);
 
+    // Fetch the task with its segments
+    const taskWithSegments =
+      await this.translationTaskRepository.findTaskWithSegments(task.id);
+    if (!taskWithSegments) {
+      this.logger.error(`Failed to fetch segments for task ${task.id}`);
+      throw new DomainException(ERRORS.TRANSLATION_TASK.NOT_FOUND);
+    }
+
     this.logger.log(
-      `Evaluation task ${task.id} assigned to editor ${editorId} successfully`,
+      `Evaluation task ${task.id} with ${taskWithSegments.segments.length} segments assigned to editor ${editorId} successfully`,
     );
 
+    // Map segments to the expected format
+    const mappedSegments = taskWithSegments.segments.map((segment) => ({
+      segmentId: segment.id,
+      segmentOrder: segment.segmentOrder,
+      segmentType: segment.segmentType,
+      anonymizedContent: segment.anonymizedContent,
+      machineTranslatedContent: segment.machineTranslatedContent,
+    }));
+
     return {
-      id: task.id,
+      translationTaskId: task.id,
       languagePairId: task.languagePairId,
       sourceLanguage: languagePair.sourceLanguageCode,
       targetLanguage: languagePair.targetLanguageCode,
-      originalContent: task.originalContent,
-      status: task.status,
-      currentStage: task.currentStage,
       isEvaluationTask: task.isEvaluationTask,
       wordCount: task.wordCount,
+      segments: mappedSegments,
     };
   }
 }

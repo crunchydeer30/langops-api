@@ -180,4 +180,50 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
     );
     return this.mapper.toDomain(evaluationTask.translationTask);
   }
+
+  async findTaskWithSegments(taskId: string): Promise<{
+    task: TranslationTask;
+    segments: Array<{
+      id: string;
+      segmentOrder: number;
+      segmentType: string;
+      anonymizedContent: string | null;
+      machineTranslatedContent: string | null;
+    }>;
+  } | null> {
+    this.logger.debug(`Finding task ${taskId} with its segments`);
+
+    const task = await this.prisma.translationTask.findUnique({
+      where: { id: taskId },
+      include: {
+        segments: {
+          orderBy: {
+            segmentOrder: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      this.logger.debug(`Task ${taskId} not found`);
+      return null;
+    }
+
+    this.logger.debug(
+      `Found task ${taskId} with ${task.segments.length} segments`,
+    );
+
+    const mappedSegments = task.segments.map((segment) => ({
+      id: segment.id,
+      segmentOrder: segment.segmentOrder,
+      segmentType: segment.segmentType,
+      anonymizedContent: segment.anonymizedContent,
+      machineTranslatedContent: segment.machineTranslatedContent,
+    }));
+
+    return {
+      task: this.mapper.toDomain(task),
+      segments: mappedSegments,
+    };
+  }
 }
