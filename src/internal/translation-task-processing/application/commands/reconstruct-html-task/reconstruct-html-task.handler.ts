@@ -56,7 +56,7 @@ export class ReconstructHtmlTaskHandler extends BaseReconstructTaskHandler {
               mappings.find((m) => m.tokenIdentifier === match)!.originalValue,
           );
         }
-        return { ...s, sourceContent: content };
+        return { ...s, targetContent: content };
       }),
     );
 
