@@ -37,25 +37,28 @@ export class ReconstructHtmlTaskHandler extends BaseReconstructTaskHandler {
         ? JSON.parse(task.originalStructure)
         : (task.originalStructure as OriginalStructure);
 
-    const mappings = await this.sensitiveDataMappingRepository.findByTaskId(
-      task.id,
+    const processedSegments: SegmentDto[] = await Promise.all(
+      segments.map(async (s) => {
+        const mappings =
+          await this.sensitiveDataMappingRepository.findBySegmentId(s.id);
+        let content = s.targetContent ?? s.sourceContent;
+        if (mappings.length > 0) {
+          content = content.replace(
+            new RegExp(
+              mappings
+                .map((m) =>
+                  m.tokenIdentifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                )
+                .join('|'),
+              'g',
+            ),
+            (match) =>
+              mappings.find((m) => m.tokenIdentifier === match)!.originalValue,
+          );
+        }
+        return { ...s, sourceContent: content };
+      }),
     );
-
-    const processedSegments: SegmentDto[] = segments.map((s) => {
-      const content = (s.targetContent ?? s.sourceContent).replace(
-        new RegExp(
-          mappings
-            .map((m) =>
-              m.tokenIdentifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-            )
-            .join('|'),
-          'g',
-        ),
-        (match) =>
-          mappings.find((m) => m.tokenIdentifier === match)!.originalValue,
-      );
-      return { ...s, sourceContent: content };
-    });
 
     const finalHtml = this.htmlParsingService.reconstructHTMLContent(
       originalStructure,

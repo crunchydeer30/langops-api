@@ -6,6 +6,7 @@ import { SegmentDto } from './html-parsing.service';
 
 export interface SensitiveDataMappingDto {
   id: string;
+  translationSegmentId: string;
   tokenIdentifier: string;
   sensitiveType: string;
   originalValue: string;
@@ -55,6 +56,7 @@ export class ContentAnonymizationService {
           for (const mapping of result.mappings) {
             sensitiveDataMappings.push({
               id: uuidv4(),
+              translationSegmentId: segments[i].id,
               tokenIdentifier: mapping.placeholder,
               sensitiveType: mapping.entity_type,
               originalValue: mapping.original,

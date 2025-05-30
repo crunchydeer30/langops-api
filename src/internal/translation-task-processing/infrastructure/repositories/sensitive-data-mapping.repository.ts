@@ -13,24 +13,24 @@ export class SensitiveDataMappingRepository
     private readonly mapper: SensitiveDataMappingMapper,
   ) {}
 
-  async findByTaskId(taskId: string): Promise<SensitiveDataMapping[]> {
+  async findBySegmentId(segmentId: string): Promise<SensitiveDataMapping[]> {
     const mappings = await this.prisma.sensitiveDataMapping.findMany({
       where: {
-        translationTaskId: taskId,
+        translationSegmentId: segmentId,
       },
     });
 
     return mappings.map((mapping) => this.mapper.toDomain(mapping));
   }
 
-  async findByTaskIdAndToken(
-    taskId: string,
+  async findBySegmentIdAndToken(
+    segmentId: string,
     tokenIdentifier: string,
   ): Promise<SensitiveDataMapping | null> {
     const mapping = await this.prisma.sensitiveDataMapping.findUnique({
       where: {
-        translationTaskId_tokenIdentifier: {
-          translationTaskId: taskId,
+        translationSegmentId_tokenIdentifier: {
+          translationSegmentId: segmentId,
           tokenIdentifier,
         },
       },
@@ -64,10 +64,10 @@ export class SensitiveDataMappingRepository
     );
   }
 
-  async deleteByTaskId(taskId: string): Promise<void> {
+  async deleteBySegmentId(segmentId: string): Promise<void> {
     await this.prisma.sensitiveDataMapping.deleteMany({
       where: {
-        translationTaskId: taskId,
+        translationSegmentId: segmentId,
       },
     });
   }

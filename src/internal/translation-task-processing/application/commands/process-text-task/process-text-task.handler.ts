@@ -60,7 +60,7 @@ export class ProcessTextTaskHandler extends BaseProcessTaskHandler {
     const sensitiveDataMappingArgs =
       anonymizationResult.sensitiveDataMappings.map((m) => ({
         id: m.id,
-        translationTaskId: task.id,
+        translationSegmentId: m.translationSegmentId,
         tokenIdentifier: m.tokenIdentifier,
         sensitiveType: m.sensitiveType,
         originalValue: m.originalValue,

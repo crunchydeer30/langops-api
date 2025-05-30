@@ -283,9 +283,8 @@ model TranslationTask {
   currentStage TranslationStage      @map("current_stage")
   errorMessage String?               @map("error_message")
 
-  translation           Translation?
-  segments              TranslationTaskSegment[]
-  sensitiveDataMappings SensitiveDataMapping[]
+  translation Translation?
+  segments    TranslationTaskSegment[]
 
   editorAssignedAt  DateTime? @map("editor_assigned_at")
   editorCompletedAt DateTime? @map("editor_completed_at")
@@ -318,8 +317,9 @@ model TranslationTaskSegment {
   /// [FormatMetadata]
   formatMetadata   Json? @map("format_metadata") @db.JsonB
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt            DateTime               @default(now()) @map("created_at")
+  updatedAt            DateTime               @updatedAt @map("updated_at")
+  sensitiveDataMapping SensitiveDataMapping[]
 
   @@index([translationTaskId, segmentOrder])
   @@map("translation_task_segments")
@@ -406,9 +406,9 @@ model EvaluationTask {
 }
 
 model SensitiveDataMapping {
-  id                String          @id @default(uuid()) @db.Uuid
-  translationTaskId String          @map("translation_task_id") @db.Uuid
-  translationTask   TranslationTask @relation(fields: [translationTaskId], references: [id], onDelete: Cascade)
+  id                   String                 @id @default(uuid()) @db.Uuid
+  translationSegmentId String                 @map("translation_task_id") @db.Uuid
+  translationSegment   TranslationTaskSegment @relation(fields: [translationSegmentId], references: [id], onDelete: Cascade)
 
   tokenIdentifier String @map("token_identifier")
   sensitiveType   String @map("sensitive_type")
@@ -417,6 +417,6 @@ model SensitiveDataMapping {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([translationTaskId, tokenIdentifier])
+  @@unique([translationSegmentId, tokenIdentifier])
   @@map("sensitive_data_mappings")
 }

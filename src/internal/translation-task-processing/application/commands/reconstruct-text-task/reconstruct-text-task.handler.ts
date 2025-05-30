@@ -38,9 +38,12 @@ export class ReconstructTextTaskHandler extends BaseReconstructTaskHandler {
     const reconstructedText =
       this.textParsingService.reconstructPlainTextContent(segments);
 
-    const mappings = await this.sensitiveDataMappingRepository.findByTaskId(
-      task.id,
+    const mappingsPerSegment = await Promise.all(
+      segments.map((s) =>
+        this.sensitiveDataMappingRepository.findBySegmentId(s.id),
+      ),
     );
+    const mappings = mappingsPerSegment.flat();
 
     if (!mappings.length) {
       this.logger.debug(`No sensitive data mappings found for task ${task.id}`);

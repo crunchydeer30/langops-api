@@ -7,7 +7,7 @@ export class SensitiveDataMappingMapper {
   toDomain(prismaEntity: PrismaSensitiveDataMapping): SensitiveDataMapping {
     return SensitiveDataMapping.reconstitute({
       id: prismaEntity.id,
-      translationTaskId: prismaEntity.translationTaskId,
+      translationSegmentId: prismaEntity.translationSegmentId,
       tokenIdentifier: prismaEntity.tokenIdentifier,
       sensitiveType: prismaEntity.sensitiveType,
       originalValue: prismaEntity.originalValue,
@@ -21,7 +21,7 @@ export class SensitiveDataMappingMapper {
   ): Omit<PrismaSensitiveDataMapping, 'createdAt' | 'updatedAt'> {
     return {
       id: domainEntity.id,
-      translationTaskId: domainEntity.translationTaskId,
+      translationSegmentId: domainEntity.translationSegmentId,
       tokenIdentifier: domainEntity.tokenIdentifier,
       sensitiveType: domainEntity.sensitiveType,
       originalValue: domainEntity.originalValue,

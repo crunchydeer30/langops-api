@@ -21,7 +21,7 @@ export interface SegmentArgs {
 
 export interface SensitiveDataMappingArgs {
   id: string;
-  translationTaskId: string;
+  translationSegmentId: string;
   tokenIdentifier: string;
   sensitiveType: string;
   originalValue: string;

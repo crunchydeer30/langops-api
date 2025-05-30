@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 
 export interface ISensitiveDataMapping {
   id: string;
-  translationTaskId: string;
+  translationSegmentId: string;
   tokenIdentifier: string;
   sensitiveType: string;
   originalValue: string;
@@ -14,7 +14,7 @@ export interface ISensitiveDataMapping {
 
 export interface ISensitiveDataMappingCreateArgs {
   id?: string;
-  translationTaskId: string;
+  translationSegmentId: string;
   tokenIdentifier: string;
   sensitiveType: string;
   originalValue: string;
@@ -27,7 +27,7 @@ export class SensitiveDataMapping
   private logger = new Logger(SensitiveDataMapping.name);
 
   public id: string;
-  public translationTaskId: string;
+  public translationSegmentId: string;
   public tokenIdentifier: string;
   public sensitiveType: string;
   public originalValue: string;
@@ -51,12 +51,16 @@ export class SensitiveDataMapping
     const id = args.id ?? uuidv4();
     const now = new Date();
 
-    const { translationTaskId, tokenIdentifier, sensitiveType, originalValue } =
-      args;
+    const {
+      translationSegmentId,
+      tokenIdentifier,
+      sensitiveType,
+      originalValue,
+    } = args;
 
     const mapping = new SensitiveDataMapping({
       id,
-      translationTaskId,
+      translationSegmentId,
       tokenIdentifier,
       sensitiveType,
       originalValue,
