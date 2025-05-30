@@ -253,7 +253,7 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
       id: string;
       segmentOrder: number;
       segmentType: string;
-      anonymizedContent: string | null;
+      sourceContent: string;
       machineTranslatedContent: string | null;
     }>;
   } | null> {
@@ -283,7 +283,7 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
       id: segment.id,
       segmentOrder: segment.segmentOrder,
       segmentType: segment.segmentType,
-      anonymizedContent: segment.anonymizedContent,
+      sourceContent: segment.sourceContent,
       machineTranslatedContent: segment.machineTranslatedContent,
     }));
 

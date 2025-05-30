@@ -17,6 +17,8 @@ import {
   TaskRejectedEvent,
   TaskCreatedEvent,
   EvaluationTaskCompletedEvent,
+  TaskReconstructionStartedEvent,
+  TaskReconstructionCompletedEvent,
 } from '../events';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
@@ -30,6 +32,7 @@ export interface ITranslationTask {
   originalContent: string;
   type: TranslationTaskType;
   originalStructure?: OriginalStructure | null;
+  finalContent?: string | null;
   currentStage: TranslationStage;
   status: TranslationTaskStatus;
   languagePairId: string;
@@ -55,6 +58,7 @@ export interface ITranslationTaskCreateArgs {
   originalContent: string;
   taskType: TranslationTaskType;
   originalStructure: OriginalStructure | null;
+  finalContent?: string | null;
   languagePairId: string;
   currentStage?: TranslationStage;
   status?: TranslationTaskStatus;
@@ -77,6 +81,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
   public originalContent: string;
   public type: TranslationTaskType;
   public originalStructure?: OriginalStructure | null;
+  public finalContent?: string | null;
   public currentStage: TranslationStage;
   public status: TranslationTaskStatus;
   public orderId: string;
@@ -115,6 +120,7 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       originalContent: args.originalContent,
       type: args.taskType,
       originalStructure: args.originalStructure ?? null,
+      finalContent: args.finalContent ?? null,
       currentStage: args.currentStage ?? TranslationStage.QUEUED_FOR_PROCESSING,
       status: args.status ?? TranslationTaskStatus.NEW,
       languagePairId: args.languagePairId,
@@ -260,13 +266,12 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     this.ensureStage(TranslationStage.EDITING, 'complete task');
     this.ensureStatus(TranslationTaskStatus.IN_PROGRESS, 'complete task');
 
-    this.status = TranslationTaskStatus.COMPLETED;
-    this.currentStage = TranslationStage.COMPLETED;
-    this.completedAt = new Date();
+    this.status = TranslationTaskStatus.IN_PROGRESS;
+    this.currentStage = TranslationStage.RECONSTRUCTING;
     this.editorCompletedAt = new Date();
 
     this.apply(
-      new TaskCompletedEvent({
+      new TaskReconstructionStartedEvent({
         taskId: this.id,
         editorId: this.editorId!,
         previousStatus: TranslationTaskStatus.IN_PROGRESS,
@@ -354,6 +359,39 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
         taskId: this.id,
         editorId: this.editorId,
         segmentCount: segmentEdits.length,
+      }),
+    );
+  }
+
+  public completeReconstruction(finalContent: string): void {
+    this.ensureStage(
+      TranslationStage.RECONSTRUCTING,
+      'complete reconstruction',
+    );
+    this.ensureStatus(
+      TranslationTaskStatus.IN_PROGRESS,
+      'complete reconstruction',
+    );
+
+    this.finalContent = finalContent;
+    this.status = TranslationTaskStatus.COMPLETED;
+    this.currentStage = TranslationStage.COMPLETED;
+    this.completedAt = new Date();
+
+    this.apply(
+      new TaskReconstructionCompletedEvent({
+        taskId: this.id,
+        previousStatus: TranslationTaskStatus.IN_PROGRESS,
+        previousStage: TranslationStage.RECONSTRUCTING,
+      }),
+    );
+
+    this.apply(
+      new TaskCompletedEvent({
+        taskId: this.id,
+        editorId: this.editorId!,
+        previousStatus: TranslationTaskStatus.IN_PROGRESS,
+        previousStage: TranslationStage.RECONSTRUCTING,
       }),
     );
   }

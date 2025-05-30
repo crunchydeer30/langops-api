@@ -17,7 +17,7 @@ export interface IPickTranslationTaskResponse {
     segmentId: string;
     segmentOrder: number;
     segmentType: string;
-    anonymizedContent: string | null;
+    sourceContent: string;
     machineTranslatedContent: string | null;
   }>;
 }
@@ -93,7 +93,7 @@ export class PickTranslationTaskHandler
       segmentId: segment.id,
       segmentOrder: segment.segmentOrder,
       segmentType: segment.segmentType,
-      anonymizedContent: segment.anonymizedContent,
+      sourceContent: segment.sourceContent,
       machineTranslatedContent: segment.machineTranslatedContent,
     }));
 

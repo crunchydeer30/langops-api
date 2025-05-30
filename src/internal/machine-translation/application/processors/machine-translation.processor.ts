@@ -83,7 +83,7 @@ export class MachineTranslationProcessor extends WorkerHost {
       const translationSegments: TranslationSegment[] = segments.map(
         (segment) => ({
           id: segment.id,
-          content: segment.anonymizedContent || segment.sourceContent,
+          content: segment.sourceContent,
           formatMetadata: segment.formatMetadata || undefined,
         }),
       );

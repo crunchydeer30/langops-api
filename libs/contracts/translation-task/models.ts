@@ -12,7 +12,7 @@ export const TranslationTaskPickResponseSchema = z.object({
       segmentId: z.string().uuid(),
       segmentOrder: z.number().int().positive(),
       segmentType: z.string(),
-      anonymizedContent: z.string().nullable(),
+      sourceContent: z.string(),
       machineTranslatedContent: z.string().nullable(),
     }),
   ),

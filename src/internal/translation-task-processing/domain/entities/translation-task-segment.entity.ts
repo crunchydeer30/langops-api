@@ -11,10 +11,8 @@ export interface ITranslationTaskSegment {
   segmentOrder: number;
   segmentType: ContentSegmentType;
   sourceContent: string;
-  anonymizedContent?: string | null;
   machineTranslatedContent?: string | null;
   editedContent?: string | null;
-  deanonymizedContent?: string | null;
   specialTokensMap?: TranslationSpecialTokenMap | null;
   formatMetadata?: FormatMetadata | null;
   createdAt: Date;
@@ -27,10 +25,8 @@ export interface ITranslationTaskSegmentCreateArgs {
   segmentOrder: number;
   segmentType: ContentSegmentType;
   sourceContent: string;
-  anonymizedContent?: string | null;
   machineTranslatedContent?: string | null;
   editedContent?: string | null;
-  deanonymizedContent?: string | null;
   specialTokensMap?: TranslationSpecialTokenMap;
   formatMetadata?: FormatMetadata | null;
 }
@@ -46,10 +42,8 @@ export class TranslationTaskSegment
   public segmentOrder: number;
   public segmentType: ContentSegmentType;
   public sourceContent: string;
-  public anonymizedContent: string | null;
   public machineTranslatedContent: string | null;
   public editedContent: string | null;
-  public deanonymizedContent: string | null;
   public specialTokensMap: TranslationSpecialTokenMap | null;
   public formatMetadata: FormatMetadata | null;
   public createdAt: Date;
@@ -77,10 +71,8 @@ export class TranslationTaskSegment
       segmentOrder,
       segmentType,
       sourceContent,
-      anonymizedContent = null,
       machineTranslatedContent = null,
       editedContent = null,
-      deanonymizedContent = null,
       specialTokensMap = {},
       formatMetadata = null,
     } = args;
@@ -91,10 +83,8 @@ export class TranslationTaskSegment
       segmentOrder,
       segmentType,
       sourceContent,
-      anonymizedContent,
       machineTranslatedContent,
       editedContent,
-      deanonymizedContent,
       specialTokensMap,
       formatMetadata,
       createdAt: now,

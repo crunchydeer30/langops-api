@@ -66,7 +66,7 @@ export class EvaluationTaskRepository implements IEvaluationTaskRepository {
           include: {
             segments: {
               orderBy: {
-                segmentOrder: 'asc', // Using segmentOrder from Prisma schema
+                segmentOrder: 'asc',
               },
             },
           },

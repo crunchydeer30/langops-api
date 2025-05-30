@@ -193,9 +193,7 @@ export class EvaluationSetRepository implements IEvaluationSetRepository {
                 segmentOrder: segment.segmentOrder,
                 segmentType: segment.segmentType,
                 sourceContent: segment.sourceContent,
-                anonymizedContent: segment.anonymizedContent,
                 machineTranslatedContent: segment.machineTranslatedContent,
-                deanonymizedContent: segment.deanonymizedContent,
                 specialTokensMap:
                   segment.specialTokensMap as TranslationSpecialTokenMap,
                 formatMetadata: segment.formatMetadata as FormatMetadata,

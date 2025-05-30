@@ -11,9 +11,7 @@ export interface SensitiveDataMappingDto {
   originalValue: string;
 }
 
-export interface AnonymizedSegmentDto extends SegmentDto {
-  anonymizedContent: string;
-}
+export type AnonymizedSegmentDto = SegmentDto;
 
 export interface AnonymizationResult {
   segments: AnonymizedSegmentDto[];
@@ -36,7 +34,6 @@ export class ContentAnonymizationService {
     const anonymizedSegments: AnonymizedSegmentDto[] = segments.map(
       (segment) => ({
         ...segment,
-        anonymizedContent: '',
       }),
     );
 
@@ -52,7 +49,7 @@ export class ContentAnonymizationService {
       for (let i = 0; i < anonymizationResults.length; i++) {
         const result = anonymizationResults[i];
 
-        anonymizedSegments[i].anonymizedContent = result.anonymized_text;
+        anonymizedSegments[i].sourceContent = result.anonymized_text;
 
         if (result.mappings && result.mappings.length > 0) {
           for (const mapping of result.mappings) {

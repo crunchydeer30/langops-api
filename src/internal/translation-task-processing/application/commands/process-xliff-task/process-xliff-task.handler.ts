@@ -59,7 +59,6 @@ export class ProcessXliffTaskHandler extends BaseProcessTaskHandler {
       segmentOrder: s.segmentOrder,
       segmentType: s.segmentType,
       sourceContent: s.sourceContent,
-      anonymizedContent: s.anonymizedContent,
       specialTokensMap: s.specialTokensMap || undefined,
       formatMetadata: s.formatMetadata || undefined,
     }));

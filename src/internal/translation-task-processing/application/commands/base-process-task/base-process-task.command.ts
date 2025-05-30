@@ -13,10 +13,8 @@ export interface SegmentArgs {
   segmentOrder: number;
   segmentType: ContentSegmentType;
   sourceContent: string;
-  anonymizedContent?: string | null;
   machineTranslatedContent?: string | null;
   editedContent?: string | null;
-  deanonymizedContent?: string | null;
   specialTokensMap?: TranslationSpecialTokenMap | null;
   formatMetadata?: FormatMetadata | null;
 }

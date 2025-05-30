@@ -78,7 +78,7 @@ export class SubmitTranslationTaskHandler
       }
 
       const originalContent =
-        taskSegment.machineTranslatedContent || taskSegment.anonymizedContent;
+        taskSegment.machineTranslatedContent || taskSegment.sourceContent;
 
       if (!originalContent) {
         this.logger.error(

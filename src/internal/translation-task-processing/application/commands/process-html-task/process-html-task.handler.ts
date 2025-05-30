@@ -58,7 +58,6 @@ export class ProcessHtmlTaskHandler extends BaseProcessTaskHandler {
         segmentOrder: segmentDto.segmentOrder,
         segmentType: segmentDto.segmentType,
         sourceContent: segmentDto.sourceContent,
-        anonymizedContent: segmentDto.anonymizedContent,
         specialTokensMap: segmentDto.specialTokensMap || undefined,
         formatMetadata: segmentDto.formatMetadata || undefined,
       }),

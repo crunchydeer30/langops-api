@@ -53,7 +53,6 @@ export class ProcessTextTaskHandler extends BaseProcessTaskHandler {
       segmentOrder: seg.segmentOrder,
       segmentType: seg.segmentType,
       sourceContent: seg.sourceContent,
-      anonymizedContent: seg.anonymizedContent,
       specialTokensMap: seg.specialTokensMap || undefined,
       formatMetadata: seg.formatMetadata || undefined,
     }));

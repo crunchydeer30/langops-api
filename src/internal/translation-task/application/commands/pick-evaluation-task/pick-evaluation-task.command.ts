@@ -9,7 +9,7 @@ export interface ISegmentResponse {
   segmentId: string;
   segmentOrder: number;
   segmentType: string;
-  anonymizedContent: string | null;
+  sourceContent: string;
   machineTranslatedContent: string | null;
 }
 

@@ -77,6 +77,7 @@ enum TranslationStage {
   MACHINE_TRANSLATING
   QUEUED_FOR_EDITING
   EDITING
+  RECONSTRUCTING
   COMPLETED
   CANCELED
 
@@ -276,6 +277,7 @@ model TranslationTask {
   formatType        TranslationTaskType @map("format_type")
   /// [OriginalStructure]
   originalStructure Json?               @map("original_structure") @db.JsonB
+  finalContent      String?             @map("final_content")
 
   status       TranslationTaskStatus
   currentStage TranslationStage      @map("current_stage")
@@ -311,10 +313,8 @@ model TranslationTaskSegment {
   segmentType  ContentSegmentType @map("segment_type")
 
   sourceContent            String  @map("source_content")
-  anonymizedContent        String? @map("anonymized_content")
   machineTranslatedContent String? @map("machine_translated_content")
   editedContent            String? @map("edited_content")
-  deanonymizedContent      String? @map("deanonymized_content")
 
   /// [TranslationSpecialTokenMap]
   specialTokensMap Json? @map("special_tokens_map") @db.JsonB

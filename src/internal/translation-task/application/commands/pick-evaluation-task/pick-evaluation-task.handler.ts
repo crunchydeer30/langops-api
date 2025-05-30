@@ -80,7 +80,7 @@ export class PickEvaluationTaskHandler
       segmentId: segment.id,
       segmentOrder: segment.segmentOrder,
       segmentType: segment.segmentType,
-      anonymizedContent: segment.anonymizedContent,
+      sourceContent: segment.sourceContent,
       machineTranslatedContent: segment.machineTranslatedContent,
     }));
 
