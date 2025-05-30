@@ -23,6 +23,7 @@ export interface SrtFormatMetadata {
 
 export interface PlainTextFormatMetadata {
   paragraph: number;
+  precedingNewlines?: number; // Number of newlines before this paragraph
 }
 
 export type FormatMetadata =

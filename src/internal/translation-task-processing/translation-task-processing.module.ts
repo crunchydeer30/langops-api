@@ -19,6 +19,7 @@ import { TextParsingService } from './application/services/text-parsing.service'
 import { TranslationTaskProcessingProcessor } from './application/processors';
 import { TranslationTaskProcessingCommandHandlers } from './application/commands';
 import { TextParsingController } from './application/controllers/text-parsing.controller';
+import { TaskReconstructionController } from './application/controllers/task-reconstruction.controller';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { TextParsingController } from './application/controllers/text-parsing.co
     TranslationTaskModule,
     LanguageModule,
   ],
-  controllers: [TextParsingController],
+  controllers: [TextParsingController, TaskReconstructionController],
   providers: [
     ...TranslationTaskProcessingEventHandlers,
     ...TranslationTaskProcessingCommandHandlers,
