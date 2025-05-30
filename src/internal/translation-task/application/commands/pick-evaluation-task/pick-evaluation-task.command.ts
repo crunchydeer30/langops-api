@@ -19,7 +19,6 @@ export interface IPickEvaluationTaskResponse {
   sourceLanguage: string;
   targetLanguage: string;
   isEvaluationTask: boolean;
-  wordCount: number;
   segments: ISegmentResponse[];
 }
 

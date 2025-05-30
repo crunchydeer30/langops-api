@@ -32,7 +32,6 @@ export interface SegmentDto {
 
 export interface HtmlParsingResult {
   segments: SegmentDto[];
-  wordCount: number;
   originalStructure: OriginalStructure;
 }
 
@@ -48,15 +47,10 @@ export class HTMLParsingService {
     const { originalStructure, segments } =
       this.parseHTMLContent(originalContent);
 
-    const wordCount = this.countWords(segments);
-
-    this.logger.debug(
-      `Parsed ${segments.length} segments with ${wordCount} words`,
-    );
+    this.logger.debug(`Parsed ${segments.length} segments`);
 
     return {
       segments,
-      wordCount,
       originalStructure,
     };
   }
@@ -344,13 +338,6 @@ export class HTMLParsingService {
         }
       });
     return hasBlocks;
-  }
-
-  private countWords(segments: SegmentDto[]): number {
-    return segments.reduce((total, segment) => {
-      const words = segment.sourceContent.split(/\s+/).filter(Boolean).length;
-      return total + words;
-    }, 0);
   }
 
   public reconstructHTMLContent(

@@ -90,7 +90,6 @@ export class PickEvaluationTaskHandler
       sourceLanguage: languagePair.sourceLanguageCode,
       targetLanguage: languagePair.targetLanguageCode,
       isEvaluationTask: task.isEvaluationTask,
-      wordCount: task.wordCount,
       segments: mappedSegments,
     };
   }

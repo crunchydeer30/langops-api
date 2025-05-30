@@ -170,7 +170,6 @@ export class EvaluationSetRepository implements IEvaluationSetRepository {
               existingTask.originalStructure as OriginalStructure,
             status: TranslationTaskStatus.IN_PROGRESS,
             currentStage: TranslationStage.QUEUED_FOR_EDITING,
-            wordCount: existingTask.wordCount,
             editorAssignedAt: now,
             isEvaluationTask: true,
           },

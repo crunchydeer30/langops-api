@@ -6,7 +6,6 @@ import { PlainTextFormatMetadata } from 'src/internal/translation-task-processin
 
 export interface TextParsingResult {
   segments: SegmentDto[];
-  wordCount: number;
   originalStructure: { paragraphs: string[] };
 }
 
@@ -35,11 +34,6 @@ export class TextParsingService {
       formatMetadata: { paragraph: idx + 1 } as PlainTextFormatMetadata,
     }));
 
-    const wordCount = paragraphs.reduce(
-      (sum, p) => sum + p.split(/\s+/).filter((w) => w).length,
-      0,
-    );
-
-    return { segments, wordCount, originalStructure: { paragraphs } };
+    return { segments, originalStructure: { paragraphs } };
   }
 }

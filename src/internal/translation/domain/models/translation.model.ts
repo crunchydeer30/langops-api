@@ -9,7 +9,6 @@ export class TranslationReadModel {
   formatType: TranslationTaskType;
   status: TranslationStatus;
   currentStage: TranslationStage | null;
-  wordCount: number;
   createdAt: Date;
   originalContent: string;
   translatedContent: string | null;

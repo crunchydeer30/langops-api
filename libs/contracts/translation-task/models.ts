@@ -6,7 +6,6 @@ export const TranslationTaskPickResponseSchema = z.object({
   sourceLanguage: z.string(),
   targetLanguage: z.string(),
   isEvaluationTask: z.boolean(),
-  wordCount: z.number().int().positive(),
   segments: z.array(
     z.object({
       segmentId: z.string().uuid(),

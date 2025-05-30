@@ -12,7 +12,6 @@ export interface IPickTranslationTaskResponse {
   sourceLanguage: string;
   targetLanguage: string;
   isEvaluationTask: boolean;
-  wordCount: number;
   segments: Array<{
     segmentId: string;
     segmentOrder: number;
@@ -103,7 +102,6 @@ export class PickTranslationTaskHandler
       sourceLanguage: languagePair.sourceLanguageCode,
       targetLanguage: languagePair.targetLanguageCode,
       isEvaluationTask: task.isEvaluationTask,
-      wordCount: task.wordCount,
       segments: mappedSegments,
     };
   }

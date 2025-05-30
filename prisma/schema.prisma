@@ -287,9 +287,6 @@ model TranslationTask {
   segments              TranslationTaskSegment[]
   sensitiveDataMappings SensitiveDataMapping[]
 
-  wordCount             Int  @default(0) @map("word_count")
-  estimatedDurationSecs Int? @map("estimated_duration_secs")
-
   editorAssignedAt  DateTime? @map("editor_assigned_at")
   editorCompletedAt DateTime? @map("editor_completed_at")
 

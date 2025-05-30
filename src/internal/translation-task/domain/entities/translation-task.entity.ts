@@ -37,8 +37,6 @@ export interface ITranslationTask {
   status: TranslationTaskStatus;
   languagePairId: string;
   editorId?: string | null;
-  wordCount: number;
-  estimatedDurationSecs?: number | null;
   isEvaluationTask: boolean;
 
   editorAssignedAt?: Date | null;
@@ -65,9 +63,6 @@ export interface ITranslationTaskCreateArgs {
   editorId?: string | null;
   isEvaluationTask?: boolean;
 
-  wordCount?: number;
-  estimatedDurationSecs?: number | null;
-
   editorAssignedAt?: Date | null;
   editorCompletedAt?: Date | null;
   assignedAt?: Date | null;
@@ -87,8 +82,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
   public orderId: string;
   public languagePairId: string;
   public editorId?: string | null;
-  public wordCount: number;
-  public estimatedDurationSecs?: number | null;
   public isEvaluationTask: boolean;
 
   public editorAssignedAt?: Date | null;
@@ -125,8 +118,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       status: args.status ?? TranslationTaskStatus.NEW,
       languagePairId: args.languagePairId,
       editorId: args.editorId ?? null,
-      wordCount: args.wordCount ?? 0,
-      estimatedDurationSecs: args.estimatedDurationSecs ?? null,
       isEvaluationTask: args.isEvaluationTask ?? false,
       editorAssignedAt: args.editorAssignedAt ?? null,
       editorCompletedAt: args.editorCompletedAt ?? null,
@@ -197,8 +188,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
       new TaskProcessingCompletedEvent({
         taskId: this.id,
         previousStatus: TranslationTaskStatus.IN_PROGRESS,
-        wordCount: this.wordCount,
-        estimatedDurationSecs: this.estimatedDurationSecs ?? 0,
       }),
     );
   }
