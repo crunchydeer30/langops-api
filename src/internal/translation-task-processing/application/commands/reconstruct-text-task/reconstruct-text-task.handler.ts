@@ -35,11 +35,9 @@ export class ReconstructTextTaskHandler extends BaseReconstructTaskHandler {
       `Reconstructing text task ${task.id} with ${segments.length} segments`,
     );
 
-    // 1. Use text service to get basic reconstruction with proper paragraph structure
     const reconstructedText =
       this.textParsingService.reconstructPlainTextContent(segments);
 
-    // 2. Get sensitive data mappings
     const mappings = await this.sensitiveDataMappingRepository.findByTaskId(
       task.id,
     );
@@ -49,14 +47,12 @@ export class ReconstructTextTaskHandler extends BaseReconstructTaskHandler {
       return reconstructedText;
     }
 
-    // 3. Replace tokens with original values
     this.logger.debug(
       `Replacing ${mappings.length} sensitive data tokens in task ${task.id}`,
     );
 
     let finalContent = reconstructedText;
     for (const mapping of mappings) {
-      // Escape special regex characters in the token
       const escapedToken = mapping.tokenIdentifier.replace(
         /[.*+?^${}()|[\]\\]/g,
         '\\$&',

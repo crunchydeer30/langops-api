@@ -38,27 +38,21 @@ export abstract class BaseReconstructTaskHandler
 
       this.logger.log(`Reconstructing task ${taskId}`);
 
-      // Get segments from the segment repository
       const segmentEntities =
         await this.segmentRepository.findByTranslationTaskId(taskId);
 
-      // Convert to DTOs for processing
       const segments: SegmentDto[] = segmentEntities.map((segment) => ({
         id: segment.id,
         segmentOrder: segment.segmentOrder,
         segmentType: segment.segmentType,
         sourceContent: segment.sourceContent,
-        // Only use machineTranslatedContent for now
+
         targetContent: segment.machineTranslatedContent || undefined,
         specialTokensMap: segment.specialTokensMap || undefined,
         formatMetadata: segment.formatMetadata || undefined,
       }));
 
       const finalContent = await this.reconstruct(task, segments);
-
-      // Update the task with the final content using the domain method
-      // task.completeReconstruction(finalContent);
-      // await this.translationTaskRepository.save(task);
 
       return {
         taskId: task.id,

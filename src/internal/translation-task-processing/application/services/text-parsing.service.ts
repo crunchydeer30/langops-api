@@ -19,23 +19,18 @@ export class TextParsingService {
       .slice()
       .sort((a, b) => a.segmentOrder - b.segmentOrder);
 
-    // Use the text segments with appropriate newline spacing
     let result = '';
 
     sorted.forEach((segment, index) => {
       const content = segment.targetContent ?? segment.sourceContent;
 
-      // Check if we need to add newlines before the content
       if (index > 0) {
-        // Get the number of newlines to add from metadata
         const metadata = segment.formatMetadata as PlainTextFormatMetadata;
-        const newlineCount = metadata?.precedingNewlines || 2; // Default to 2 if not specified
+        const newlineCount = metadata?.precedingNewlines || 2;
 
-        // Add the appropriate number of newlines
         result += '\n'.repeat(newlineCount);
       }
 
-      // Add the segment content
       result += content;
     });
 
@@ -43,10 +38,8 @@ export class TextParsingService {
   }
 
   parse(text: string): TextParsingResult {
-    // Preserve original text for structure analysis
     const originalText = text;
 
-    // Find newline patterns and their positions
     const newlinePatterns: { pattern: string; position: number }[] = [];
     const regex = /\r?\n(\s*\r?\n)+/g;
     let match: RegExpExecArray | null;
@@ -58,16 +51,13 @@ export class TextParsingService {
       });
     }
 
-    // Split text and preserve paragraph metadata
     const paragraphs = text
       .split(/\r?\n\s*\r?\n/)
       .map((p) => p.trim())
       .filter((p) => p.length > 0);
 
-    // Create segments with enhanced metadata
     const segments: SegmentDto[] = paragraphs.map((p, idx) => {
-      // Calculate number of newlines before this paragraph
-      const precedingNewlines = 
+      const precedingNewlines =
         idx === 0
           ? 0
           : (newlinePatterns[idx - 1]?.pattern.match(/\n/g) || []).length;
@@ -84,7 +74,6 @@ export class TextParsingService {
       };
     });
 
-    // Save both paragraphs and newline patterns in the original structure
     return {
       segments,
       originalStructure: {
