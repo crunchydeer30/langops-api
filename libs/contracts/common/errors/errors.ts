@@ -106,6 +106,12 @@ export const ERRORS = {
       message: 'Editor is not qualified for this language pair',
       httpStatus: 403,
     },
+    NOT_ELIGIBLE_FOR_EVALUATION: {
+      code: 'EDITOR_007',
+      message:
+        'Editor is not eligible for picking evaluation tasks in the language pair',
+      httpStatus: 403,
+    },
   },
   EDITOR_APPLICATION: {
     INVALID_STATUS_TRANSITION: {
@@ -413,6 +419,26 @@ export const ERRORS = {
       code: 'EVALUATION_009',
       message: 'Evaluation set already started',
       httpStatus: 409,
+    },
+    TASK_NOT_FOUND: {
+      code: 'EVALUATION_011',
+      message: 'Evaluation task not found',
+      httpStatus: 404,
+    },
+    TASK_ALREADY_RATED: {
+      code: 'EVALUATION_012',
+      message: 'Evaluation task has already been rated',
+      httpStatus: 400,
+    },
+    INVALID_STATUS: {
+      code: 'EVALUATION_013',
+      message: 'Evaluation set is not in the correct status',
+      httpStatus: 400,
+    },
+    INVALID_FEEDBACK: {
+      code: 'EVALUATION_014',
+      message: 'Feedback is required for rating evaluation tasks',
+      httpStatus: 400,
     },
   },
   COMMON: {

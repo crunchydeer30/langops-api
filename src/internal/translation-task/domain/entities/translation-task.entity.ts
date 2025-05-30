@@ -339,10 +339,6 @@ export class TranslationTask extends AggregateRoot implements ITranslationTask {
     );
   }
 
-  /**
-   * Set edited content for segments in this task
-   * Used when editor submits their edits
-   */
   public setEditedContent(
     segmentEdits: Array<{ segmentId: string; editedContent: string }>,
   ): void {

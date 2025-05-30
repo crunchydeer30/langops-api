@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { DomainException } from '@common/exceptions';
 import { ERRORS } from 'libs/contracts/common/errors/errors';
-import { EvaluationTaskGradedEvent } from '../events';
+import { EvaluationTaskRatedEvent } from '../events';
 
 export interface IEvaluationTask {
   id: string;
@@ -62,27 +62,31 @@ export class EvaluationTask extends AggregateRoot implements IEvaluationTask {
     return task;
   }
 
-  public grade(score: number, feedback?: string): void {
+  public rate(score: number, feedback: string): void {
     if (score < 1 || score > 5) {
       throw new DomainException(
-        ERRORS.EVALUATION.INVALID_GRADE,
+        ERRORS.EVALUATION.INVALID_RATING,
         'Rating must be between 1 and 5',
       );
     }
 
+    if (!feedback || feedback.trim() === '') {
+      throw new DomainException(ERRORS.EVALUATION.INVALID_FEEDBACK);
+    }
+
     this.rating = score;
-    this.seniorEditorFeedback = feedback || null;
+    this.seniorEditorFeedback = feedback;
     this.updatedAt = new Date();
 
     this.apply(
-      new EvaluationTaskGradedEvent({
-        taskId: this.id,
+      new EvaluationTaskRatedEvent({
+        evaluationTaskId: this.id,
         evaluationSetId: this.evaluationSetId,
         rating: score,
-        feedback: feedback || null,
+        seniorEditorFeedback: feedback,
       }),
     );
 
-    this.logger.log(`Evaluation task ${this.id} graded with score ${score}`);
+    this.logger.log(`Evaluation task ${this.id} rated with score ${score}`);
   }
 }

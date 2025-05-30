@@ -5,6 +5,5 @@ export class GetEvaluationTasksResponseDto extends createZodDto(
   GetEvaluationTasks.ResponseSchema,
 ) {}
 
-// Generate OpenAPI schemas
 zodToOpenAPI(GetEvaluationTasks.ResponseSchema);
 zodToOpenAPI(GetEvaluationTasks.ResponseSchema);

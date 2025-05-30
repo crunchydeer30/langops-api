@@ -90,7 +90,7 @@ export class EvaluationSet extends AggregateRoot implements IEvaluationSet {
   }
 
   public markAsCompleted(averageRating: number): void {
-    if (this.status !== EvaluationSetStatus.READY_FOR_REVIEW) {
+    if (this.status !== EvaluationSetStatus.REVIEWING) {
       throw new DomainException(ERRORS.EVALUATION.INVALID_STATE);
     }
 
@@ -101,16 +101,20 @@ export class EvaluationSet extends AggregateRoot implements IEvaluationSet {
     this.status = EvaluationSetStatus.COMPLETED;
     this.averageRating = averageRating;
     this.updatedAt = new Date();
+    const isQualified = averageRating >= 4.5;
 
     this.apply(
       new EvaluationSetCompletedEvent({
         evaluationSetId: this.id,
+        editorId: this.editorId,
+        languagePairId: this.languagePairId,
         averageRating: this.averageRating,
+        isQualified,
       }),
     );
 
     this.logger.log(
-      `Evaluation set ${this.id} marked as completed with average rating ${this.averageRating}`,
+      `Evaluation set ${this.id} marked as completed with average rating ${this.averageRating}. Editor is ${isQualified ? 'qualified' : 'not qualified'}.`,
     );
   }
 

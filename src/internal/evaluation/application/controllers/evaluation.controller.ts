@@ -37,9 +37,17 @@ import { StartReviewResponseDto } from '../dtos/start-review.dto';
 import { GetEvaluationTasksResponseDto } from '../dtos/ge-evaluation-tasks.dto';
 import { GetEvaluationTaskDetailsResponseDto } from '../dtos/get-evaluation-task-details.dto';
 import {
+  RateEvaluationTaskRequestDto,
+  RateEvaluationTaskResponseDto,
+} from '../dtos/rate-evaluation-task.dto';
+import {
   GetEvaluationTaskDetailsQuery,
   IGetEvaluationTaskDetailsQueryResponse,
 } from '../queries/get-evaluation-task-details/get-evaluation-task-details.query';
+import {
+  RateEvaluationTaskCommand,
+  IRateEvaluationTaskCommandResponse,
+} from '../commands/rate-evaluation-task';
 
 @ApiTags('evaluation')
 @Controller(EVALUATION_HTTP_CONTROLLER)
@@ -219,5 +227,53 @@ export class EvaluationController {
     );
 
     return result;
+  }
+
+  @Post(EVALUATION_HTTP_ROUTES.RATE_TASK(':evaluationId', ':taskId'))
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.EDITOR)
+  @ApiOperation({
+    summary: 'Rate an evaluation task by a senior editor',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: RateEvaluationTaskResponseDto,
+    description: 'Evaluation task rated successfully',
+  })
+  async rateEvaluationTask(
+    @Param('evaluationId') evaluationId: string,
+    @Param('taskId') taskId: string,
+    @Body() dto: RateEvaluationTaskRequestDto,
+    @GetJWTPayload() jwtPayload: JwtPayload,
+  ): Promise<RateEvaluationTaskResponseDto> {
+    this.logger.log(
+      `Senior editor ${jwtPayload.id} evaluating task ${taskId} in evaluation set ${evaluationId} with rating ${dto.rating}`,
+    );
+
+    try {
+      const result = await this.commandBus.execute<
+        RateEvaluationTaskCommand,
+        IRateEvaluationTaskCommandResponse
+      >(
+        new RateEvaluationTaskCommand({
+          evaluationSetId: evaluationId,
+          taskId: taskId,
+          rating: dto.rating,
+          feedback: dto.feedback,
+          evaluatorId: jwtPayload.id,
+        }),
+      );
+
+      this.logger.log(
+        `Successfully evaluated task ${taskId} with rating ${dto.rating}`,
+      );
+
+      return result;
+    } catch (error) {
+      const err = error as Error;
+      this.logger.error(`Error evaluating task: ${err.message}`, err.stack);
+      throw error;
+    }
   }
 }

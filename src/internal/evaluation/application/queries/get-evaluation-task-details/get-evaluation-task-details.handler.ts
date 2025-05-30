@@ -53,7 +53,6 @@ export class GetEvaluationTaskDetailsHandler
       throw new DomainException(ERRORS.EVALUATION.NOT_AUTHORIZED);
     }
 
-    // Get the task with its segments using the repository method
     const taskWithSegments =
       await this.evaluationTaskRepository.findTaskWithSegments(
         taskId,
@@ -64,7 +63,6 @@ export class GetEvaluationTaskDetailsHandler
       throw new DomainException(ERRORS.EVALUATION.NOT_FOUND);
     }
 
-    // Map the segments from the repository result
     const segments = taskWithSegments.segments.map((segment) => ({
       id: segment.id,
       sourceText: segment.sourceSegmentText,
@@ -73,7 +71,6 @@ export class GetEvaluationTaskDetailsHandler
       order: segment.order,
     }));
 
-    // Ensure segments are sorted by order
     segments.sort((a, b) => a.order - b.order);
 
     const response: IGetEvaluationTaskDetailsQueryResponse = {

@@ -31,6 +31,7 @@ export class GetAvailableEvaluationTasksHandler
 
     const languagePair =
       await this.languagePairRepository.findById(languagePairId);
+
     if (!languagePair) {
       this.logger.error(`Language pair ${languagePairId} not found`);
       throw new DomainException(ERRORS.LANGUAGE.NOT_FOUND);
@@ -46,7 +47,7 @@ export class GetAvailableEvaluationTasksHandler
       this.logger.warn(
         `Editor ${editorId} is not eligible for evaluation in language pair ${languagePairId}`,
       );
-      throw new DomainException(ERRORS.EDITOR.NOT_QUALIFIED_FOR_LANGUAGE_PAIR);
+      throw new DomainException(ERRORS.EDITOR.NOT_ELIGIBLE_FOR_EVALUATION);
     }
 
     const count =
