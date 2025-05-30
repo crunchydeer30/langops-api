@@ -18,7 +18,6 @@ import {
   NodeStructure,
   ElementNodeStruct,
 } from '../../domain/interfaces/original-structure.interface';
-import { URL } from 'url';
 
 export interface SegmentDto {
   id: string;
@@ -198,47 +197,19 @@ export class HTMLParsingService {
       const originalHtml = $.html($elem);
       const attrs = $elem.attr() || {};
       const innerHtml = $elem.html() ?? '';
-      const displayText = $elem.text() ?? '';
-      const href = attrs.href || '';
 
-      const token = `<URL_${tokenId}>`;
+      const token = `<INLINE_${tokenId}>`;
       specialTokensMap[token] = {
         id: tokenId,
-        type: TranslationSpecialTokenType.URL,
+        type: TranslationSpecialTokenType.INLINE_FORMATTING,
         sourceContent: originalHtml,
         attrs,
         innerHtml,
-        href,
-        displayText,
       };
 
-      const innerText = $elem.text().trim();
-
-      const isValidUrl = (text: string): boolean => {
-        const urlToTest =
-          text.startsWith('http://') || text.startsWith('https://')
-            ? text
-            : `http://${text}`;
-
-        try {
-          new URL(urlToTest);
-          return true;
-        } catch {
-          return false;
-        }
-      };
-
-      const isURL =
-        isValidUrl(innerText) ||
-        innerText === href ||
-        innerText === href.replace(/^https?:\/\//, '');
-      if (!innerHtml.includes('<') && !isURL) {
-        $elem.replaceWith(
-          `<g id="${tokenId}" type="${tagName}">${innerHtml}</g>`,
-        );
-      } else {
-        $elem.replaceWith(`<ph id="${tokenId}" type="${tagName}"/>`);
-      }
+      $elem.replaceWith(
+        `<g id="${tokenId}" type="${tagName}">${innerHtml}</g>`,
+      );
     });
 
     $clone.find('img, br, hr').each((_, elem) => {
@@ -351,28 +322,33 @@ export class HTMLParsingService {
       if (node.type === 'segment') {
         const seg = segments.find((s) => s.segmentOrder === node.id);
         if (!seg) return '';
-        let html = seg.sourceContent;
+
+        let html = seg.targetContent ?? seg.sourceContent;
         const tokenMap = seg.specialTokensMap || {};
         Object.values(tokenMap).forEach((entry) => {
           const id = entry.id;
-          if (entry.type === TranslationSpecialTokenType.INLINE_FORMATTING) {
+          if (
+            entry.type === TranslationSpecialTokenType.INLINE_FORMATTING &&
+            entry.attrs.href
+          ) {
             html = html.replace(
-              new RegExp(`<g[^>]*id=["']${id}["'][^>]*>.*?<\\/g>`, 'g'),
-              entry.sourceContent,
+              new RegExp(`<g[^>]*id=["']${id}["'][^>]*>([^]*?)</g>`, 'g'),
+              (_match, innerTranslated) =>
+                `<a href="${entry.attrs.href}">${innerTranslated}</a>`,
             );
-          } else if (entry.type === TranslationSpecialTokenType.URL) {
-            const href = entry.href || '#';
-            const displayText = entry.displayText || href;
-
+          } else if (
+            entry.type === TranslationSpecialTokenType.INLINE_FORMATTING
+          ) {
             html = html.replace(
-              new RegExp(`<g[^>]*id=["']${id}["'][^>]*>(.*?)<\/g>`, 'g'),
-              (match, content) => `<a href="${href}">${content}</a>`,
-            );
-
-            html = html.replace(
-              new RegExp(`<ph[^>]*id=["']${id}["'][^>]*>(?:</ph>)?`, 'g'),
-
-              `<a href="${href}">${displayText?.includes('<') || displayText?.includes('/>') ? 'Link' : displayText}</a>`,
+              new RegExp(`<g[^>]*id=["']${id}["'][^>]*>([^]*?)</g>`, 'g'),
+              (_match, innerTranslated) => {
+                const parts = entry.sourceContent.match(
+                  /^(<[^>]+>)([^]*?)(<\/[^>]+>)$/,
+                );
+                if (!parts) return entry.sourceContent;
+                const [, prefix, , suffix] = parts;
+                return `${prefix}${innerTranslated}${suffix}`;
+              },
             );
           } else {
             html = html.replace(
