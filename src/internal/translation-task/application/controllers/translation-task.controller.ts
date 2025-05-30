@@ -29,6 +29,10 @@ import {
   PickEvaluationTaskResponseDto,
 } from '../dtos/pick-evaluation-task.dto';
 import {
+  PickTranslationTaskRequestDto,
+  PickTranslationTaskResponseDto,
+} from '../dtos/pick-translation-task.dto';
+import {
   GetAvailableTasksQuery,
   IGetAvailableTasksQueryResponse,
 } from '../queries/get-available-tasks/get-available-tasks.query';
@@ -38,6 +42,8 @@ import {
   IPickEvaluationTaskResponse,
   PickEvaluationTaskCommand,
 } from '../commands/pick-evaluation-task/pick-evaluation-task.command';
+import { IPickTranslationTaskResponse } from '../commands/pick-translation-task/pick-translation-task.handler';
+import { PickTranslationTaskCommand } from '../commands/pick-translation-task/pick-translation-task.command';
 import {
   SubmitTranslationTaskCommand,
   ISubmitTranslationTaskResponse,
@@ -160,6 +166,43 @@ export class TranslationTaskController {
 
     this.logger.log(
       `Successfully assigned evaluation task ${result.translationTaskId} to editor ${jwtPayload.id}`,
+    );
+
+    return result;
+  }
+
+  @Post(TRANSLATION_TASK_HTTP_ROUTES.PICK)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.EDITOR)
+  @ApiOperation({
+    summary: 'Pick an available translation task for a qualified editor',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Translation task assigned successfully',
+    type: PickTranslationTaskResponseDto,
+  })
+  async pickTranslationTask(
+    @GetJWTPayload() jwtPayload: JwtPayload,
+    @Body() dto: PickTranslationTaskRequestDto,
+  ): Promise<PickTranslationTaskResponseDto> {
+    this.logger.log(
+      `Editor ${jwtPayload.id} requesting to pick a translation task for language pair ${dto.languagePairId}`,
+    );
+
+    const result = await this.commandBus.execute<
+      PickTranslationTaskCommand,
+      IPickTranslationTaskResponse
+    >(
+      new PickTranslationTaskCommand({
+        editorId: jwtPayload.id,
+        languagePairId: dto.languagePairId,
+      }),
+    );
+
+    this.logger.log(
+      `Successfully assigned translation task ${result.translationTaskId} to editor ${jwtPayload.id}`,
     );
 
     return result;

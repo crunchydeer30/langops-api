@@ -201,6 +201,52 @@ export class TranslationTaskRepository implements ITranslationTaskRepository {
     return this.mapper.toDomain(evaluationTask.translationTask);
   }
 
+  async findTranslationTaskForEditor(
+    editorId: string,
+    languagePairId: string,
+  ): Promise<TranslationTask | null> {
+    this.logger.debug(
+      `Finding regular translation task for editor ${editorId} in language pair: ${languagePairId}`,
+    );
+
+    const isQualified = await this.isEditorQualifiedForLanguagePair(
+      editorId,
+      languagePairId,
+    );
+
+    if (!isQualified) {
+      this.logger.debug(
+        `Editor ${editorId} is not qualified for language pair ${languagePairId}`,
+      );
+      return null;
+    }
+
+    const task = await this.prisma.translationTask.findFirst({
+      where: {
+        languagePairId,
+        status: TranslationTaskStatus.IN_PROGRESS,
+        currentStage: TranslationStage.QUEUED_FOR_EDITING,
+        isEvaluationTask: false,
+        editorId: null,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    if (!task) {
+      this.logger.debug(
+        `No available translation tasks found for editor ${editorId} in language pair ${languagePairId}`,
+      );
+      return null;
+    }
+
+    this.logger.debug(
+      `Found translation task ${task.id} for editor ${editorId} in language pair ${languagePairId}`,
+    );
+    return this.mapper.toDomain(task);
+  }
+
   async findTaskWithSegments(taskId: string): Promise<{
     task: TranslationTask;
     segments: Array<{
